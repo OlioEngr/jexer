@@ -1,0 +1,77 @@
+<!--
+
+   Jexer - Java Text User Interface - Ant build
+
+   $Id$
+
+   This program is licensed under the GNU Lesser General Public License
+   Version 3.  Please see the file "COPYING" in this directory for more
+   information about the GNU Lesser General Public License Version 3.
+
+       Copyright (C) 2015  Kevin Lamonte
+
+   This library is free software; you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 3 of the
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this program; if not, see
+   http://www.gnu.org/licenses/, or write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+   USA
+
+-->
+
+<project name="jexer" basedir="." default="run">
+
+    <property name="src.dir"     value="src"/>
+    <property name="build.dir"   value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.dir"     value="${build.dir}/jar"/>
+
+    <property name="demo.class"  value="Demo1"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}"
+	       includeantruntime="false"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar"
+	     basedir="${classes.dir}"
+	     excludes="**/Demo*" >
+        </jar>
+    </target>
+
+    <target name="demos" depends="jar">
+      <mkdir dir="${classes.dir}"/>
+      <javac srcdir="demos" destdir="${classes.dir}"
+	     includeantruntime="false"/>
+    </target>
+
+    <target name="run" depends="jar,demos">
+      <java classname="${demo.class}" fork="false">
+	<classpath>
+          <path location="${jar.dir}/${ant.project.name}.jar"/>
+          <path location="${classes.dir}"/>
+	</classpath>
+      </java>
+    </target>
+
+    <target name="clean-build" depends="clean,jar"/>
+
+    <target name="main" depends="clean,run"/>
+
+</project>

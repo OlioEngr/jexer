@@ -38,9 +38,19 @@ SRC_DIR = src
 ANT_TARGET_DIR = build
 TARGET_DIR = classes
 
-JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java
+JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
+	$(SRC_DIR)/jexer/bits/GraphicsChars.java \
+	$(SRC_DIR)/jexer/bits/Color.java \
+	$(SRC_DIR)/jexer/bits/CellAttributes.java \
+	$(SRC_DIR)/jexer/bits/Cell.java \
+	$(SRC_DIR)/jexer/bits/ColorTheme.java
 
-JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class
+JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
+	$(TARGET_DIR)/jexer/bits/GraphicsChars.class \
+	$(TARGET_DIR)/jexer/bits/Color.class \
+	$(TARGET_DIR)/jexer/bits/CellAttributes.class \
+	$(TARGET_DIR)/jexer/bits/Cell.class \
+	$(TARGET_DIR)/jexer/bits/ColorTheme.class
 
 JAVAC = javac
 JAVAFLAGS = -g -deprecation

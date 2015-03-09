@@ -39,18 +39,44 @@ ANT_TARGET_DIR = build
 TARGET_DIR = classes
 
 JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
+	$(SRC_DIR)/jexer/TCommand.java \
+	$(SRC_DIR)/jexer/TKeypress.java \
 	$(SRC_DIR)/jexer/bits/GraphicsChars.java \
 	$(SRC_DIR)/jexer/bits/Color.java \
 	$(SRC_DIR)/jexer/bits/CellAttributes.java \
 	$(SRC_DIR)/jexer/bits/Cell.java \
-	$(SRC_DIR)/jexer/bits/ColorTheme.java
+	$(SRC_DIR)/jexer/bits/ColorTheme.java \
+	$(SRC_DIR)/jexer/bits/MnemonicString.java \
+	$(SRC_DIR)/jexer/event/TInputEvent.java \
+	$(SRC_DIR)/jexer/event/TCommandEvent.java \
+	$(SRC_DIR)/jexer/event/TKeypressEvent.java \
+	$(SRC_DIR)/jexer/event/TMenuEvent.java \
+	$(SRC_DIR)/jexer/event/TMouseEvent.java \
+	$(SRC_DIR)/jexer/event/TResizeEvent.java \
+	$(SRC_DIR)/jexer/session/SessionInfo.java \
+	$(SRC_DIR)/jexer/session/TSessionInfo.java \
+	$(SRC_DIR)/jexer/io/Screen.java \
+	$(SRC_DIR)/jexer/backend/Backend.java
 
 JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
+	$(TARGET_DIR)/jexer/TCommand.class \
+	$(TARGET_DIR)/jexer/TKeypress.class \
 	$(TARGET_DIR)/jexer/bits/GraphicsChars.class \
 	$(TARGET_DIR)/jexer/bits/Color.class \
 	$(TARGET_DIR)/jexer/bits/CellAttributes.class \
 	$(TARGET_DIR)/jexer/bits/Cell.class \
-	$(TARGET_DIR)/jexer/bits/ColorTheme.class
+	$(TARGET_DIR)/jexer/bits/ColorTheme.class \
+	$(TARGET_DIR)/jexer/bits/MnemonicString.class \
+	$(TARGET_DIR)/jexer/event/TInputEvent.class \
+	$(TARGET_DIR)/jexer/event/TCommandEvent.class \
+	$(TARGET_DIR)/jexer/event/TKeypressEvent.class \
+	$(TARGET_DIR)/jexer/event/TMenuEvent.class \
+	$(TARGET_DIR)/jexer/event/TMouseEvent.class \
+	$(TARGET_DIR)/jexer/event/TResizeEvent.class \
+	$(TARGET_DIR)/jexer/session/SessionInfo.class \
+	$(TARGET_DIR)/jexer/session/TSessionInfo.class \
+	$(TARGET_DIR)/jexer/io/Screen.class \
+	$(TARGET_DIR)/jexer/backend/Backend.class
 
 JAVAC = javac
 JAVAFLAGS = -g -deprecation

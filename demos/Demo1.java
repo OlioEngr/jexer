@@ -30,12 +30,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
  */
+
+import jexer.bits.*;
 import jexer.TApplication;
 
 /**
  * The demo application itself.
  */
 class DemoApplication extends TApplication {
+    /**
+     * Public constructor
+     */
+    public DemoApplication() {
+	try {
+	    ColorTheme theme = new ColorTheme();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
 }
 
 /**

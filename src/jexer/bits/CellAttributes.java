@@ -160,7 +160,7 @@ public class CellAttributes {
      * @param color "red", "blue", etc.
      * @return Color.RED, Color.BLUE, etc.
      */
-    static private Color colorFromString(String color) {
+    static public Color colorFromString(String color) {
 	switch (color.toLowerCase()) {
 	case "black":
 	    return Color.BLACK;

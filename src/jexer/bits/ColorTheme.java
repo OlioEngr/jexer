@@ -32,9 +32,13 @@
  */
 package jexer.bits;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.SortedMap;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 /**
  * ColorTheme is a collection of colors keyed by string.
@@ -44,7 +48,15 @@ public class ColorTheme {
     /**
      * The current theme colors
      */
-    private Map<String, CellAttributes> colors;
+    private SortedMap<String, CellAttributes> colors;
+
+    /**
+     * Public constructor.
+     */
+    public ColorTheme() {
+	colors = new TreeMap<String, CellAttributes>();
+	setDefaultTheme();
+    }
 
     /**
      * Retrieve the CellAttributes by name.
@@ -62,14 +74,13 @@ public class ColorTheme {
      *
      * @param filename file to write to
      */
-    public void save(String filename) {
-	/*
-	auto file = File(filename, "wt");
-	foreach (string key; colors.keys.sort) {
-	    CellAttributes color = colors[key];
-	    file.writefln("%s = %s", key, color);
+    public void save(String filename) throws IOException {
+	FileWriter file = new FileWriter(filename);
+	for (String key: colors.keySet()) {
+	    CellAttributes color = getColor(key);
+	    file.write(String.format("%s = %s\n", key, color));
 	}
-	 */
+	file.close();
     }
 
     /**
@@ -77,45 +88,51 @@ public class ColorTheme {
      *
      * @param filename file to read from
      */
-    public void load(String filename) {
-	/*
-	string text = std.file.readText!(string)(filename);
-	foreach (line; std.string.splitLines!(string)(text)) {
-	    string key;
-	    string bold;
-	    string foreColor;
-	    string on;
-	    string backColor;
-	    auto tokenCount = formattedRead(line, "%s = %s %s %s %s",
-		&key, &bold, &foreColor, &on, &backColor);
-	    if (tokenCount == 4) {
-		std.stdio.stderr.writefln("1 %s = %s %s %s %s",
-		    key, bold, foreColor, on, backColor);
+    public void load(String filename) throws IOException {
+	BufferedReader reader = new BufferedReader(new FileReader(filename));
+	String line = reader.readLine();
+	for (; line != null; line = reader.readLine()) {
+	    String key;
+	    String bold;
+	    String foreColor;
+	    String backColor;
 
-		// "key = blah on blah"
-		foreColor = bold;
-		backColor = on;
-		bold = "";
-	    } else if (tokenCount == 5) {
-		// "key = bold blah on blah"
-		std.stdio.stderr.writefln("2 %s = %s %s %s %s",
-		    key, bold, foreColor, on, backColor);
-	    } else {
-		// Unknown line, skip this one
+	    // Look for lines that resemble:
+	    //     "key = blah on blah"
+	    //     "key = bold blah on blah"
+	    StringTokenizer tokenizer = new StringTokenizer(line);
+	    key = tokenizer.nextToken();
+	    if (!tokenizer.nextToken().equals("=")) {
+		// Skip this line
 		continue;
 	    }
+	    bold = tokenizer.nextToken();
+	    if (!bold.toLowerCase().equals("bold")) {
+		// "key = blah on blah"
+		foreColor = bold;
+	    } else {
+		// "key = bold blah on blah"
+		foreColor = tokenizer.nextToken().toLowerCase();
+	    }
+	    if (!tokenizer.nextToken().toLowerCase().equals("on")) {
+		// Skip this line
+		continue;
+	    }
+	    backColor = tokenizer.nextToken().toLowerCase();
+
 	    CellAttributes color = new CellAttributes();
-	    if (bold == "bold") {
+	    if (bold.equals("bold")) {
 		color.bold = true;
 	    }
 	    color.foreColor = CellAttributes.colorFromString(foreColor);
 	    color.backColor = CellAttributes.colorFromString(backColor);
-	    colors[key] = color;
+	    colors.put(key, color);
 	}
-	 */
     }
 
-    /// Sets to defaults that resemble the Borland IDE colors.
+    /**
+     * Sets to defaults that resemble the Borland IDE colors.
+     */
     public void setDefaultTheme() {
 	CellAttributes color;
 
@@ -400,14 +417,6 @@ public class ColorTheme {
 	color.bold = false;
 	colors.put("teditor", color);
 
-
     }
 
-    /**
-     * Public constructor.
-     */
-    public ColorTheme() {
-	setDefaultTheme();
-    }
 }
-

@@ -33,6 +33,7 @@
 
 import jexer.bits.*;
 import jexer.TApplication;
+import jexer.session.TTYSessionInfo;
 
 /**
  * The demo application itself.
@@ -44,6 +45,9 @@ class DemoApplication extends TApplication {
     public DemoApplication() {
 	try {
 	    ColorTheme theme = new ColorTheme();
+	    TTYSessionInfo tty = new TTYSessionInfo();
+	    System.out.println("width: " + tty.getWindowWidth());
+	    System.out.println("height: " + tty.getWindowHeight());
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

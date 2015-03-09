@@ -68,11 +68,20 @@ public interface SessionInfo {
 
     /**
      * Text window width getter
+     *
+     * @return the window width
      */
     public int getWindowWidth();
 
     /**
      * Text window height getter
+     *
+     * @return the window height
      */
     public int getWindowHeight();
+
+    /**
+     * Re-query the text window size
+     */
+    public void queryWindowSize();
 }

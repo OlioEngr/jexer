@@ -96,6 +96,8 @@ public class TSessionInfo implements SessionInfo {
 
     /**
      * Text window width getter
+     *
+     * @return the window width
      */
     public int getWindowWidth() {
 	return windowWidth;
@@ -103,8 +105,18 @@ public class TSessionInfo implements SessionInfo {
 
     /**
      * Text window height getter
+     *
+     * @return the window height
      */
     public int getWindowHeight() {
 	return windowHeight;
     }
+
+    /**
+     * Re-query the text window size
+     */
+    public void queryWindowSize() {
+	// NOP
+    }
+
 }

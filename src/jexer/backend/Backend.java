@@ -32,6 +32,7 @@
  */
 package jexer.backend;
 
+import java.util.List;
 import jexer.event.TInputEvent;
 import jexer.io.Screen;
 import jexer.session.SessionInfo;
@@ -66,7 +67,7 @@ public abstract class Backend {
      * @param timeout maximum amount of time to wait for an event
      * @return events received, or an empty list if the timeout was reached
      */
-    abstract public TInputEvent [] getEvents(int timeout);
+    abstract public List<TInputEvent> getEvents(int timeout);
 
     /**
      * Subclasses must provide an implementation that closes sockets,

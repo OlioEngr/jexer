@@ -37,7 +37,7 @@ package jexer.event;
  */
 public class TMouseEvent extends TInputEvent {
 
-    enum Type {
+    public enum Type {
 	/**
 	 * Mouse motion.  X and Y will have screen coordinates.
 	 */

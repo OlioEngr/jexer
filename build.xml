@@ -61,7 +61,7 @@
 	     includeantruntime="false"/>
     </target>
 
-    <target name="run" depends="jar,demos">
+    <target name="run" depends="jar,docs,demos">
       <java classname="${demo.class}" fork="false">
 	<classpath>
           <path location="${jar.dir}/${ant.project.name}.jar"/>
@@ -73,5 +73,38 @@
     <target name="clean-build" depends="clean,jar"/>
 
     <target name="main" depends="clean,run"/>
+    
+    <target name="docs" depends="jar">
+      <javadoc
+          destdir="docs/api"
+          author="true"
+          version="true"
+          use="true"
+	  access="private"
+	  failonwarning="true"
+          windowtitle="Jexer - Java Text User Interface - API docs">
 
+	<fileset dir="${src.dir}" defaultexcludes="yes">
+	  <include name="jexer/**"/>
+	  <exclude name="demos/**"/>
+	</fileset>
+
+	<doctitle>
+	  <![CDATA[<h1>Test</h1>]]>
+	</doctitle>
+	<bottom>
+	  <![CDATA[<i>Copyright &#169; 2015 Kevin Lamonte. Licensed LGPLv3+</i>]]>
+	</bottom>
+	<!--
+	    <tag name="todo" scope="all" description="To do:"/>
+	    <group title="Group 1 Packages" packages="com.dummy.test.a*"/>
+	    <group title="Group 2 Packages" packages="com.dummy.test.b*:com.dummy.test.c*"/>
+	    <link offline="true"
+	    href="http://docs.oracle.com/javase/7/docs/api/"
+	    packagelistLoc="C:\tmp"/>
+	    <link href="http://docs.oracle.com/javase/7/docs/api/"/>
+	-->
+      </javadoc>
+    </target>
+    
 </project>

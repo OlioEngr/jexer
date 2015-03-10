@@ -31,21 +31,21 @@ import jexer.*;
 public class MyApplication extends TApplication {
 
     public MyApplication() {
-        super();
+	super();
 
-        // Create an editor window that has support for
-        // copy/paste, search text, arrow keys, horizontal
-        // and vertical scrollbar, etc.
-        addEditor();
+	// Create an editor window that has support for
+	// copy/paste, search text, arrow keys, horizontal
+	// and vertical scrollbar, etc.
+	addEditor();
 
-        // Create standard menus for File and Window
-        addFileMenu();
-        addWindowMenu();
+	// Create standard menus for File and Window
+	addFileMenu();
+	addWindowMenu();
     }
 
     public static void main(String [] args) {
-        MyApplication app = new MyApplication();
-        app.run();
+	MyApplication app = new MyApplication();
+	app.run();
     }
 }
 ```
@@ -60,10 +60,9 @@ version 1.0:
 0.0.1:
 
 - Base classes:
-  - Events
-  - Backend
-    - ECMABackend
+  - EMCA48Terminal read thread
   - TApplication loop
+- Incorporate checkstyle ant task
 
 0.0.2:
 
@@ -75,7 +74,6 @@ version 1.0:
 
 - ECMATerminal
   - Mouse 1006 mode parsing
-  - Win32 support (used for reading/writing sockets)
 - Bugs
   - TDirectoryList cannot be navigated only with keyboard
   - TTreeView cannot be navigated only with keyboard
@@ -102,5 +100,3 @@ Wishlist features (2.0):
   - TTerminal
   - TComboBox
 - AWTBackend
-- ECMABackend
-  - libgpm support

@@ -32,50 +32,78 @@
  */
 package jexer.backend;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import jexer.event.TInputEvent;
-import jexer.io.Screen;
-import jexer.session.SessionInfo;
+import jexer.io.ECMA48Screen;
+import jexer.io.ECMA48Terminal;
 
 /**
- * This abstract class provides a screen, keyboard, and mouse to
- * TApplication.  It also exposes session information as gleaned from lower
- * levels of the communication stack.
+ * This class uses an xterm/ANSI X3.64/ECMA-48 type terminal to provide a
+ * screen, keyboard, and mouse to TApplication.
  */
-public abstract class Backend {
+public class ECMA48Backend extends Backend {
 
     /**
-     * The session information
+     * Input events are processed by this Terminal.
      */
-    public SessionInfo session;
+    private ECMA48Terminal terminal;
 
     /**
-     * The screen to draw on
+     * Public constructor.
+     *
+     * @param input an InputStream connected to the remote user, or null for
+     * System.in.  If System.in is used, then on non-Windows systems it will
+     * be put in raw mode; shutdown() will (blindly!) put System.in in cooked
+     * mode.  input is always converted to a Reader with UTF-8 encoding.
+     * @param output an OutputStream connected to the remote user, or null
+     * for System.out.  output is always converted to a Writer with UTF-8
+     * encoding.
      */
-    public Screen screen;
+    public ECMA48Backend(InputStream input, OutputStream output) throws UnsupportedEncodingException {
+
+	// Create a terminal and explicitly set stdin into raw mode
+	terminal = new ECMA48Terminal(input, output);
+
+	// Create a screen
+	screen = new ECMA48Screen(terminal);
+
+	// Clear the screen
+	terminal.getOutput().write(terminal.clearAll());
+	terminal.flush();
+    }
 
     /**
-     * Subclasses must provide an implementation that syncs the logical
-     * screen to the physical device.
+     * Sync the logical screen to the physical device.
      */
-    abstract public void flushScreen();
+    @Override
+    public void flushScreen() {
+	screen.flushPhysical();
+    }
 
     /**
-     * Subclasses must provide an implementation to get keyboard, mouse, and
-     * screen resize events.
+     * Get keyboard, mouse, and screen resize events.
      *
      * @param timeout maximum amount of time (in millis) to wait for an
      * event.  0 means to return immediately, i.e. perform a poll.
      * @return events received, or an empty list if the timeout was reached
+     * first
      */
-    abstract public List<TInputEvent> getEvents(int timeout);
+    @Override
+    public List<TInputEvent> getEvents(int timeout) {
+	return terminal.getEvents();
+    }
 
     /**
      * Subclasses must provide an implementation that closes sockets,
      * restores console, etc.
      */
-    abstract public void shutdown();
+    @Override
+    public void shutdown() {
+	terminal.shutdown();
+    }
 
 }
-

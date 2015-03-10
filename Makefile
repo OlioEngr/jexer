@@ -59,7 +59,8 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/io/Screen.java \
 	$(SRC_DIR)/jexer/io/ECMA48Screen.java \
 	$(SRC_DIR)/jexer/io/ECMA48Terminal.java \
-	$(SRC_DIR)/jexer/backend/Backend.java
+	$(SRC_DIR)/jexer/backend/Backend.java \
+	$(SRC_DIR)/jexer/backend/ECMA48Backend.java
 
 JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/TCommand.class \
@@ -82,7 +83,8 @@ JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/io/Screen.class \
 	$(TARGET_DIR)/jexer/io/ECMA48Screen.class \
 	$(TARGET_DIR)/jexer/io/ECMA48Terminal.class \
-	$(TARGET_DIR)/jexer/backend/Backend.class
+	$(TARGET_DIR)/jexer/backend/Backend.class \
+	$(TARGET_DIR)/jexer/backend/ECMA48Backend.class
 
 JAVAC = javac
 JAVAFLAGS = -g -deprecation

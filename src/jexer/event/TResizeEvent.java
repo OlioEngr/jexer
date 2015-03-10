@@ -66,7 +66,7 @@ public class TResizeEvent extends TInputEvent {
      *
      * @param type the Type of resize, Screen or Widget
      * @param width the new width
-     * @param width the new height
+     * @param height the new height
      */
     public TResizeEvent(Type type, int width, int height) {
 	this.type   = type;

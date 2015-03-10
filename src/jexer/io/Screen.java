@@ -143,7 +143,6 @@ public abstract class Screen {
      * @param x column coordinate.  0 is the left-most column.
      * @param y row coordinate.  0 is the top-most row.
      * @param attr attributes to use (bold, foreColor, backColor)
-     * @param clip if true, honor clipping/offset
      */
     public void putAttrXY(int x, int y, CellAttributes attr) {
 	putAttrXY(x, y, attr, true);

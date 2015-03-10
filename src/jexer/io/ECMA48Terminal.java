@@ -696,16 +696,21 @@ public class ECMA48Terminal {
     }
 
     /**
-     * Parses the next character of input to see if an InputEvent is
-     * fully here.
+     * Return any events in the IO queue.
      *
-     * Params:
-     *    ch = Unicode code point
-     *    noChar = if true, ignore ch.  This is currently used to
-     *    return a bare ESC and RESIZE events.
+     * @return list of new events (which may be empty)
+     */
+    public List<TInputEvent> getEvents() {
+	List<TInputEvent> events = new LinkedList<TInputEvent>();
+	return events;
+    }
+
+    /**
+     * Parses the next character of input to see if an InputEvent is fully
+     * here.
      *
-     * Returns:
-     *    list of new events (which may be empty)
+     * @param ch Unicode code point
+     * @return list of new events (which may be empty)
      */
     public List<TInputEvent> getEvents(char ch) {
 	return getEvents(ch, false);
@@ -715,13 +720,10 @@ public class ECMA48Terminal {
      * Parses the next character of input to see if an InputEvent is
      * fully here.
      *
-     * Params:
-     *    ch = Unicode code point
-     *    noChar = if true, ignore ch.  This is currently used to
-     *    return a bare ESC and RESIZE events.
-     *
-     * Returns:
-     *    list of new events (which may be empty)
+     * @param ch Unicode code point
+     * @param noChar if true, ignore ch.  This is currently used to return a
+     * bare ESC and RESIZE events.
+     * @return list of new events (which may be empty)
      */
     public List<TInputEvent> getEvents(char ch, boolean noChar) {
 	List<TInputEvent> events = new LinkedList<TInputEvent>();
@@ -1103,15 +1105,12 @@ public class ECMA48Terminal {
     }
 
     /**
-     * Tell (u)xterm that we want alt- keystrokes to send escape +
-     * character rather than set the 8th bit.  Anyone who wants UTF8
-     * should want this enabled.
+     * Tell (u)xterm that we want alt- keystrokes to send escape + character
+     * rather than set the 8th bit.  Anyone who wants UTF8 should want this
+     * enabled.
      *
-     * Params:
-     *    on = if true, enable metaSendsEscape
-     *
-     * Returns:
-     *    the string to emit to xterm
+     * @param on if true, enable metaSendsEscape
+     * @return the string to emit to xterm
      */
     static public String xtermMetaSendsEscape(boolean on) {
 	if (on) {
@@ -1121,15 +1120,13 @@ public class ECMA48Terminal {
     }
 
     /**
-     * Convert a list of SGR parameters into a full escape sequence.
-     * This also eliminates a trailing ';' which would otherwise reset
-     * everything to white-on-black not-bold.
+     * Convert a list of SGR parameters into a full escape sequence.  This
+     * also eliminates a trailing ';' which would otherwise reset everything
+     * to white-on-black not-bold.
      *
-     * Params:
-     *    str = string of parameters, e.g. "31;1;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[31;1m"
+     * @param str string of parameters, e.g. "31;1;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[31;1m"
      */
     static public String addHeaderSGR(String str) {
 	if (str.length() > 0) {
@@ -1144,12 +1141,10 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for a single color change.
      *
-     * Params:
-     *    color = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    foreground = if true, this is a foreground color
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[42m"
+     * @param color one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param foreground if true, this is a foreground color
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[42m"
      */
     static public String color(Color color, boolean foreground) {
 	return color(color, foreground, true);
@@ -1158,14 +1153,12 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for a single color change.
      *
-     * Params:
-     *    color = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    foreground = if true, this is a foreground color
-     *    header = if true, make the full header, otherwise just emit
-     *    the color parameter e.g. "42;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[42m"
+     * @param color one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param foreground if true, this is a foreground color
+     * @param header if true, make the full header, otherwise just emit the
+     * color parameter e.g. "42;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[42m"
      */
     static public String color(Color color, boolean foreground,
 	boolean header) {
@@ -1190,12 +1183,10 @@ public class ECMA48Terminal {
      * Create a SGR parameter sequence for both foreground and
      * background color change.
      *
-     * Params:
-     *    foreColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    backColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[31;42m"
+     * @param foreColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param backColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[31;42m"
      */
     static public String color(Color foreColor, Color backColor) {
 	return color(foreColor, backColor, true);
@@ -1205,14 +1196,12 @@ public class ECMA48Terminal {
      * Create a SGR parameter sequence for both foreground and
      * background color change.
      *
-     * Params:
-     *    foreColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    backColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    header = if true, make the full header, otherwise just emit
-     *    the color parameter e.g. "31;42;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[31;42m"
+     * @param foreColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param backColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param header if true, make the full header, otherwise just emit the
+     * color parameter e.g. "31;42;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[31;42m"
      */
     static public String color(Color foreColor, Color backColor,
 	boolean header) {
@@ -1233,19 +1222,17 @@ public class ECMA48Terminal {
 
     /**
      * Create a SGR parameter sequence for foreground, background, and
-     * several attributes.  This sequence first resets all attributes
-     * to default, then sets attributes as per the parameters.
+     * several attributes.  This sequence first resets all attributes to
+     * default, then sets attributes as per the parameters.
      *
-     * Params:
-     *    foreColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    backColor = one of the Color.WHITE, Color.BLUE, etc. constants
-     *    bold = if true, set bold
-     *    reverse = if true, set reverse
-     *    blink = if true, set blink
-     *    underline = if true, set underline
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[0;1;31;42m"
+     * @param foreColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param backColor one of the Color.WHITE, Color.BLUE, etc. constants
+     * @param bold if true, set bold
+     * @param reverse if true, set reverse
+     * @param blink if true, set blink
+     * @param underline if true, set underline
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[0;1;31;42m"
      */
     static public String color(Color foreColor, Color backColor, boolean bold,
 	boolean reverse, boolean blink, boolean underline) {
@@ -1299,11 +1286,9 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling reverse color.
      *
-     * Params:
-     *    on = if true, turn on reverse
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[7m"
+     * @param on if true, turn on reverse
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[7m"
      */
     static public String reverse(boolean on) {
 	if (on) {
@@ -1315,8 +1300,8 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence to reset to defaults.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[0m"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[0m"
      */
     static public String normal() {
 	return normal(true);
@@ -1325,12 +1310,10 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence to reset to defaults.
      *
-     * Params:
-     *    header = if true, make the full header, otherwise just emit
-     *    the bare parameter e.g. "0;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[0m"
+     * @param header if true, make the full header, otherwise just emit the
+     * bare parameter e.g. "0;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[0m"
      */
     static public String normal(boolean header) {
 	if (header) {
@@ -1342,11 +1325,9 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling boldface.
      *
-     * Params:
-     *    on = if true, turn on bold
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[1m"
+     * @param on if true, turn on bold
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[1m"
      */
     static public String bold(boolean on) {
 	return bold(on, true);
@@ -1355,13 +1336,11 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling boldface.
      *
-     * Params:
-     *    on = if true, turn on bold
-     *    header = if true, make the full header, otherwise just emit
-     *    the bare parameter e.g. "1;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[1m"
+     * @param on if true, turn on bold
+     * @param header if true, make the full header, otherwise just emit the
+     * bare parameter e.g. "1;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[1m"
      */
     static public String bold(boolean on, boolean header) {
 	if (header) {
@@ -1379,11 +1358,9 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling blinking text.
      *
-     * Params:
-     *    on = if true, turn on blink
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[5m"
+     * @param on if true, turn on blink
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[5m"
      */
     static public String blink(boolean on) {
 	return blink(on, true);
@@ -1392,13 +1369,11 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling blinking text.
      *
-     * Params:
-     *    on = if true, turn on blink
-     *    header = if true, make the full header, otherwise just emit
-     *    the bare parameter e.g. "5;"
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[5m"
+     * @param on if true, turn on blink
+     * @param header if true, make the full header, otherwise just emit the
+     * bare parameter e.g. "5;"
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[5m"
      */
     static public String blink(boolean on, boolean header) {
 	if (header) {
@@ -1414,14 +1389,12 @@ public class ECMA48Terminal {
     }
 
     /**
-     * Create a SGR parameter sequence for enabling underline /
-     * underscored text.
+     * Create a SGR parameter sequence for enabling underline / underscored
+     * text.
      *
-     * Params:
-     *    on = if true, turn on underline
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal, e.g. "\033[4m"
+     * @param on if true, turn on underline
+     * @return the string to emit to an ANSI / ECMA-style terminal,
+     * e.g. "\033[4m"
      */
     static public String underline(boolean on) {
 	if (on) {
@@ -1433,11 +1406,8 @@ public class ECMA48Terminal {
     /**
      * Create a SGR parameter sequence for enabling the visible cursor.
      *
-     * Params:
-     *    on = if true, turn on cursor
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @param on if true, turn on cursor
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     public String cursor(boolean on) {
 	if (on && (cursorOn == false)) {
@@ -1455,8 +1425,7 @@ public class ECMA48Terminal {
      * Clear the entire screen.  Because some terminals use back-color-erase,
      * set the color to white-on-black beforehand.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String clearAll() {
 	return "\033[0;37;40m\033[2J";
@@ -1467,8 +1436,7 @@ public class ECMA48Terminal {
      * Because some terminals use back-color-erase, set the color to
      * white-on-black beforehand.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String clearRemainingLine() {
 	return "\033[0;37;40m\033[K";
@@ -1478,8 +1446,7 @@ public class ECMA48Terminal {
      * Clear the line up the cursor (inclusive).  Because some terminals use
      * back-color-erase, set the color to white-on-black beforehand.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String clearPreceedingLine() {
 	return "\033[0;37;40m\033[1K";
@@ -1489,8 +1456,7 @@ public class ECMA48Terminal {
      * Clear the line.  Because some terminals use back-color-erase, set the
      * color to white-on-black beforehand.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String clearLine() {
 	return "\033[0;37;40m\033[2K";
@@ -1499,8 +1465,7 @@ public class ECMA48Terminal {
     /**
      * Move the cursor to the top-left corner.
      *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String home() {
 	return "\033[H";
@@ -1509,29 +1474,25 @@ public class ECMA48Terminal {
     /**
      * Move the cursor to (x, y).
      *
-     * Params:
-     *    x = column coordinate.  0 is the left-most column.
-     *    y = row coordinate.  0 is the top-most row.
-     *
-     * Returns:
-     *    the string to emit to an ANSI / ECMA-style terminal
+     * @param x column coordinate.  0 is the left-most column.
+     * @param y row coordinate.  0 is the top-most row.
+     * @return the string to emit to an ANSI / ECMA-style terminal
      */
     static public String gotoXY(int x, int y) {
 	return String.format("\033[%d;%dH", y + 1, x + 1);
     }
 
     /**
-     * Tell (u)xterm that we want to receive mouse events based on
-     * "Any event tracking" and UTF-8 coordinates.  See
+     * Tell (u)xterm that we want to receive mouse events based on "Any event
+     * tracking" and UTF-8 coordinates.  See
      * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
      *
-     * Finally, this sets the alternate screen buffer.
+     * Note that this also sets the alternate/primary screen buffer.
      *
-     * Params:
-     *    on = if true, enable mouse report
-     *
-     * Returns:
-     *    the string to emit to xterm
+     * @param on If true, enable mouse report and use the alternate screen
+     * buffer.  If false disable mouse reporting and use the primary screen
+     * buffer.
+     * @return the string to emit to xterm
      */
     static public String mouse(boolean on) {
 	if (on) {

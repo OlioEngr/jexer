@@ -57,6 +57,7 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/session/TSessionInfo.java \
 	$(SRC_DIR)/jexer/session/TTYSessionInfo.java \
 	$(SRC_DIR)/jexer/io/Screen.java \
+	$(SRC_DIR)/jexer/io/ECMA48Screen.java \
 	$(SRC_DIR)/jexer/io/ECMA48Terminal.java \
 	$(SRC_DIR)/jexer/backend/Backend.java
 
@@ -79,6 +80,7 @@ JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/session/TSessionInfo.class \
 	$(TARGET_DIR)/jexer/session/TTYSessionInfo.class \
 	$(TARGET_DIR)/jexer/io/Screen.class \
+	$(TARGET_DIR)/jexer/io/ECMA48Screen.class \
 	$(TARGET_DIR)/jexer/io/ECMA48Terminal.class \
 	$(TARGET_DIR)/jexer/backend/Backend.class
 

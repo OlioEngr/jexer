@@ -160,6 +160,15 @@ public class ECMA48Terminal {
     private boolean brokenTerminalUTFMouse = false;
 
     /**
+     * Get the output writer.
+     *
+     * @return the Writer
+     */
+    public PrintWriter getOutput() {
+	return output;
+    }
+
+    /**
      * Call 'stty cooked' to set cooked mode.
      */
     private void sttyCooked() {

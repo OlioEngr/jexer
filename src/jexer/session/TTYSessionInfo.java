@@ -116,8 +116,6 @@ public class TTYSessionInfo implements SessionInfo {
 	    "/bin/sh", "-c", "stty size < /dev/tty"
 	};
 	try {
-	    System.out.println("spawn stty");
-
 	    Process process = Runtime.getRuntime().exec(cmd);
 	    BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
 	    String line = in.readLine();

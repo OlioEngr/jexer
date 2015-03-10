@@ -32,24 +32,6 @@
  */
 package jexer.bits;
 
-// Commonly used ASCII characters
-
-/*
-public static final byte C_NUL	= 0x00;		// NUL
-public static final byte C_SOH	= 0x01;		// SOH
-public static final byte C_STX	= 0x02;		// STX
-public static final byte C_EOT	= 0x04;		// EOT
-public static final byte C_ACK	= 0x06;		// ACK
-public static final byte C_LF	= 0x0A;		// Line feed '\n'
-public static final byte C_CR	= 0x0D;		// Carriage return '\r'
-public static final byte C_XON	= 0x11;		// XON, also known as DC1
-public static final byte C_XOFF	= 0x13;		// XOFF, also known as DC3
-public static final byte C_NAK	= 0x15;		// NAK
-public static final byte C_CAN	= 0x18;		// CAN
-public static final byte C_SUB	= 0x1A;		// SUB
-public static final byte C_ESC	= 0x1B;		// ESC
- */
-
 /**
  * Collection of special characters used by the windowing system.
  */
@@ -58,7 +40,7 @@ public class GraphicsChars {
     /**
      * CP437 translation map
      */
-    private static final char cp437_chars[] = {
+    static private final char cp437_chars[] = {
 	
     '\u2007', '\u263A', '\u263B', '\u2665', '\u2666', '\u2663', '\u2660', '\u2022',
     '\u25D8', '\u25CB', '\u25D9', '\u2642', '\u2640', '\u266A', '\u266B', '\u263C',
@@ -96,37 +78,37 @@ public class GraphicsChars {
     };
 
 
-    public static final char HATCH			= cp437_chars[0xB0];
-    public static final char DOUBLE_BAR			= cp437_chars[0xCD];
-    public static final char BOX			= cp437_chars[0xFE];
-    public static final char CHECK			= cp437_chars[0xFB];
-    public static final char TRIPLET			= cp437_chars[0xF0];
-    public static final char OMEGA			= cp437_chars[0xEA];
-    public static final char PI				= cp437_chars[0xE3];
-    public static final char UPARROW			= cp437_chars[0x18];
-    public static final char DOWNARROW			= cp437_chars[0x19];
-    public static final char RIGHTARROW			= cp437_chars[0x1A];
-    public static final char LEFTARROW			= cp437_chars[0x1B];
-    public static final char SINGLE_BAR			= cp437_chars[0xC4];
-    public static final char BACK_ARROWHEAD		= cp437_chars[0x11];
-    public static final char LRCORNER			= cp437_chars[0xD9];
-    public static final char URCORNER			= cp437_chars[0xBF];
-    public static final char LLCORNER			= cp437_chars[0xC0];
-    public static final char ULCORNER			= cp437_chars[0xDA];
-    public static final char DEGREE			= cp437_chars[0xF8];
-    public static final char PLUSMINUS			= cp437_chars[0xF1];
-    public static final char WINDOW_TOP			= cp437_chars[0xCD];
-    public static final char WINDOW_LEFT_TOP		= cp437_chars[0xD5];
-    public static final char WINDOW_RIGHT_TOP		= cp437_chars[0xB8];
-    public static final char WINDOW_SIDE		= cp437_chars[0xB3];
-    public static final char WINDOW_LEFT_BOTTOM		= cp437_chars[0xD4];
-    public static final char WINDOW_RIGHT_BOTTOM	= cp437_chars[0xBE];
-    public static final char WINDOW_LEFT_TEE		= cp437_chars[0xC6];
-    public static final char WINDOW_RIGHT_TEE		= cp437_chars[0xB5];
-    public static final char WINDOW_SIDE_DOUBLE		= cp437_chars[0xBA];
-    public static final char WINDOW_LEFT_TOP_DOUBLE	= cp437_chars[0xC9];
-    public static final char WINDOW_RIGHT_TOP_DOUBLE	= cp437_chars[0xBB];
-    public static final char WINDOW_LEFT_BOTTOM_DOUBLE	= cp437_chars[0xC8];
-    public static final char WINDOW_RIGHT_BOTTOM_DOUBLE	= cp437_chars[0xBC];
+    static public final char HATCH			= cp437_chars[0xB0];
+    static public final char DOUBLE_BAR			= cp437_chars[0xCD];
+    static public final char BOX			= cp437_chars[0xFE];
+    static public final char CHECK			= cp437_chars[0xFB];
+    static public final char TRIPLET			= cp437_chars[0xF0];
+    static public final char OMEGA			= cp437_chars[0xEA];
+    static public final char PI				= cp437_chars[0xE3];
+    static public final char UPARROW			= cp437_chars[0x18];
+    static public final char DOWNARROW			= cp437_chars[0x19];
+    static public final char RIGHTARROW			= cp437_chars[0x1A];
+    static public final char LEFTARROW			= cp437_chars[0x1B];
+    static public final char SINGLE_BAR			= cp437_chars[0xC4];
+    static public final char BACK_ARROWHEAD		= cp437_chars[0x11];
+    static public final char LRCORNER			= cp437_chars[0xD9];
+    static public final char URCORNER			= cp437_chars[0xBF];
+    static public final char LLCORNER			= cp437_chars[0xC0];
+    static public final char ULCORNER			= cp437_chars[0xDA];
+    static public final char DEGREE			= cp437_chars[0xF8];
+    static public final char PLUSMINUS			= cp437_chars[0xF1];
+    static public final char WINDOW_TOP			= cp437_chars[0xCD];
+    static public final char WINDOW_LEFT_TOP		= cp437_chars[0xD5];
+    static public final char WINDOW_RIGHT_TOP		= cp437_chars[0xB8];
+    static public final char WINDOW_SIDE		= cp437_chars[0xB3];
+    static public final char WINDOW_LEFT_BOTTOM		= cp437_chars[0xD4];
+    static public final char WINDOW_RIGHT_BOTTOM	= cp437_chars[0xBE];
+    static public final char WINDOW_LEFT_TEE		= cp437_chars[0xC6];
+    static public final char WINDOW_RIGHT_TEE		= cp437_chars[0xB5];
+    static public final char WINDOW_SIDE_DOUBLE		= cp437_chars[0xBA];
+    static public final char WINDOW_LEFT_TOP_DOUBLE	= cp437_chars[0xC9];
+    static public final char WINDOW_RIGHT_TOP_DOUBLE	= cp437_chars[0xBB];
+    static public final char WINDOW_LEFT_BOTTOM_DOUBLE	= cp437_chars[0xC8];
+    static public final char WINDOW_RIGHT_BOTTOM_DOUBLE	= cp437_chars[0xBC];
 }
 

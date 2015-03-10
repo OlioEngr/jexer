@@ -101,12 +101,10 @@ public class Color {
 
     /**
      * Invert a color in the same way as (CGA/VGA color XOR 0x7).
-     *
-     * @param color color to change
      * @return the inverted color
      */
-    static public Color invert(Color color) {
-	switch (color.value) {
+    public Color invert() {
+	switch (value) {
 	case black:
 	    return Color.WHITE;
 	case white:
@@ -125,6 +123,19 @@ public class Color {
 	    return Color.BLUE;
 	}
 	throw new IllegalArgumentException("Invalid Color value: " +
-	    color.value);
+	    value);
+    }
+
+    /**
+     * Comparison.  All fields must match to return true.
+     */
+    @Override
+    public boolean equals(Object rhs) {
+	if (!(rhs instanceof Color)) {
+	    return false;
+	}
+
+	Color that = (Color)rhs;
+	return (value == that.value);
     }
 }

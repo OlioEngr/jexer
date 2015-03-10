@@ -226,6 +226,24 @@ public class TKeypress {
     }
 
     /**
+     * Comparison.  All fields must match to return true.
+     */
+    @Override
+    public boolean equals(Object rhs) {
+	if (!(rhs instanceof TKeypress)) {
+	    return false;
+	}
+
+	TKeypress that = (TKeypress)rhs;
+	return ((isKey == that.isKey) &&
+	    (fnKey == that.fnKey) &&
+	    (ch == that.ch) &&
+	    (alt == that.alt) &&
+	    (ctrl == that.ctrl) &&
+	    (shift == that.shift));
+    }
+
+    /**
      * Make human-readable description of this Keystroke.
      */
     @Override

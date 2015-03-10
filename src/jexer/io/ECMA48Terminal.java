@@ -33,6 +33,8 @@
 package jexer.io;
 
 import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -62,12 +64,27 @@ import static jexer.TKeypress.*;
  * X3.64 / ECMA-48 type terminals e.g. xterm, linux, vt100, ansi.sys,
  * etc.
  */
-public class ECMA48Terminal {
+public class ECMA48Terminal implements Runnable {
 
     /**
      * The session information
      */
     public SessionInfo session;
+
+    /**
+     * The event queue, filled up by a thread reading on input
+     */
+    private List<TInputEvent> eventQueue;
+
+    /**
+     * If true, we want the reader thread to exit gracefully.
+     */
+    private boolean stopReaderThread;
+
+    /**
+     * The reader thread
+     */
+    private Thread readerThread;
 
     /**
      * Parameters being collected.  E.g. if the string is \033[1;3m, then
@@ -139,10 +156,18 @@ public class ECMA48Terminal {
 
     /**
      * The terminal's input.  If an InputStream is not specified in the
-     * constructor, then this InputReader will be bound to System.in with
-     * UTF-8 encoding.
+     * constructor, then this InputStreamReader will be bound to System.in
+     * with UTF-8 encoding.
      */
     private Reader input;
+
+    /**
+     * The terminal's raw InputStream.  If an InputStream is not specified in
+     * the constructor, then this InputReader will be bound to System.in.
+     * This is used by run() to see if bytes are available() before calling
+     * (Reader)input.read().
+     */
+    private InputStream inputStream;
 
     /**
      * The terminal's output.  If an OutputStream is not specified in the
@@ -189,14 +214,12 @@ public class ECMA48Terminal {
      */
     private void doStty(boolean mode) {
 	String [] cmdRaw = {
-	    "/bin/sh", "-c", "stty raw < /dev/tty"
+	    "/bin/sh", "-c", "stty -ignbrk -brkint -parmrk -istrip -inlcr -igncr -icrnl -ixon -opost -echo -echonl -icanon -isig -iexten -parenb cs8 min 1 < /dev/tty"
 	};
 	String [] cmdCooked = {
-	    "/bin/sh", "-c", "stty cooked < /dev/tty"
+	    "/bin/sh", "-c", "stty sane cooked < /dev/tty"
 	};
 	try {
-	    System.out.println("spawn stty");
-
 	    Process process;
 	    if (mode == true) {
 		process = Runtime.getRuntime().exec(cmdRaw);
@@ -244,17 +267,21 @@ public class ECMA48Terminal {
     public ECMA48Terminal(InputStream input, OutputStream output) throws UnsupportedEncodingException {
 
 	reset();
-	mouse1 = false;
-	mouse2 = false;
-	mouse3 = false;
+	mouse1           = false;
+	mouse2           = false;
+	mouse3           = false;
+	stopReaderThread = false;
 
 	if (input == null) {
-	    this.input = new InputStreamReader(System.in, "UTF-8");
+	    // inputStream = System.in;
+	    inputStream = new FileInputStream(FileDescriptor.in);
 	    sttyRaw();
 	    setRawMode = true;
 	} else {
-	    this.input = new InputStreamReader(input);
+	    inputStream = input;
 	}
+	this.input = new InputStreamReader(inputStream, "UTF-8");
+
 	// TODO: include TelnetSocket from NIB and have it implement
 	// SessionInfo
 	if (input instanceof SessionInfo) {
@@ -283,18 +310,52 @@ public class ECMA48Terminal {
 	// Hang onto the window size
 	windowResize = new TResizeEvent(TResizeEvent.Type.Screen,
 	    session.getWindowWidth(), session.getWindowHeight());
+
+	// Spin up the input reader
+	eventQueue = new LinkedList<TInputEvent>();
+	readerThread = new Thread(this);
+	readerThread.start();
     }
 
     /**
      * Restore terminal to normal state
      */
     public void shutdown() {
+
+	// System.err.println("=== shutdown() ==="); System.err.flush();
+
+	// Tell the reader thread to stop looking at input
+	stopReaderThread = true;
+	try {
+	    readerThread.join();
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	}
+
+	// Disable mouse reporting and show cursor
+	output.printf("%s%s%s", mouse(false), cursor(true), normal());
+	output.flush();
+
 	if (setRawMode) {
 	    sttyCooked();
 	    setRawMode = false;
+	    // We don't close System.in/out
+	} else {
+	    // Shut down the streams, this should wake up the reader thread
+	    // and make it exit.
+	    try {
+		if (input != null) {
+		    input.close();
+		    input = null;
+		}
+		if (output != null) {
+		    output.close();
+		    output = null;
+		}
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
 	}
-	// Disable mouse reporting and show cursor
-	output.printf("%s%s%s", mouse(false), cursor(true), normal());
     }
 
     /**
@@ -309,6 +370,7 @@ public class ECMA48Terminal {
      */
     private void reset() {
 	state = ParseState.GROUND;
+	params = new ArrayList<String>();
 	paramI = 0;
 	params.clear();
 	params.add("");
@@ -329,8 +391,12 @@ public class ECMA48Terminal {
 	// System.err.printf("controlChar: %02x\n", ch);
 
 	switch (ch) {
-	case '\r':
-	    // ENTER
+	case 0x0D:
+	    // Carriage return --> ENTER
+	    event.key = kbEnter;
+	    break;
+	case 0x0A:
+	    // Linefeed --> ENTER
 	    event.key = kbEnter;
 	    break;
 	case 0x1B:
@@ -702,6 +768,18 @@ public class ECMA48Terminal {
      */
     public List<TInputEvent> getEvents() {
 	List<TInputEvent> events = new LinkedList<TInputEvent>();
+
+	synchronized(this) {
+	    if (eventQueue.size() > 0) {
+		events.addAll(eventQueue);
+		eventQueue.clear();
+	    }
+	}
+
+	// TEST: drop a cmAbort
+	// events.add(new jexer.event.TCommandEvent(jexer.TCommand.cmAbort));
+	// events.add(new jexer.event.TKeypressEvent(kbAltX));
+
 	return events;
     }
 
@@ -731,6 +809,7 @@ public class ECMA48Terminal {
 	TKeypressEvent keypress;
 	Date now = new Date();
 
+	/*
 	// ESCDELAY type timeout
 	if (state == ParseState.ESCAPE) {
 	    long escDelay = now.getTime() - escapeTime;
@@ -740,6 +819,7 @@ public class ECMA48Terminal {
 		reset();
 	    }
 	}
+	 */
 
 	if (noChar == true) {
 	    int newWidth = session.getWindowWidth();
@@ -1499,6 +1579,61 @@ public class ECMA48Terminal {
 	    return "\033[?1003;1005h\033[?1049h";
 	}
 	return "\033[?1003;1005l\033[?1049l";
+    }
+
+    /**
+     * Read function runs on a separate thread.
+     */
+    public void run() {
+	boolean done = false;
+	// available() will often return > 1, so we need to read in chunks to
+	// stay caught up.
+	char [] readBuffer = new char[128];
+
+	while ((done == false) && (stopReaderThread == false)) {
+	    try {
+		// We assume that if inputStream has bytes available, then
+		// input won't block on read().
+		int n = inputStream.available();
+		if (n > 0) {
+		    if (readBuffer.length < n) {
+			// The buffer wasn't big enough, make it huger
+			readBuffer = new char[readBuffer.length * 2];
+		    }
+
+		    int rc = input.read(readBuffer, 0, n);
+		    // System.err.printf("read() %d", rc); System.err.flush();
+		    if (rc == -1) {
+			// This is EOF
+			done = true;
+		    } else {
+			for (int i = 0; i < rc; i++) {
+			    int ch = readBuffer[i];
+
+			    // System.err.printf("** READ 0x%x '%c'", ch, ch);
+			    List<TInputEvent> events = getEvents((char)ch);
+			    synchronized (this) {
+				/*
+				System.err.printf("adding %d events\n",
+				    events.size());
+				 */
+				eventQueue.addAll(events);
+			    }
+			}
+		    }
+		} else {
+		    // Wait 5 millis for more data
+		    Thread.sleep(5);
+		}
+		// System.err.println("end while loop"); System.err.flush();
+	    } catch (InterruptedException e) {
+		// SQUASH
+	    } catch (IOException e) {
+		e.printStackTrace();
+		done = true;
+	    }
+	} // while ((done == false) && (stopReaderThread == false))
+	// System.err.println("*** run() exiting..."); System.err.flush();
     }
 
 }

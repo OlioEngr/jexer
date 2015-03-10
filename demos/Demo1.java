@@ -42,7 +42,9 @@ class DemoApplication extends TApplication {
     /**
      * Public constructor
      */
-    public DemoApplication() {
+    public DemoApplication() throws Exception {
+	super(null, null);
+	/*
 	try {
 	    ColorTheme theme = new ColorTheme();
 	    TTYSessionInfo tty = new TTYSessionInfo();
@@ -51,6 +53,7 @@ class DemoApplication extends TApplication {
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
+	 */
     }
 }
 
@@ -64,8 +67,12 @@ public class Demo1 {
      * @param  args Command line arguments
      */
     public static void main(String [] args) {
-	DemoApplication app = new DemoApplication();
-	app.run();
+	try {
+	    DemoApplication app = new DemoApplication();
+	    app.run();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
 }

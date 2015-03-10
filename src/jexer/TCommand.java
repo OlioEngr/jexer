@@ -144,6 +144,19 @@ public class TCommand {
 	return String.format("%s", type);
     }
 
+    /**
+     * Comparison.  All fields must match to return true.
+     */
+    @Override
+    public boolean equals(Object rhs) {
+	if (!(rhs instanceof TCommand)) {
+	    return false;
+	}
+
+	TCommand that = (TCommand)rhs;
+	return (type == that.type);
+    }
+
     static public final TCommand cmAbort      = new TCommand(TCommand.Type.ABORT);
     static public final TCommand cmExit       = new TCommand(TCommand.Type.EXIT);
     static public final TCommand cmQuit       = new TCommand(TCommand.Type.EXIT);

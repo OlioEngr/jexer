@@ -60,17 +60,24 @@ version 1.0:
 0.0.1:
 
 - Base classes:
-  - EMCA48Terminal read thread
-  - TApplication loop
+  - TWidget
+  - TWindow
+- package-info's
 - Incorporate checkstyle ant task
+  - Fix all noted issues except use of tabs
 
 0.0.2:
 
-- Get modal messagebox running without fibers
+- Get modal messagebox running without fibers (use two reader threads
+  with syncronization, don't bother with coroutines)
 - Port remaining d-tui functionality over
   - All widgets
 
 0.0.3:
+
+- TEditor, fixup keyboard movement
+
+0.0.4:
 
 - ECMATerminal
   - Mouse 1006 mode parsing

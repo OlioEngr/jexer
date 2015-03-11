@@ -101,7 +101,7 @@ public class ECMA48Backend extends Backend {
 		    terminal.wait(timeout);
 		    if (terminal.hasEvents()) {
 			// System.err.println("getEvents()");
-			terminal.getIdleEvents(queue);
+			terminal.getEvents(queue);
 		    } else {
 			// If I got here, then I timed out.  Call
 			// terminal.getIdleEvents() to pick up stragglers

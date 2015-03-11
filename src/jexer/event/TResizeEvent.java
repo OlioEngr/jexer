@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.event;
 
@@ -42,45 +40,81 @@ public class TResizeEvent extends TInputEvent {
      * widget/window resize.
      */
     public enum Type {
-	Screen,
-	Widget
+        /**
+         * The entire screen size changed.
+         */
+        SCREEN,
+
+        /**
+         * A widget was resized.
+         */
+        WIDGET
     }
 
     /**
-     * The type of resize
+     * The type of resize.
      */
-    public Type type;
+    private Type type;
 
     /**
-     * New width
+     * Get resize type.
+     *
+     * @return SCREEN or WIDGET
      */
-    public int width;
+    public final Type getType() {
+        return type;
+    }
 
     /**
-     * New height
+     * New width.
      */
-    public int height;
+    private int width;
 
     /**
-     * Public contructor
+     * Get the new width.
+     *
+     * @return width
+     */
+    public final int getWidth() {
+        return width;
+    }
+
+    /**
+     * New height.
+     */
+    private int height;
+
+    /**
+     * Get the new height.
+     *
+     * @return height
+     */
+    public final int getHeight() {
+        return width;
+    }
+
+    /**
+     * Public contructor.
      *
      * @param type the Type of resize, Screen or Widget
      * @param width the new width
      * @param height the new height
      */
-    public TResizeEvent(Type type, int width, int height) {
-	this.type   = type;
-	this.width  = width;
-	this.height = height;
+    public TResizeEvent(final Type type, final int width, final int height) {
+        this.type   = type;
+        this.width  = width;
+        this.height = height;
     }
 
     /**
-     * Make human-readable description of this event
+     * Make human-readable description of this TResizeEvent.
+     *
+     * @return displayable String
      */
     @Override
-    public String toString() {
-	return String.format("Resize: %s width = %d height = %d",
-	    type, width, height);
+    public final String toString() {
+        return String.format("Resize: %s width = %d height = %d",
+            type, width, height);
     }
 
 }

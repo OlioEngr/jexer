@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.backend;
 
@@ -62,26 +60,32 @@ public class ECMA48Backend extends Backend {
      * @param output an OutputStream connected to the remote user, or null
      * for System.out.  output is always converted to a Writer with UTF-8
      * encoding.
+     * @throws UnsupportedEncodingException if an exception is thrown when
+     * creating the InputStreamReader
      */
-    public ECMA48Backend(InputStream input, OutputStream output) throws UnsupportedEncodingException {
+    public ECMA48Backend(final InputStream input,
+        final OutputStream output) throws UnsupportedEncodingException {
 
-	// Create a terminal and explicitly set stdin into raw mode
-	terminal = new ECMA48Terminal(input, output);
+        // Create a terminal and explicitly set stdin into raw mode
+        terminal = new ECMA48Terminal(input, output);
 
-	// Create a screen
-	screen = new ECMA48Screen(terminal);
+        // Keep the terminal's sessionInfo so that TApplication can see it
+        sessionInfo = terminal.getSessionInfo();
 
-	// Clear the screen
-	terminal.getOutput().write(terminal.clearAll());
-	terminal.flush();
+        // Create a screen
+        screen = new ECMA48Screen(terminal);
+
+        // Clear the screen
+        terminal.getOutput().write(terminal.clearAll());
+        terminal.flush();
     }
 
     /**
      * Sync the logical screen to the physical device.
      */
     @Override
-    public void flushScreen() {
-	screen.flushPhysical();
+    public final void flushScreen() {
+        screen.flushPhysical();
     }
 
     /**
@@ -92,43 +96,42 @@ public class ECMA48Backend extends Backend {
      * event.  0 means to return immediately, i.e. perform a poll.
      */
     @Override
-    public void getEvents(List<TInputEvent> queue, int timeout) {
-	if (timeout > 0) {
-	    // Try to sleep, let the terminal's input thread wake me up if
-	    // something came in.
-	    synchronized (terminal) {
-		try {
-		    terminal.wait(timeout);
-		    if (terminal.hasEvents()) {
-			// System.err.println("getEvents()");
-			terminal.getEvents(queue);
-		    } else {
-			// If I got here, then I timed out.  Call
-			// terminal.getIdleEvents() to pick up stragglers
-			// like bare resize.
-			// System.err.println("getIdleEvents()");
-			terminal.getIdleEvents(queue);
-		    }
-		} catch (InterruptedException e) {
-		    // Spurious interrupt, pretend it was like a timeout.
-		    // System.err.println("[interrupt] getEvents()");
-		    terminal.getIdleEvents(queue);
-		}
-	    }
-	} else {
-	    // Asking for a poll, go get it.
-	    System.err.println("[polled] getEvents()");
-	    terminal.getEvents(queue);
-	}
+    public void getEvents(final List<TInputEvent> queue, final int timeout) {
+        if (timeout > 0) {
+            // Try to sleep, let the terminal's input thread wake me up if
+            // something came in.
+            synchronized (terminal) {
+                try {
+                    terminal.wait(timeout);
+                    if (terminal.hasEvents()) {
+                        // System.err.println("getEvents()");
+                        terminal.getEvents(queue);
+                    } else {
+                        // If I got here, then I timed out.  Call
+                        // terminal.getIdleEvents() to pick up stragglers
+                        // like bare resize.
+                        // System.err.println("getIdleEvents()");
+                        terminal.getIdleEvents(queue);
+                    }
+                } catch (InterruptedException e) {
+                    // Spurious interrupt, pretend it was like a timeout.
+                    // System.err.println("[interrupt] getEvents()");
+                    terminal.getIdleEvents(queue);
+                }
+            }
+        } else {
+            // Asking for a poll, go get it.
+            // System.err.println("[polled] getEvents()");
+            terminal.getEvents(queue);
+        }
     }
 
     /**
-     * Subclasses must provide an implementation that closes sockets,
-     * restores console, etc.
+     * Close the I/O, restore the console, etc.
      */
     @Override
-    public void shutdown() {
-	terminal.shutdown();
+    public final void shutdown() {
+        terminal.shutdown();
     }
 
 }

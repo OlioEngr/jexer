@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.event;
 
@@ -40,25 +38,35 @@ package jexer.event;
 public class TMenuEvent extends TInputEvent {
 
     /**
-     * MenuItem ID
+     * MenuItem ID.
      */
-    public short id;
+    private short id;
 
     /**
-     * Public contructor
+     * Get the MenuItem ID.
+     *
+     * @return the ID
+     */
+    public final short getId() {
+        return id;
+    }
+
+    /**
+     * Public contructor.
      *
      * @param id the MenuItem ID
      */
-    public TMenuEvent(short id) {
-	this.id = id;
+    public TMenuEvent(final short id) {
+        this.id = id;
     }
 
     /**
-     * Make human-readable description of this event
+     * Make human-readable description of this TMenuEvent.
+     *
+     * @return displayable String
      */
     @Override
-    public String toString() {
-	return String.format("MenuEvent: %d", id);
+    public final String toString() {
+        return String.format("MenuEvent: %d", id);
     }
 }
-

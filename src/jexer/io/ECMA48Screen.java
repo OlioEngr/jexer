@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.io;
 
@@ -41,184 +39,195 @@ import jexer.bits.CellAttributes;
 public class ECMA48Screen extends Screen {
 
     /**
-     * We call terminal.cursor() so need the instance
+     * Emit debugging to stderr.
+     */
+    private boolean debugToStderr;
+
+    /**
+     * We call terminal.cursor() so need the instance.
      */
     private ECMA48Terminal terminal;
 
     /**
-     * Public constructor
+     * Public constructor.
      *
      * @param terminal ECMA48Terminal to use
      */
-    public ECMA48Screen(ECMA48Terminal terminal) {
-	this.terminal = terminal;
+    public ECMA48Screen(final ECMA48Terminal terminal) {
+        debugToStderr = false;
 
-	// Query the screen size
-	setDimensions(terminal.session.getWindowWidth(),
-	    terminal.session.getWindowHeight());
+        this.terminal = terminal;
+
+        // Query the screen size
+        setDimensions(terminal.getSessionInfo().getWindowWidth(),
+            terminal.getSessionInfo().getWindowHeight());
     }
 
     /**
-     * Perform a somewhat-optimal rendering of a line
+     * Perform a somewhat-optimal rendering of a line.
      *
      * @param y row coordinate.  0 is the top-most row.
      * @param sb StringBuilder to write escape sequences to
      * @param lastAttr cell attributes from the last call to flushLine
      */
-    private void flushLine(int y, StringBuilder sb, CellAttributes lastAttr) {
+    private void flushLine(final int y, final StringBuilder sb,
+        CellAttributes lastAttr) {
 
-	int lastX = -1;
-	int textEnd = 0;
-	for (int x = 0; x < width; x++) {
-	    Cell lCell = logical[x][y];
-	    if (!lCell.isBlank()) {
-		textEnd = x;
-	    }
-	}
-	// Push textEnd to first column beyond the text area
-	textEnd++;
+        int lastX = -1;
+        int textEnd = 0;
+        for (int x = 0; x < width; x++) {
+            Cell lCell = logical[x][y];
+            if (!lCell.isBlank()) {
+                textEnd = x;
+            }
+        }
+        // Push textEnd to first column beyond the text area
+        textEnd++;
 
-	// DEBUG
-	// reallyCleared = true;
+        // DEBUG
+        // reallyCleared = true;
 
-	for (int x = 0; x < width; x++) {
-	    Cell lCell = logical[x][y];
-	    Cell pCell = physical[x][y];
+        for (int x = 0; x < width; x++) {
+            Cell lCell = logical[x][y];
+            Cell pCell = physical[x][y];
 
-	    if ((lCell != pCell) || (reallyCleared == true)) {
+            if ((lCell != pCell) || reallyCleared) {
 
-		if (debugToStderr) {
-		    System.err.printf("\n--\n");
-		    System.err.printf(" Y: %d X: %d\n", y, x);
-		    System.err.printf("   lCell: %s\n", lCell);
-		    System.err.printf("   pCell: %s\n", pCell);
-		    System.err.printf("    ====    \n");
-		}
+                if (debugToStderr) {
+                    System.err.printf("\n--\n");
+                    System.err.printf(" Y: %d X: %d\n", y, x);
+                    System.err.printf("   lCell: %s\n", lCell);
+                    System.err.printf("   pCell: %s\n", pCell);
+                    System.err.printf("    ====    \n");
+                }
 
-		if (lastAttr == null) {
-		    lastAttr = new CellAttributes();
-		    sb.append(terminal.normal());
-		}
+                if (lastAttr == null) {
+                    lastAttr = new CellAttributes();
+                    sb.append(terminal.normal());
+                }
 
-		// Place the cell
-		if ((lastX != (x - 1)) || (lastX == -1)) {
-		    // Advancing at least one cell, or the first gotoXY
-		    sb.append(terminal.gotoXY(x, y));
-		}
+                // Place the cell
+                if ((lastX != (x - 1)) || (lastX == -1)) {
+                    // Advancing at least one cell, or the first gotoXY
+                    sb.append(terminal.gotoXY(x, y));
+                }
 
-		assert(lastAttr != null);
+                assert (lastAttr != null);
 
-		if ((x == textEnd) && (textEnd < width - 1)) {
-		    assert(lCell.isBlank());
+                if ((x == textEnd) && (textEnd < width - 1)) {
+                    assert (lCell.isBlank());
 
-		    for (int i = x; i < width; i++) {
-			assert(logical[i][y].isBlank());
-			// Physical is always updatesd
-			physical[i][y].reset();
-		    }
+                    for (int i = x; i < width; i++) {
+                        assert (logical[i][y].isBlank());
+                        // Physical is always updatesd
+                        physical[i][y].reset();
+                    }
 
-		    // Clear remaining line
-		    sb.append(terminal.clearRemainingLine());
-		    lastAttr.reset();
-		    return;
-		}
+                    // Clear remaining line
+                    sb.append(terminal.clearRemainingLine());
+                    lastAttr.reset();
+                    return;
+                }
 
-		// Now emit only the modified attributes
-		if ((lCell.foreColor != lastAttr.foreColor) &&
-		    (lCell.backColor != lastAttr.backColor) &&
-		    (lCell.bold == lastAttr.bold) &&
-		    (lCell.reverse == lastAttr.reverse) &&
-		    (lCell.underline == lastAttr.underline) &&
-		    (lCell.blink == lastAttr.blink)) {
+                // Now emit only the modified attributes
+                if ((lCell.getForeColor() != lastAttr.getForeColor())
+                    && (lCell.getBackColor() != lastAttr.getBackColor())
+                    && (lCell.getBold() == lastAttr.getBold())
+                    && (lCell.getReverse() == lastAttr.getReverse())
+                    && (lCell.getUnderline() == lastAttr.getUnderline())
+                    && (lCell.getBlink() == lastAttr.getBlink())
+                ) {
+                    // Both colors changed, attributes the same
+                    sb.append(terminal.color(lCell.getForeColor(),
+                            lCell.getBackColor()));
 
-		    // Both colors changed, attributes the same
-		    sb.append(terminal.color(lCell.foreColor,
-			    lCell.backColor));
+                    if (debugToStderr) {
+                        System.err.printf("1 Change only fore/back colors\n");
+                    }
+                } else if ((lCell.getForeColor() != lastAttr.getForeColor())
+                    && (lCell.getBackColor() != lastAttr.getBackColor())
+                    && (lCell.getBold() != lastAttr.getBold())
+                    && (lCell.getReverse() != lastAttr.getReverse())
+                    && (lCell.getUnderline() != lastAttr.getUnderline())
+                    && (lCell.getBlink() != lastAttr.getBlink())
+                ) {
+                    // Everything is different
+                    sb.append(terminal.color(lCell.getForeColor(),
+                            lCell.getBackColor(),
+                            lCell.getBold(), lCell.getReverse(),
+                            lCell.getBlink(),
+                            lCell.getUnderline()));
 
-		    if (debugToStderr) {
-			System.err.printf("1 Change only fore/back colors\n");
-		    }
-		} else if ((lCell.foreColor != lastAttr.foreColor) &&
-		    (lCell.backColor != lastAttr.backColor) &&
-		    (lCell.bold != lastAttr.bold) &&
-		    (lCell.reverse != lastAttr.reverse) &&
-		    (lCell.underline != lastAttr.underline) &&
-		    (lCell.blink != lastAttr.blink)) {
+                    if (debugToStderr) {
+                        System.err.printf("2 Set all attributes\n");
+                    }
+                } else if ((lCell.getForeColor() != lastAttr.getForeColor())
+                    && (lCell.getBackColor() == lastAttr.getBackColor())
+                    && (lCell.getBold() == lastAttr.getBold())
+                    && (lCell.getReverse() == lastAttr.getReverse())
+                    && (lCell.getUnderline() == lastAttr.getUnderline())
+                    && (lCell.getBlink() == lastAttr.getBlink())
+                ) {
 
-		    if (debugToStderr) {
-			System.err.printf("2 Set all attributes\n");
-		    }
+                    // Attributes same, foreColor different
+                    sb.append(terminal.color(lCell.getForeColor(), true));
 
-		    // Everything is different
-		    sb.append(terminal.color(lCell.foreColor,
-			    lCell.backColor,
-			    lCell.bold, lCell.reverse, lCell.blink,
-			    lCell.underline));
+                    if (debugToStderr) {
+                        System.err.printf("3 Change foreColor\n");
+                    }
+                } else if ((lCell.getForeColor() == lastAttr.getForeColor())
+                    && (lCell.getBackColor() != lastAttr.getBackColor())
+                    && (lCell.getBold() == lastAttr.getBold())
+                    && (lCell.getReverse() == lastAttr.getReverse())
+                    && (lCell.getUnderline() == lastAttr.getUnderline())
+                    && (lCell.getBlink() == lastAttr.getBlink())
+                ) {
+                    // Attributes same, backColor different
+                    sb.append(terminal.color(lCell.getBackColor(), false));
 
-		} else if ((lCell.foreColor != lastAttr.foreColor) &&
-		    (lCell.backColor == lastAttr.backColor) &&
-		    (lCell.bold == lastAttr.bold) &&
-		    (lCell.reverse == lastAttr.reverse) &&
-		    (lCell.underline == lastAttr.underline) &&
-		    (lCell.blink == lastAttr.blink)) {
+                    if (debugToStderr) {
+                        System.err.printf("4 Change backColor\n");
+                    }
+                } else if ((lCell.getForeColor() == lastAttr.getForeColor())
+                    && (lCell.getBackColor() == lastAttr.getBackColor())
+                    && (lCell.getBold() == lastAttr.getBold())
+                    && (lCell.getReverse() == lastAttr.getReverse())
+                    && (lCell.getUnderline() == lastAttr.getUnderline())
+                    && (lCell.getBlink() == lastAttr.getBlink())
+                ) {
 
-		    // Attributes same, foreColor different
-		    sb.append(terminal.color(lCell.foreColor, true));
+                    // All attributes the same, just print the char
+                    // NOP
 
-		    if (debugToStderr) {
-			System.err.printf("3 Change foreColor\n");
-		    }
+                    if (debugToStderr) {
+                        System.err.printf("5 Only emit character\n");
+                    }
+                } else {
+                    // Just reset everything again
+                    sb.append(terminal.color(lCell.getForeColor(),
+                            lCell.getBackColor(),
+                            lCell.getBold(),
+                            lCell.getReverse(),
+                            lCell.getBlink(),
+                            lCell.getUnderline()));
 
-		} else if ((lCell.foreColor == lastAttr.foreColor) &&
-		    (lCell.backColor != lastAttr.backColor) &&
-		    (lCell.bold == lastAttr.bold) &&
-		    (lCell.reverse == lastAttr.reverse) &&
-		    (lCell.underline == lastAttr.underline) &&
-		    (lCell.blink == lastAttr.blink)) {
+                    if (debugToStderr) {
+                        System.err.printf("6 Change all attributes\n");
+                    }
+                }
+                // Emit the character
+                sb.append(lCell.getChar());
 
-		    // Attributes same, backColor different
-		    sb.append(terminal.color(lCell.backColor, false));
+                // Save the last rendered cell
+                lastX = x;
+                lastAttr.setTo(lCell);
 
-		    if (debugToStderr) {
-			System.err.printf("4 Change backColor\n");
-		    }
+                // Physical is always updatesd
+                physical[x][y].setTo(lCell);
 
-		} else if ((lCell.foreColor == lastAttr.foreColor) &&
-		    (lCell.backColor == lastAttr.backColor) &&
-		    (lCell.bold == lastAttr.bold) &&
-		    (lCell.reverse == lastAttr.reverse) &&
-		    (lCell.underline == lastAttr.underline) &&
-		    (lCell.blink == lastAttr.blink)) {
+            } // if ((lCell != pCell) || (reallyCleared == true))
 
-		    // All attributes the same, just print the char
-		    // NOP
-
-		    if (debugToStderr) {
-			System.err.printf("5 Only emit character\n");
-		    }
-		} else {
-		    // Just reset everything again
-		    sb.append(terminal.color(lCell.foreColor, lCell.backColor,
-			    lCell.bold, lCell.reverse, lCell.blink,
-			    lCell.underline));
-
-		    if (debugToStderr) {
-			System.err.printf("6 Change all attributes\n");
-		    }
-		}
-		// Emit the character
-		sb.append(lCell.ch);
-
-		// Save the last rendered cell
-		lastX = x;
-		lastAttr.setTo(lCell);
-
-		// Physical is always updatesd
-		physical[x][y].setTo(lCell);
-
-	    } // if ((lCell != pCell) || (reallyCleared == true))
-
-	} // for (int x = 0; x < width; x++)
+        } // for (int x = 0; x < width; x++)
     }
 
     /**
@@ -229,31 +238,31 @@ public class ECMA48Screen extends Screen {
      * physical screen
      */
     public String flushString() {
-	if (dirty == false) {
-	    assert(reallyCleared == false);
-	    return "";
-	}
+        if (!dirty) {
+            assert (!reallyCleared);
+            return "";
+        }
 
-	CellAttributes attr = null;
+        CellAttributes attr = null;
 
-	StringBuilder sb = new StringBuilder();
-	if (reallyCleared == true) {
-	    attr = new CellAttributes();
-	    sb.append(terminal.clearAll());
-	}
+        StringBuilder sb = new StringBuilder();
+        if (reallyCleared) {
+            attr = new CellAttributes();
+            sb.append(terminal.clearAll());
+        }
 
-	for (int y = 0; y < height; y++) {
-	    flushLine(y, sb, attr);
-	}
+        for (int y = 0; y < height; y++) {
+            flushLine(y, sb, attr);
+        }
 
-	dirty = false;
-	reallyCleared = false;
+        dirty = false;
+        reallyCleared = false;
 
-	String result = sb.toString();
-	if (debugToStderr) {
-	    System.err.printf("flushString(): %s\n", result);
-	}
-	return result;
+        String result = sb.toString();
+        if (debugToStderr) {
+            System.err.printf("flushString(): %s\n", result);
+        }
+        return result;
     }
 
     /**
@@ -261,17 +270,17 @@ public class ECMA48Screen extends Screen {
      */
     @Override
     public void flushPhysical() {
-	String result = flushString();
-	if ((cursorVisible) &&
-	    (cursorY <= height - 1) &&
-	    (cursorX <= width - 1)
-	) {
-	    result += terminal.cursor(true);
-	    result += terminal.gotoXY(cursorX, cursorY);
-	} else {
-	    result += terminal.cursor(false);
-	}
-	terminal.getOutput().write(result);
-	terminal.flush();
+        String result = flushString();
+        if ((cursorVisible)
+            && (cursorY <= height - 1)
+            && (cursorX <= width - 1)
+        ) {
+            result += terminal.cursor(true);
+            result += terminal.gotoXY(cursorX, cursorY);
+        } else {
+            result += terminal.cursor(false);
+        }
+        terminal.getOutput().write(result);
+        terminal.flush();
     }
 }

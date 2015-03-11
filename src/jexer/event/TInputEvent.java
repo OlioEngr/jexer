@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,26 +24,38 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.event;
 
 import java.util.Date;
 
 /**
- * This is the parent class of all events received from the Terminal.
+ * This is the parent class of all events dispatched to the UI.
  */
-public class TInputEvent {
+public abstract class TInputEvent {
 
     /**
-     * Time at which event was generated
+     * Time at which event was generated.
      */
-    public Date timestamp;
+    private Date time;
 
     /**
-     * Public contructor
+     * Get time.
+     *
+     * @return the time that this event was generated
      */
-    public TInputEvent() {
-	// Save the current time
-	timestamp = new Date();
+    public final Date getTime() {
+        return time;
+    }
+
+    /**
+     * Protected contructor.
+     */
+    protected TInputEvent() {
+        // Save the current time
+        time = new Date();
     }
 }

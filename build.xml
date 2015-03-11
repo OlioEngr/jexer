@@ -90,7 +90,7 @@
 	</fileset>
 
 	<doctitle>
-	  <![CDATA[<h1>Test</h1>]]>
+	  <![CDATA[<h1>Jexer - Java Text User Interface Library</h1>]]>
 	</doctitle>
 	<bottom>
 	  <![CDATA[<i>Copyright &#169; 2015 Kevin Lamonte. Licensed LGPLv3+</i>]]>

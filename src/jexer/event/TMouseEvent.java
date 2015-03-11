@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.event;
 
@@ -37,97 +35,102 @@ package jexer.event;
  */
 public class TMouseEvent extends TInputEvent {
 
+    /**
+     * The type of event generated.
+     */
     public enum Type {
-	/**
-	 * Mouse motion.  X and Y will have screen coordinates.
-	 */
-	MOUSE_MOTION,
+        /**
+         * Mouse motion.  X and Y will have screen coordinates.
+         */
+        MOUSE_MOTION,
 
-	/**
-	 * Mouse button down.  X and Y will have screen coordinates.
-	 */
-	MOUSE_DOWN,
+        /**
+         * Mouse button down.  X and Y will have screen coordinates.
+         */
+        MOUSE_DOWN,
 
-	/**
-	 * Mouse button up.  X and Y will have screen coordinates.
-	 */
-	MOUSE_UP
+        /**
+         * Mouse button up.  X and Y will have screen coordinates.
+         */
+        MOUSE_UP
     }
 
     /**
      * Type of event, one of MOUSE_MOTION, MOUSE_UP, or MOUSE_DOWN, or
-     * KEYPRESS
+     * KEYPRESS.
      */
     public Type type;
 
     /**
-     * Mouse X - relative coordinates
+     * Mouse X - relative coordinates.
      */
     public int x;
 
     /**
-     * Mouse Y - relative coordinates
+     * Mouse Y - relative coordinates.
      */
     public int y;
 
     /**
-     * Mouse X - absolute screen coordinates
+     * Mouse X - absolute screen coordinates.
      */
     public int absoluteX;
 
     /**
-     * Mouse Y - absolute screen coordinate
+     * Mouse Y - absolute screen coordinate.
      */
     public int absoluteY;
 
     /**
-     * Mouse button 1 (left button)
+     * Mouse button 1 (left button).
      */
     public boolean mouse1;
 
     /**
-     * Mouse button 2 (right button)
+     * Mouse button 2 (right button).
      */
     public boolean mouse2;
 
     /**
-     * Mouse button 3 (middle button)
+     * Mouse button 3 (middle button).
      */
     public boolean mouse3;
 
     /**
-     * Mouse wheel UP (button 4)
+     * Mouse wheel UP (button 4).
      */
     public boolean mouseWheelUp;
 
     /**
-     * Mouse wheel DOWN (button 5)
+     * Mouse wheel DOWN (button 5).
      */
     public boolean mouseWheelDown;
 
     /**
-     * Public contructor
+     * Public contructor.
      *
      * @param type the type of event, MOUSE_MOTION, MOUSE_DOWN, or MOUSE_UP
      */
-    public TMouseEvent(Type type) {
-	this.type = type;
+    public TMouseEvent(final Type type) {
+        this.type = type;
     }
 
     /**
-     * Make human-readable description of this event
+     * Make human-readable description of this TMouseEvent.
+     *
+     * @return displayable String
      */
     @Override
-    public String toString() {
-	return String.format("Mouse: %s x %d y %d absoluteX %d absoluteY %d 1 %s 2 %s 3 %s DOWN %s UP %s",
-	    type,
-	    x, y,
-	    absoluteX, absoluteY,
-	    mouse1,
-	    mouse2,
-	    mouse3,
-	    mouseWheelUp,
-	    mouseWheelDown);
+    public final String toString() {
+        return String.format("Mouse: %s x %d y %d absoluteX %d absoluteY %d 1 %s 2 %s 3 %s DOWN %s UP %s",
+            type,
+            x, y,
+            absoluteX, absoluteY,
+            mouse1,
+            mouse2,
+            mouse3,
+            mouseWheelUp,
+            mouseWheelDown);
     }
 
 }

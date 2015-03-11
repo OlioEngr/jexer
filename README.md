@@ -60,21 +60,26 @@ version 1.0:
 0.0.1:
 
 - Base classes:
+  - TCommand use getters/setters
+  - TCommand.Type: switch to int so that subclasses can make more
+    kinds of commands
+  - TKeypress use getters/setters to make immutable
+  - TKeypressEvent use getters/setters to make immutable
+  - TMouseEvent use getters/setters to make immutable
+- Get a movable window on screen
   - TWidget
   - TWindow
-- package-info's
-- Incorporate checkstyle ant task
-  - Fix all noted issues except use of tabs
+  - TLabel
 
 0.0.2:
 
-- Get modal messagebox running without fibers (use two reader threads
-  with syncronization, don't bother with coroutines)
 - Port remaining d-tui functionality over
-  - All widgets
+  - All widgets except modal (e.g. messagebox/fileopen)
 
 0.0.3:
 
+- Get modal messagebox running without fibers (use two reader threads
+  with syncronization, don't bother with coroutines)
 - TEditor, fixup keyboard movement
 
 0.0.4:

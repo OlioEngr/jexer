@@ -1,16 +1,11 @@
 /**
  * Jexer - Java Text User Interface
  *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
- *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,6 +24,9 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
 package jexer.backend;
 
@@ -46,20 +44,38 @@ import jexer.session.SessionInfo;
 public abstract class Backend {
 
     /**
-     * The session information
+     * The session information.
      */
-    public SessionInfo session;
+    protected SessionInfo sessionInfo;
 
     /**
-     * The screen to draw on
+     * Getter for sessionInfo.
+     *
+     * @return the SessionInfo
      */
-    public Screen screen;
+    public final SessionInfo getSessionInfo() {
+        return sessionInfo;
+    }
+
+    /**
+     * The screen to draw on.
+     */
+    protected Screen screen;
+
+    /**
+     * Getter for screen.
+     *
+     * @return the Screen
+     */
+    public final Screen getScreen() {
+        return screen;
+    }
 
     /**
      * Subclasses must provide an implementation that syncs the logical
      * screen to the physical device.
      */
-    abstract public void flushScreen();
+    public abstract void flushScreen();
 
     /**
      * Subclasses must provide an implementation to get keyboard, mouse, and
@@ -69,13 +85,12 @@ public abstract class Backend {
      * @param timeout maximum amount of time (in millis) to wait for an
      * event.  0 means to return immediately, i.e. perform a poll.
      */
-    abstract public void getEvents(List<TInputEvent> queue, int timeout);
+    public abstract void getEvents(List<TInputEvent> queue, int timeout);
 
     /**
      * Subclasses must provide an implementation that closes sockets,
      * restores console, etc.
      */
-    abstract public void shutdown();
+    public abstract void shutdown();
 
 }
-

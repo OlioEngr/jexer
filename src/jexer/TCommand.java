@@ -38,106 +38,97 @@ package jexer;
 public class TCommand {
 
     /**
-     * The following types are predefined for the entire system.
-     *
-     * TODO: Switch this to int so that TCommand can be subclassed so that
-     * applications can add more.
+     * Immediately abort the application (e.g. remote side closed
+     * connection).
      */
-    public enum Type {
-        /**
-         * Immediately abort the application (e.g. remote side closed
-         * connection).
-         */
-        ABORT,
+    public static final int ABORT       = 1;
 
-        /**
-         * File open dialog.
-         */
-        OPEN,
+    /**
+     * File open dialog.
+     */
+    public static final int OPEN        = 2;
 
-        /**
-         * Exit application.
-         */
-        EXIT,
+    /**
+     * Exit application.
+     */
+    public static final int EXIT        = 3;
 
-        /**
-         * Spawn OS shell window.
-         */
-        SHELL,
+    /**
+     * Spawn OS shell window.
+     */
+    public static final int SHELL       = 4;
 
-        /**
-         * Cut selected text and copy to the clipboard.
-         */
-        CUT,
+    /**
+     * Cut selected text and copy to the clipboard.
+     */
+    public static final int CUT         = 5;
 
-        /**
-         * Copy selected text to clipboard.
-         */
-        COPY,
+    /**
+     * Copy selected text to clipboard.
+     */
+    public static final int COPY        = 6;
 
-        /**
-         * Paste from clipboard.
-         */
-        PASTE,
+    /**
+     * Paste from clipboard.
+     */
+    public static final int PASTE       = 7;
 
-        /**
-         * Clear selected text without copying it to the clipboard.
-         */
-        CLEAR,
+    /**
+     * Clear selected text without copying it to the clipboard.
+     */
+    public static final int CLEAR       = 8;
 
-        /**
-         * Tile windows.
-         */
-        TILE,
+    /**
+     * Tile windows.
+     */
+    public static final int TILE        = 9;
 
-        /**
-         * Cascade windows.
-         */
-        CASCADE,
+    /**
+     * Cascade windows.
+     */
+    public static final int CASCADE     = 10;
 
-        /**
-         * Close all windows.
-         */
-        CLOSE_ALL,
+    /**
+     * Close all windows.
+     */
+    public static final int CLOSE_ALL   = 11;
 
-        /**
-         * Move (move/resize) window.
-         */
-        WINDOW_MOVE,
+    /**
+     * Move (move/resize) window.
+     */
+    public static final int WINDOW_MOVE = 12;
 
-        /**
-         * Zoom (maximize/restore) window.
-         */
-        WINDOW_ZOOM,
+    /**
+     * Zoom (maximize/restore) window.
+     */
+    public static final int WINDOW_ZOOM = 13;
 
-        /**
-         * Next window (like Alt-TAB).
-         */
-        WINDOW_NEXT,
+    /**
+     * Next window (like Alt-TAB).
+     */
+    public static final int WINDOW_NEXT = 14;
 
-        /**
-         * Previous window (like Shift-Alt-TAB).
-         */
-        WINDOW_PREVIOUS,
+    /**
+     * Previous window (like Shift-Alt-TAB).
+     */
+    public static final int WINDOW_PREVIOUS = 15;
 
-        /**
-         * Close window.
-         */
-        WINDOW_CLOSE,
-
-    }
+    /**
+     * Close window.
+     */
+    public static final int WINDOW_CLOSE = 16;
 
     /**
      * Type of command, one of EXIT, CASCADE, etc.
      */
-    private Type type;
+    private int type;
 
     /**
-     * Public constructor.
+     * Protected constructor.  Subclasses can be used to define new commands.
      *
      * @param type the Type of command, one of EXIT, CASCADE, etc.
      */
-    public TCommand(final Type type) {
+    protected TCommand(final int type) {
         this.type = type;
     }
 
@@ -167,22 +158,22 @@ public class TCommand {
         return (type == that.type);
     }
 
-    public static final TCommand cmAbort      = new TCommand(TCommand.Type.ABORT);
-    public static final TCommand cmExit       = new TCommand(TCommand.Type.EXIT);
-    public static final TCommand cmQuit       = new TCommand(TCommand.Type.EXIT);
-    public static final TCommand cmOpen       = new TCommand(TCommand.Type.OPEN);
-    public static final TCommand cmShell      = new TCommand(TCommand.Type.SHELL);
-    public static final TCommand cmCut        = new TCommand(TCommand.Type.CUT);
-    public static final TCommand cmCopy       = new TCommand(TCommand.Type.COPY);
-    public static final TCommand cmPaste      = new TCommand(TCommand.Type.PASTE);
-    public static final TCommand cmClear      = new TCommand(TCommand.Type.CLEAR);
-    public static final TCommand cmTile       = new TCommand(TCommand.Type.TILE);
-    public static final TCommand cmCascade    = new TCommand(TCommand.Type.CASCADE);
-    public static final TCommand cmCloseAll   = new TCommand(TCommand.Type.CLOSE_ALL);
-    public static final TCommand cmWindowMove = new TCommand(TCommand.Type.WINDOW_MOVE);
-    public static final TCommand cmWindowZoom = new TCommand(TCommand.Type.WINDOW_ZOOM);
-    public static final TCommand cmWindowNext = new TCommand(TCommand.Type.WINDOW_NEXT);
-    public static final TCommand cmWindowPrevious = new TCommand(TCommand.Type.WINDOW_PREVIOUS);
-    public static final TCommand cmWindowClose = new TCommand(TCommand.Type.WINDOW_CLOSE);
+    public static final TCommand cmAbort      = new TCommand(ABORT);
+    public static final TCommand cmExit       = new TCommand(EXIT);
+    public static final TCommand cmQuit       = new TCommand(EXIT);
+    public static final TCommand cmOpen       = new TCommand(OPEN);
+    public static final TCommand cmShell      = new TCommand(SHELL);
+    public static final TCommand cmCut        = new TCommand(CUT);
+    public static final TCommand cmCopy       = new TCommand(COPY);
+    public static final TCommand cmPaste      = new TCommand(PASTE);
+    public static final TCommand cmClear      = new TCommand(CLEAR);
+    public static final TCommand cmTile       = new TCommand(TILE);
+    public static final TCommand cmCascade    = new TCommand(CASCADE);
+    public static final TCommand cmCloseAll   = new TCommand(CLOSE_ALL);
+    public static final TCommand cmWindowMove = new TCommand(WINDOW_MOVE);
+    public static final TCommand cmWindowZoom = new TCommand(WINDOW_ZOOM);
+    public static final TCommand cmWindowNext = new TCommand(WINDOW_NEXT);
+    public static final TCommand cmWindowPrevious = new TCommand(WINDOW_PREVIOUS);
+    public static final TCommand cmWindowClose = new TCommand(WINDOW_CLOSE);
 
 }

@@ -63,6 +63,30 @@ public final class TCommandEvent extends TInputEvent {
     }
 
     /**
+     * Comparison check.  All fields must match to return true.
+     *
+     * @param rhs another TCommandEvent or TCommand instance
+     * @return true if all fields are equal
+     */
+    @Override
+    public boolean equals(final Object rhs) {
+        if (!(rhs instanceof TCommandEvent)
+            && !(rhs instanceof TCommand)
+        ) {
+            return false;
+        }
+
+        if (rhs instanceof TCommandEvent) {
+            TCommandEvent that = (TCommandEvent) rhs;
+            return (cmd.equals(that.cmd)
+                && (getTime().equals(that.getTime())));
+        }
+
+        TCommand that = (TCommand) rhs;
+        return (cmd.equals(that));
+    }
+
+    /**
      * Make human-readable description of this TCommandEvent.
      *
      * @return displayable String

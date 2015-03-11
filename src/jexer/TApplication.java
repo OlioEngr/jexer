@@ -365,9 +365,9 @@ public class TApplication {
             // Peek at the mouse position
             if (event instanceof TMouseEvent) {
                 TMouseEvent mouse = (TMouseEvent) event;
-                if ((mouseX != mouse.x) || (mouseY != mouse.y)) {
-                    mouseX = mouse.x;
-                    mouseY = mouse.y;
+                if ((mouseX != mouse.getX()) || (mouseY != mouse.getY())) {
+                    mouseX = mouse.getX();
+                    mouseY = mouse.getY();
                     drawMouse();
                 }
             }

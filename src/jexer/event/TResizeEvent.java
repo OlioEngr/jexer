@@ -33,7 +33,7 @@ package jexer.event;
 /**
  * This class encapsulates a screen or window resize event.
  */
-public class TResizeEvent extends TInputEvent {
+public final class TResizeEvent extends TInputEvent {
 
     /**
      * Resize events can be generated for either a total screen resize or a
@@ -61,7 +61,7 @@ public class TResizeEvent extends TInputEvent {
      *
      * @return SCREEN or WIDGET
      */
-    public final Type getType() {
+    public Type getType() {
         return type;
     }
 
@@ -75,7 +75,7 @@ public class TResizeEvent extends TInputEvent {
      *
      * @return width
      */
-    public final int getWidth() {
+    public int getWidth() {
         return width;
     }
 
@@ -89,8 +89,8 @@ public class TResizeEvent extends TInputEvent {
      *
      * @return height
      */
-    public final int getHeight() {
-        return width;
+    public int getHeight() {
+        return height;
     }
 
     /**
@@ -112,7 +112,7 @@ public class TResizeEvent extends TInputEvent {
      * @return displayable String
      */
     @Override
-    public final String toString() {
+    public String toString() {
         return String.format("Resize: %s width = %d height = %d",
             type, width, height);
     }

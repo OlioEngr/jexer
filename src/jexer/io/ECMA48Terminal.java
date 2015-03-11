@@ -474,7 +474,7 @@ public class ECMA48Terminal implements Runnable {
             // Unknown modifier, bail out
             return null;
         }
-        
+
         switch (key) {
         case 1:
             return new TKeypressEvent(kbHome, alt, ctrl, shift);
@@ -530,97 +530,100 @@ public class ECMA48Terminal implements Runnable {
             y = windowResize.getHeight() - 1;
         }
 
-        TMouseEvent event = new TMouseEvent(TMouseEvent.Type.MOUSE_DOWN);
-        event.x = x;
-        event.y = y;
-        event.absoluteX = x;
-        event.absoluteY = y;
+        TMouseEvent.Type eventType = TMouseEvent.Type.MOUSE_DOWN;
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        boolean eventMouseWheelUp = false;
+        boolean eventMouseWheelDown = false;
 
         // System.err.printf("buttons: %04x\r\n", buttons);
 
         switch (buttons) {
         case 0:
-            event.mouse1 = true;
+            eventMouse1 = true;
             mouse1 = true;
             break;
         case 1:
-            event.mouse2 = true;
+            eventMouse2 = true;
             mouse2 = true;
             break;
         case 2:
-            event.mouse3 = true;
+            eventMouse3 = true;
             mouse3 = true;
             break;
         case 3:
             // Release or Move
             if (!mouse1 && !mouse2 && !mouse3) {
-                event.type = TMouseEvent.Type.MOUSE_MOTION;
+                eventType = TMouseEvent.Type.MOUSE_MOTION;
             } else {
-                event.type = TMouseEvent.Type.MOUSE_UP;
+                eventType = TMouseEvent.Type.MOUSE_UP;
             }
             if (mouse1) {
                 mouse1 = false;
-                event.mouse1 = true;
+                eventMouse1 = true;
             }
             if (mouse2) {
                 mouse2 = false;
-                event.mouse2 = true;
+                eventMouse2 = true;
             }
             if (mouse3) {
                 mouse3 = false;
-                event.mouse3 = true;
+                eventMouse3 = true;
             }
             break;
 
         case 32:
             // Dragging with mouse1 down
-            event.mouse1 = true;
+            eventMouse1 = true;
             mouse1 = true;
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
 
         case 33:
             // Dragging with mouse2 down
-            event.mouse2 = true;
+            eventMouse2 = true;
             mouse2 = true;
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
 
         case 34:
             // Dragging with mouse3 down
-            event.mouse3 = true;
+            eventMouse3 = true;
             mouse3 = true;
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
 
         case 96:
             // Dragging with mouse2 down after wheelUp
-            event.mouse2 = true;
+            eventMouse2 = true;
             mouse2 = true;
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
 
         case 97:
             // Dragging with mouse2 down after wheelDown
-            event.mouse2 = true;
+            eventMouse2 = true;
             mouse2 = true;
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
 
         case 64:
-            event.mouseWheelUp = true;
+            eventMouseWheelUp = true;
             break;
 
         case 65:
-            event.mouseWheelDown = true;
+            eventMouseWheelDown = true;
             break;
 
         default:
             // Unknown, just make it motion
-            event.type = TMouseEvent.Type.MOUSE_MOTION;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
             break;
         }
-        return event;
+        return new TMouseEvent(eventType, x, y, x, y,
+            eventMouse1, eventMouse2, eventMouse3,
+            eventMouseWheelUp, eventMouseWheelDown);
     }
 
     /**

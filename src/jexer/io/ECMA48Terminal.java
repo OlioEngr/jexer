@@ -194,6 +194,17 @@ public class ECMA48Terminal implements Runnable {
     }
 
     /**
+     * Check if there are events in the queue.
+     *
+     * @return if true, getEvents() has something to return to the backend
+     */
+    public boolean hasEvents() {
+	synchronized (eventQueue) {
+	    return (eventQueue.size() > 0);
+	}
+    }
+
+    /**
      * Call 'stty cooked' to set cooked mode.
      */
     private void sttyCooked() {
@@ -764,52 +775,59 @@ public class ECMA48Terminal implements Runnable {
     /**
      * Return any events in the IO queue.
      *
-     * @return list of new events (which may be empty)
+     * @param queue list to append new events to
      */
-    public List<TInputEvent> getEvents() {
-	List<TInputEvent> events = new LinkedList<TInputEvent>();
-
-	synchronized(this) {
+    public void getEvents(List<TInputEvent> queue) {
+	synchronized (eventQueue) {
 	    if (eventQueue.size() > 0) {
-		events.addAll(eventQueue);
+		queue.addAll(eventQueue);
 		eventQueue.clear();
 	    }
 	}
-
-	// TEST: drop a cmAbort
-	// events.add(new jexer.event.TCommandEvent(jexer.TCommand.cmAbort));
-	// events.add(new jexer.event.TKeypressEvent(kbAltX));
-
-	return events;
     }
 
     /**
-     * Parses the next character of input to see if an InputEvent is fully
-     * here.
+     * Return any events in the IO queue due to timeout.
      *
-     * @param ch Unicode code point
-     * @return list of new events (which may be empty)
+     * @param queue list to append new events to
      */
-    public List<TInputEvent> getEvents(char ch) {
-	return getEvents(ch, false);
+    public void getIdleEvents(List<TInputEvent> queue) {
+
+	// Check for new window size
+	session.queryWindowSize();
+	int newWidth = session.getWindowWidth();
+	int newHeight = session.getWindowHeight();
+	if ((newWidth != windowResize.width) ||
+	    (newHeight != windowResize.height)) {
+	    TResizeEvent event = new TResizeEvent(TResizeEvent.Type.Screen,
+		newWidth, newHeight);
+	    windowResize.width = newWidth;
+	    windowResize.height = newHeight;
+	    synchronized (eventQueue) {
+		eventQueue.add(event);
+	    }
+	}
+
+	synchronized (eventQueue) {
+	    if (eventQueue.size() > 0) {
+		queue.addAll(eventQueue);
+		eventQueue.clear();
+	    }
+	}
     }
 
     /**
      * Parses the next character of input to see if an InputEvent is
      * fully here.
      *
+     * @param events list to append new events to
      * @param ch Unicode code point
-     * @param noChar if true, ignore ch.  This is currently used to return a
-     * bare ESC and RESIZE events.
-     * @return list of new events (which may be empty)
      */
-    public List<TInputEvent> getEvents(char ch, boolean noChar) {
-	List<TInputEvent> events = new LinkedList<TInputEvent>();
+    private void processChar(List<TInputEvent> events, char ch) {
 
 	TKeypressEvent keypress;
 	Date now = new Date();
 
-	/*
 	// ESCDELAY type timeout
 	if (state == ParseState.ESCAPE) {
 	    long escDelay = now.getTime() - escapeTime;
@@ -818,23 +836,6 @@ public class ECMA48Terminal implements Runnable {
 		events.add(controlChar((char)0x1B));
 		reset();
 	    }
-	}
-	 */
-
-	if (noChar == true) {
-	    int newWidth = session.getWindowWidth();
-	    int newHeight = session.getWindowHeight();
-	    if ((newWidth != windowResize.width) ||
-		(newHeight != windowResize.height)) {
-		TResizeEvent event = new TResizeEvent(TResizeEvent.Type.Screen,
-		    newWidth, newHeight);
-		windowResize.width = newWidth;
-		windowResize.height = newHeight;
-		events.add(event);
-	    }
-
-	    // Nothing else to do, bail out
-	    return events;
 	}
 
 	// System.err.printf("state: %s ch %c\r\n", state, ch);
@@ -845,14 +846,14 @@ public class ECMA48Terminal implements Runnable {
 	    if (ch == 0x1B) {
 		state = ParseState.ESCAPE;
 		escapeTime = now.getTime();
-		return events;
+		return;
 	    }
 
 	    if (ch <= 0x1F) {
 		// Control character
 		events.add(controlChar(ch));
 		reset();
-		return events;
+		return;
 	    }
 
 	    if (ch >= 0x20) {
@@ -862,7 +863,7 @@ public class ECMA48Terminal implements Runnable {
 		keypress.key.ch = ch;
 		events.add(keypress);
 		reset();
-		return events;
+		return;
 	    }
 
 	    break;
@@ -874,19 +875,19 @@ public class ECMA48Terminal implements Runnable {
 		keypress.key.alt = true;
 		events.add(keypress);
 		reset();
-		return events;
+		return;
 	    }
 
 	    if (ch == 'O') {
 		// This will be one of the function keys
 		state = ParseState.ESCAPE_INTERMEDIATE;
-		return events;
+		return;
 	    }
 
 	    // '[' goes to CSI_ENTRY
 	    if (ch == '[') {
 		state = ParseState.CSI_ENTRY;
-		return events;
+		return;
 	    }
 
 	    // Everything else is assumed to be Alt-keystroke
@@ -899,7 +900,7 @@ public class ECMA48Terminal implements Runnable {
 	    }
 	    events.add(keypress);
 	    reset();
-	    return events;
+	    return;
 
 	case ESCAPE_INTERMEDIATE:
 	    if ((ch >= 'P') && (ch <= 'S')) {
@@ -924,25 +925,25 @@ public class ECMA48Terminal implements Runnable {
 		}
 		events.add(keypress);
 		reset();
-		return events;
+		return;
 	    }
 
 	    // Unknown keystroke, ignore
 	    reset();
-	    return events;
+	    return;
 
 	case CSI_ENTRY:
 	    // Numbers - parameter values
 	    if ((ch >= '0') && (ch <= '9')) {
 		params.set(paramI, params.get(paramI) + ch);
 		state = ParseState.CSI_PARAM;
-		return events;
+		return;
 	    }
 	    // Parameter separator
 	    if (ch == ';') {
 		paramI++;
 		params.set(paramI, "");
-		return events;
+		return;
 	    }
 
 	    if ((ch >= 0x30) && (ch <= 0x7E)) {
@@ -965,7 +966,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'B':
 		    // Down
 		    keypress = new TKeypressEvent();
@@ -984,7 +985,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'C':
 		    // Right
 		    keypress = new TKeypressEvent();
@@ -1003,7 +1004,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'D':
 		    // Left
 		    keypress = new TKeypressEvent();
@@ -1022,7 +1023,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'H':
 		    // Home
 		    keypress = new TKeypressEvent();
@@ -1030,7 +1031,7 @@ public class ECMA48Terminal implements Runnable {
 		    keypress.key.fnKey = TKeypress.HOME;
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'F':
 		    // End
 		    keypress = new TKeypressEvent();
@@ -1038,7 +1039,7 @@ public class ECMA48Terminal implements Runnable {
 		    keypress.key.fnKey = TKeypress.END;
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'Z':
 		    // CBT - Cursor backward X tab stops (default 1)
 		    keypress = new TKeypressEvent();
@@ -1046,11 +1047,11 @@ public class ECMA48Terminal implements Runnable {
 		    keypress.key.fnKey = TKeypress.BTAB;
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'M':
 		    // Mouse position
 		    state = ParseState.MOUSE;
-		    return events;
+		    return;
 		default:
 		    break;
 		}
@@ -1058,26 +1059,26 @@ public class ECMA48Terminal implements Runnable {
 
 	    // Unknown keystroke, ignore
 	    reset();
-	    return events;
+	    return;
 
 	case CSI_PARAM:
 	    // Numbers - parameter values
 	    if ((ch >= '0') && (ch <= '9')) {
 		params.set(paramI, params.get(paramI) + ch);
 		state = ParseState.CSI_PARAM;
-		return events;
+		return;
 	    }
 	    // Parameter separator
 	    if (ch == ';') {
 		paramI++;
 		params.set(paramI, "");
-		return events;
+		return;
 	    }
 
 	    if (ch == '~') {
 		events.add(csiFnKey());
 		reset();
-		return events;
+		return;
 	    }
 
 	    if ((ch >= 0x30) && (ch <= 0x7E)) {
@@ -1100,7 +1101,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'B':
 		    // Down
 		    keypress = new TKeypressEvent();
@@ -1119,7 +1120,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'C':
 		    // Right
 		    keypress = new TKeypressEvent();
@@ -1138,7 +1139,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		case 'D':
 		    // Left
 		    keypress = new TKeypressEvent();
@@ -1157,7 +1158,7 @@ public class ECMA48Terminal implements Runnable {
 		    }
 		    events.add(keypress);
 		    reset();
-		    return events;
+		    return;
 		default:
 		    break;
 		}
@@ -1165,7 +1166,7 @@ public class ECMA48Terminal implements Runnable {
 
 	    // Unknown keystroke, ignore
 	    reset();
-	    return events;
+	    return;
 
 	case MOUSE:
 	    params.set(0, params.get(paramI) + ch);
@@ -1174,14 +1175,14 @@ public class ECMA48Terminal implements Runnable {
 		events.add(parseMouse());
 		reset();
 	    }
-	    return events;
+	    return;
 
 	default:
 	    break;
 	}
 
 	// This "should" be impossible to reach
-	return events;
+	return;
     }
 
     /**
@@ -1589,6 +1590,7 @@ public class ECMA48Terminal implements Runnable {
 	// available() will often return > 1, so we need to read in chunks to
 	// stay caught up.
 	char [] readBuffer = new char[128];
+	List<TInputEvent> events = new LinkedList<TInputEvent>();
 
 	while ((done == false) && (stopReaderThread == false)) {
 	    try {
@@ -1609,15 +1611,18 @@ public class ECMA48Terminal implements Runnable {
 		    } else {
 			for (int i = 0; i < rc; i++) {
 			    int ch = readBuffer[i];
-
-			    // System.err.printf("** READ 0x%x '%c'", ch, ch);
-			    List<TInputEvent> events = getEvents((char)ch);
-			    synchronized (this) {
-				/*
-				System.err.printf("adding %d events\n",
-				    events.size());
-				 */
-				eventQueue.addAll(events);
+			    processChar(events, (char)ch);
+			    if (events.size() > 0) {
+				// Add to the queue for the backend thread to
+				// be able to obtain.
+				synchronized (eventQueue) {
+				    eventQueue.addAll(events);
+				}
+				// Now wake up the backend
+				synchronized (this) {
+				    this.notifyAll();
+				}
+				events.clear();
 			    }
 			}
 		    }

@@ -87,14 +87,39 @@ public class ECMA48Backend extends Backend {
     /**
      * Get keyboard, mouse, and screen resize events.
      *
+     * @param queue list to append new events to
      * @param timeout maximum amount of time (in millis) to wait for an
      * event.  0 means to return immediately, i.e. perform a poll.
-     * @return events received, or an empty list if the timeout was reached
-     * first
      */
     @Override
-    public List<TInputEvent> getEvents(int timeout) {
-	return terminal.getEvents();
+    public void getEvents(List<TInputEvent> queue, int timeout) {
+	if (timeout > 0) {
+	    // Try to sleep, let the terminal's input thread wake me up if
+	    // something came in.
+	    synchronized (terminal) {
+		try {
+		    terminal.wait(timeout);
+		    if (terminal.hasEvents()) {
+			// System.err.println("getEvents()");
+			terminal.getIdleEvents(queue);
+		    } else {
+			// If I got here, then I timed out.  Call
+			// terminal.getIdleEvents() to pick up stragglers
+			// like bare resize.
+			// System.err.println("getIdleEvents()");
+			terminal.getIdleEvents(queue);
+		    }
+		} catch (InterruptedException e) {
+		    // Spurious interrupt, pretend it was like a timeout.
+		    // System.err.println("[interrupt] getEvents()");
+		    terminal.getIdleEvents(queue);
+		}
+	    }
+	} else {
+	    // Asking for a poll, go get it.
+	    System.err.println("[polled] getEvents()");
+	    terminal.getEvents(queue);
+	}
     }
 
     /**

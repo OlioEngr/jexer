@@ -65,11 +65,11 @@ public abstract class Backend {
      * Subclasses must provide an implementation to get keyboard, mouse, and
      * screen resize events.
      *
+     * @param queue list to append new events to
      * @param timeout maximum amount of time (in millis) to wait for an
      * event.  0 means to return immediately, i.e. perform a poll.
-     * @return events received, or an empty list if the timeout was reached
      */
-    abstract public List<TInputEvent> getEvents(int timeout);
+    abstract public void getEvents(List<TInputEvent> queue, int timeout);
 
     /**
      * Subclasses must provide an implementation that closes sockets,

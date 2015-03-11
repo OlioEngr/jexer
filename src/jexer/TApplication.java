@@ -249,12 +249,12 @@ public class TApplication {
      * Run this application until it exits, using stdin and stdout
      */
     public final void run() {
-
+	List<TInputEvent> events = new LinkedList<TInputEvent>();
+	
 	while (quit == false) {
 	    // Timeout is in milliseconds, so default timeout after 1 second
 	    // of inactivity.
 	    int timeout = getSleepTime(1000);
-	    // std.stdio.stderr.writefln("poll() timeout: %d", timeout);
 
 	    if (eventQueue.size() > 0) {
 		// Do not wait if there are definitely events waiting to be
@@ -263,8 +263,9 @@ public class TApplication {
 	    }
 
 	    // Pull any pending input events
-	    List<TInputEvent> events = backend.getEvents(timeout);
+	    backend.getEvents(events, timeout);
 	    metaHandleEvents(events);
+	    events.clear();
 
 	    // Process timers and call doIdle()'s
 	    doIdle();
@@ -432,7 +433,8 @@ public class TApplication {
 	assert(sleepTime.total!("msecs")() >= 0);
 	return cast(uint)sleepTime.total!("msecs")();
 	 */
-	return 0;
+	// TODO: fix timers.  Until then, come back after 250 millis.
+	return 250;
     }
 
 }

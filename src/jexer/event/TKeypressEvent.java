@@ -35,18 +35,20 @@ import jexer.TKeypress;
 /**
  * This class encapsulates a keyboard input event.
  */
-public class TKeypressEvent extends TInputEvent {
+public final class TKeypressEvent extends TInputEvent {
 
     /**
      * Keystroke received.
      */
-    public TKeypress key;
+    private TKeypress key;
 
     /**
-     * Public contructor sets the key to the special kbNoKey.
+     * Get keystroke.
+     *
+     * @return keystroke
      */
-    public TKeypressEvent() {
-        key = TKeypress.kbNoKey;
+    public TKeypress getKey() {
+        return key;
     }
 
     /**
@@ -59,12 +61,67 @@ public class TKeypressEvent extends TInputEvent {
     }
 
     /**
+     * Public constructor.
+     *
+     * @param isKey is true, this is a function key
+     * @param fnKey the function key code (only valid if isKey is true)
+     * @param ch the character (only valid if fnKey is false)
+     * @param alt if true, ALT was pressed with this keystroke
+     * @param ctrl if true, CTRL was pressed with this keystroke
+     * @param shift if true, SHIFT was pressed with this keystroke
+     */
+    public TKeypressEvent(final boolean isKey, final int fnKey, final char ch,
+        final boolean alt, final boolean ctrl, final boolean shift) {
+
+        this.key = new TKeypress(isKey, fnKey, ch, alt, ctrl, shift);
+    }
+
+    /**
+     * Public constructor.
+     *
+     * @param key the TKeypress received
+     * @param alt if true, ALT was pressed with this keystroke
+     * @param ctrl if true, CTRL was pressed with this keystroke
+     * @param shift if true, SHIFT was pressed with this keystroke
+     */
+    public TKeypressEvent(final TKeypress key,
+        final boolean alt, final boolean ctrl, final boolean shift) {
+
+        this.key = new TKeypress(key.getIsKey(), key.getFnKey(), key.getCh(),
+            alt, ctrl, shift);
+    }
+
+    /**
+     * Comparison check.  All fields must match to return true.
+     *
+     * @param rhs another TKeypressEvent or TKeypress instance
+     * @return true if all fields are equal
+     */
+    @Override
+    public boolean equals(final Object rhs) {
+        if (!(rhs instanceof TKeypressEvent)
+            && !(rhs instanceof TKeypress)
+        ) {
+            return false;
+        }
+
+        if (rhs instanceof TKeypressEvent) {
+            TKeypressEvent that = (TKeypressEvent) rhs;
+            return (key.equals(that.key)
+                && (getTime().equals(that.getTime())));
+        }
+
+        TKeypress that = (TKeypress) rhs;
+        return (key.equals(that));
+    }
+
+    /**
      * Make human-readable description of this TKeypressEvent.
      *
      * @return displayable String
      */
     @Override
-    public final String toString() {
+    public String toString() {
         return String.format("Keypress: %s", key.toString());
     }
 }

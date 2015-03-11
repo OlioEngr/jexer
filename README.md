@@ -63,8 +63,6 @@ version 1.0:
   - TCommand use getters/setters
   - TCommand.Type: switch to int so that subclasses can make more
     kinds of commands
-  - TKeypress use getters/setters to make immutable
-  - TKeypressEvent use getters/setters to make immutable
   - TMouseEvent use getters/setters to make immutable
 - Get a movable window on screen
   - TWidget

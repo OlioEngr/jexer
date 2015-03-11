@@ -406,41 +406,34 @@ public class ECMA48Terminal implements Runnable {
      * etc.).
      *
      * @param ch Unicode code point
+     * @param alt if true, set alt on the TKeypress
      * @return one TKeypress event, either a control character (e.g. isKey ==
      * false, ch == 'A', ctrl == true), or a special key (e.g. isKey == true,
      * fnKey == ESC)
      */
-    private TKeypressEvent controlChar(final char ch) {
-        TKeypressEvent event = new TKeypressEvent();
-
+    private TKeypressEvent controlChar(final char ch, final boolean alt) {
         // System.err.printf("controlChar: %02x\n", ch);
 
         switch (ch) {
         case 0x0D:
             // Carriage return --> ENTER
-            event.key = kbEnter;
-            break;
+            return new TKeypressEvent(kbEnter, alt, false, false);
         case 0x0A:
             // Linefeed --> ENTER
-            event.key = kbEnter;
-            break;
+            return new TKeypressEvent(kbEnter, alt, false, false);
         case 0x1B:
             // ESC
-            event.key = kbEsc;
-            break;
+            return new TKeypressEvent(kbEsc, alt, false, false);
         case '\t':
             // TAB
-            event.key = kbTab;
-            break;
+            return new TKeypressEvent(kbTab, alt, false, false);
         default:
             // Make all other control characters come back as the alphabetic
             // character with the ctrl field set.  So SOH would be 'A' +
             // ctrl.
-            event.key = new TKeypress(false, 0, (char)(ch + 0x40),
-                false, true, false);
-            break;
+            return new TKeypressEvent(false, 0, (char)(ch + 0x40),
+                alt, true, false);
         }
-        return event;
     }
 
     /**
@@ -457,220 +450,64 @@ public class ECMA48Terminal implements Runnable {
         if (params.size() > 1) {
             modifier = Integer.parseInt(params.get(1));
         }
-        TKeypressEvent event = new TKeypressEvent();
+        boolean alt = false;
+        boolean ctrl = false;
+        boolean shift = false;
 
         switch (modifier) {
         case 0:
             // No modifier
-            switch (key) {
-            case 1:
-                event.key = kbHome;
-                break;
-            case 2:
-                event.key = kbIns;
-                break;
-            case 3:
-                event.key = kbDel;
-                break;
-            case 4:
-                event.key = kbEnd;
-                break;
-            case 5:
-                event.key = kbPgUp;
-                break;
-            case 6:
-                event.key = kbPgDn;
-                break;
-            case 15:
-                event.key = kbF5;
-                break;
-            case 17:
-                event.key = kbF6;
-                break;
-            case 18:
-                event.key = kbF7;
-                break;
-            case 19:
-                event.key = kbF8;
-                break;
-            case 20:
-                event.key = kbF9;
-                break;
-            case 21:
-                event.key = kbF10;
-                break;
-            case 23:
-                event.key = kbF11;
-                break;
-            case 24:
-                event.key = kbF12;
-                break;
-            default:
-                // Unknown
-                return null;
-            }
-
             break;
         case 2:
             // Shift
-            switch (key) {
-            case 1:
-                event.key = kbShiftHome;
-                break;
-            case 2:
-                event.key = kbShiftIns;
-                break;
-            case 3:
-                event.key = kbShiftDel;
-                break;
-            case 4:
-                event.key = kbShiftEnd;
-                break;
-            case 5:
-                event.key = kbShiftPgUp;
-                break;
-            case 6:
-                event.key = kbShiftPgDn;
-                break;
-            case 15:
-                event.key = kbShiftF5;
-                break;
-            case 17:
-                event.key = kbShiftF6;
-                break;
-            case 18:
-                event.key = kbShiftF7;
-                break;
-            case 19:
-                event.key = kbShiftF8;
-                break;
-            case 20:
-                event.key = kbShiftF9;
-                break;
-            case 21:
-                event.key = kbShiftF10;
-                break;
-            case 23:
-                event.key = kbShiftF11;
-                break;
-            case 24:
-                event.key = kbShiftF12;
-                break;
-            default:
-                // Unknown
-                return null;
-            }
+            shift = true;
             break;
-
         case 3:
             // Alt
-            switch (key) {
-            case 1:
-                event.key = kbAltHome;
-                break;
-            case 2:
-                event.key = kbAltIns;
-                break;
-            case 3:
-                event.key = kbAltDel;
-                break;
-            case 4:
-                event.key = kbAltEnd;
-                break;
-            case 5:
-                event.key = kbAltPgUp;
-                break;
-            case 6:
-                event.key = kbAltPgDn;
-                break;
-            case 15:
-                event.key = kbAltF5;
-                break;
-            case 17:
-                event.key = kbAltF6;
-                break;
-            case 18:
-                event.key = kbAltF7;
-                break;
-            case 19:
-                event.key = kbAltF8;
-                break;
-            case 20:
-                event.key = kbAltF9;
-                break;
-            case 21:
-                event.key = kbAltF10;
-                break;
-            case 23:
-                event.key = kbAltF11;
-                break;
-            case 24:
-                event.key = kbAltF12;
-                break;
-            default:
-                // Unknown
-                return null;
-            }
+            alt = true;
             break;
-
         case 5:
             // Ctrl
-            switch (key) {
-            case 1:
-                event.key = kbCtrlHome;
-                break;
-            case 2:
-                event.key = kbCtrlIns;
-                break;
-            case 3:
-                event.key = kbCtrlDel;
-                break;
-            case 4:
-                event.key = kbCtrlEnd;
-                break;
-            case 5:
-                event.key = kbCtrlPgUp;
-                break;
-            case 6:
-                event.key = kbCtrlPgDn;
-                break;
-            case 15:
-                event.key = kbCtrlF5;
-                break;
-            case 17:
-                event.key = kbCtrlF6;
-                break;
-            case 18:
-                event.key = kbCtrlF7;
-                break;
-            case 19:
-                event.key = kbCtrlF8;
-                break;
-            case 20:
-                event.key = kbCtrlF9;
-                break;
-            case 21:
-                event.key = kbCtrlF10;
-                break;
-            case 23:
-                event.key = kbCtrlF11;
-                break;
-            case 24:
-                event.key = kbCtrlF12;
-                break;
-            default:
-                // Unknown
-                return null;
-            }
+            ctrl = true;
             break;
-
+        default:
+            // Unknown modifier, bail out
+            return null;
+        }
+        
+        switch (key) {
+        case 1:
+            return new TKeypressEvent(kbHome, alt, ctrl, shift);
+        case 2:
+            return new TKeypressEvent(kbIns, alt, ctrl, shift);
+        case 3:
+            return new TKeypressEvent(kbDel, alt, ctrl, shift);
+        case 4:
+            return new TKeypressEvent(kbEnd, alt, ctrl, shift);
+        case 5:
+            return new TKeypressEvent(kbPgUp, alt, ctrl, shift);
+        case 6:
+            return new TKeypressEvent(kbPgDn, alt, ctrl, shift);
+        case 15:
+            return new TKeypressEvent(kbF5, alt, ctrl, shift);
+        case 17:
+            return new TKeypressEvent(kbF6, alt, ctrl, shift);
+        case 18:
+            return new TKeypressEvent(kbF7, alt, ctrl, shift);
+        case 19:
+            return new TKeypressEvent(kbF8, alt, ctrl, shift);
+        case 20:
+            return new TKeypressEvent(kbF9, alt, ctrl, shift);
+        case 21:
+            return new TKeypressEvent(kbF10, alt, ctrl, shift);
+        case 23:
+            return new TKeypressEvent(kbF11, alt, ctrl, shift);
+        case 24:
+            return new TKeypressEvent(kbF12, alt, ctrl, shift);
         default:
             // Unknown
             return null;
         }
-
-        // All OK, return a keypress
-        return event;
     }
 
     /**
@@ -840,18 +677,23 @@ public class ECMA48Terminal implements Runnable {
      */
     private void processChar(final List<TInputEvent> events, final char ch) {
 
-        TKeypressEvent keypress;
-        Date now = new Date();
-
         // ESCDELAY type timeout
+        Date now = new Date();
         if (state == ParseState.ESCAPE) {
             long escDelay = now.getTime() - escapeTime;
             if (escDelay > 250) {
                 // After 0.25 seconds, assume a true escape character
-                events.add(controlChar((char)0x1B));
+                events.add(controlChar((char)0x1B, false));
                 reset();
             }
         }
+
+        // TKeypress fields
+        boolean ctrl = false;
+        boolean alt = false;
+        boolean shift = false;
+        char keyCh = ch;
+        TKeypress key;
 
         // System.err.printf("state: %s ch %c\r\n", state, ch);
 
@@ -866,17 +708,15 @@ public class ECMA48Terminal implements Runnable {
 
             if (ch <= 0x1F) {
                 // Control character
-                events.add(controlChar(ch));
+                events.add(controlChar(ch, false));
                 reset();
                 return;
             }
 
             if (ch >= 0x20) {
                 // Normal character
-                keypress = new TKeypressEvent();
-                keypress.key.isKey = false;
-                keypress.key.ch = ch;
-                events.add(keypress);
+                events.add(new TKeypressEvent(false, 0, ch,
+                        false, false, false));
                 reset();
                 return;
             }
@@ -886,9 +726,7 @@ public class ECMA48Terminal implements Runnable {
         case ESCAPE:
             if (ch <= 0x1F) {
                 // ALT-Control character
-                keypress = controlChar(ch);
-                keypress.key.alt = true;
-                events.add(keypress);
+                events.add(controlChar(ch, true));
                 reset();
                 return;
             }
@@ -906,39 +744,33 @@ public class ECMA48Terminal implements Runnable {
             }
 
             // Everything else is assumed to be Alt-keystroke
-            keypress = new TKeypressEvent();
-            keypress.key.isKey = false;
-            keypress.key.ch = ch;
-            keypress.key.alt = true;
             if ((ch >= 'A') && (ch <= 'Z')) {
-                keypress.key.shift = true;
+                shift = true;
             }
-            events.add(keypress);
+            alt = true;
+            events.add(new TKeypressEvent(false, 0, ch, alt, ctrl, shift));
             reset();
             return;
 
         case ESCAPE_INTERMEDIATE:
             if ((ch >= 'P') && (ch <= 'S')) {
                 // Function key
-                keypress = new TKeypressEvent();
-                keypress.key.isKey = true;
                 switch (ch) {
                 case 'P':
-                    keypress.key.fnKey = TKeypress.F1;
+                    events.add(new TKeypressEvent(kbF1));
                     break;
                 case 'Q':
-                    keypress.key.fnKey = TKeypress.F2;
+                    events.add(new TKeypressEvent(kbF2));
                     break;
                 case 'R':
-                    keypress.key.fnKey = TKeypress.F3;
+                    events.add(new TKeypressEvent(kbF3));
                     break;
                 case 'S':
-                    keypress.key.fnKey = TKeypress.F4;
+                    events.add(new TKeypressEvent(kbF4));
                     break;
                 default:
                     break;
                 }
-                events.add(keypress);
                 reset();
                 return;
             }
@@ -965,102 +797,81 @@ public class ECMA48Terminal implements Runnable {
                 switch (ch) {
                 case 'A':
                     // Up
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.UP;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbUp, alt, ctrl, shift));
                     reset();
                     return;
                 case 'B':
                     // Down
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.DOWN;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbDown, alt, ctrl, shift));
                     reset();
                     return;
                 case 'C':
                     // Right
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.RIGHT;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbRight, alt, ctrl, shift));
                     reset();
                     return;
                 case 'D':
                     // Left
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.LEFT;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbLeft, alt, ctrl, shift));
                     reset();
                     return;
                 case 'H':
                     // Home
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.HOME;
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbHome));
                     reset();
                     return;
                 case 'F':
                     // End
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.END;
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbEnd));
                     reset();
                     return;
                 case 'Z':
                     // CBT - Cursor backward X tab stops (default 1)
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.BTAB;
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbBackTab));
                     reset();
                     return;
                 case 'M':
@@ -1100,78 +911,66 @@ public class ECMA48Terminal implements Runnable {
                 switch (ch) {
                 case 'A':
                     // Up
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.UP;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbUp, alt, ctrl, shift));
                     reset();
                     return;
                 case 'B':
                     // Down
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.DOWN;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbDown, alt, ctrl, shift));
                     reset();
                     return;
                 case 'C':
                     // Right
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.RIGHT;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbRight, alt, ctrl, shift));
                     reset();
                     return;
                 case 'D':
                     // Left
-                    keypress = new TKeypressEvent();
-                    keypress.key.isKey = true;
-                    keypress.key.fnKey = TKeypress.LEFT;
                     if (params.size() > 1) {
                         if (params.get(1).equals("2")) {
-                            keypress.key.shift = true;
+                            shift = true;
                         }
                         if (params.get(1).equals("5")) {
-                            keypress.key.ctrl = true;
+                            ctrl = true;
                         }
                         if (params.get(1).equals("3")) {
-                            keypress.key.alt = true;
+                            alt = true;
                         }
                     }
-                    events.add(keypress);
+                    events.add(new TKeypressEvent(kbLeft, alt, ctrl, shift));
                     reset();
                     return;
                 default:

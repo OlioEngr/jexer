@@ -332,7 +332,7 @@ public class TApplication {
             // DEBUG
             if (event instanceof TKeypressEvent) {
                 TKeypressEvent keypress = (TKeypressEvent) event;
-                if (keypress.key.equals(kbAltX)) {
+                if (keypress.equals(kbAltX)) {
                     quit = true;
                     return;
                 }

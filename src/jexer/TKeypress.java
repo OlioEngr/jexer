@@ -33,7 +33,7 @@ package jexer;
 /**
  * This class represents keystrokes.
  */
-public class TKeypress {
+public final class TKeypress {
 
     // Various special keystrokes
 
@@ -175,35 +175,89 @@ public class TKeypress {
     /**
      * If true, ch is meaningless, use fnKey instead.
      */
-    public boolean isKey;
+    private boolean isKey;
+
+    /**
+     * Getter for isKey.
+     *
+     * @return if true, ch is meaningless, use fnKey instead
+     */
+    public boolean getIsKey() {
+        return isKey;
+    }
 
     /**
      * Will be set to F1, F2, HOME, END, etc. if isKey is true.
      */
-    public int fnKey;
+    private int fnKey;
+
+    /**
+     * Getter for fnKey.
+     *
+     * @return fnKey value (only valid is isKey is true)
+     */
+    public int getFnKey() {
+        return fnKey;
+    }
 
     /**
      * Keystroke modifier ALT.
      */
-    public boolean alt;
+    private boolean alt;
+
+    /**
+     * Getter for ALT.
+     *
+     * @return alt value
+     */
+    public boolean getAlt() {
+        return alt;
+    }
 
     /**
      * Keystroke modifier CTRL.
      */
-    public boolean ctrl;
+    private boolean ctrl;
+
+    /**
+     * Getter for CTRL.
+     *
+     * @return ctrl value
+     */
+    public boolean getCtrl() {
+        return ctrl;
+    }
 
     /**
      * Keystroke modifier SHIFT.
      */
-    public boolean shift;
+    private boolean shift;
+
+    /**
+     * Getter for SHIFT.
+     *
+     * @return shift value
+     */
+    public boolean getShift() {
+        return shift;
+    }
 
     /**
      * The character received.
      */
-    public char ch;
+    private char ch;
 
     /**
-     * Convenience constructor for the pre-defined instances.
+     * Getter for character.
+     *
+     * @return the character (only valid if isKey is false)
+     */
+    public char getCh() {
+        return ch;
+    }
+
+    /**
+     * Public constructor makes an immutable instance.
      *
      * @param isKey is true, this is a function key
      * @param fnKey the function key code (only valid if isKey is true)
@@ -230,7 +284,7 @@ public class TKeypress {
      * @return true if all fields are equal
      */
     @Override
-    public final boolean equals(Object rhs) {
+    public boolean equals(final Object rhs) {
         if (!(rhs instanceof TKeypress)) {
             return false;
         }
@@ -250,7 +304,7 @@ public class TKeypress {
      * @return displayable String
      */
     @Override
-    public final String toString() {
+    public String toString() {
         if (isKey) {
             switch (fnKey) {
             case F1:

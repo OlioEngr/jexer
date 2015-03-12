@@ -36,7 +36,7 @@ package jexer.bits;
  * characters, e.g. "&File && Stuff" would be "File & Stuff" with the first
  * 'F' highlighted.
  */
-public class MnemonicString {
+public final class MnemonicString {
 
     /**
      * Keyboard shortcut to activate this item.
@@ -49,10 +49,28 @@ public class MnemonicString {
     private int shortcutIdx = -1;
 
     /**
+     * Get location of the highlighted character.
+     *
+     * @return location of the highlighted character
+     */
+    public int getShortcutIdx() {
+        return shortcutIdx;
+    }
+
+    /**
      * The raw (uncolored) string.
      */
     private String rawLabel;
 
+    /**
+     * Get the raw (uncolored) string.
+     *
+     * @return the raw (uncolored) string
+     */
+    public String getRawLabel() {
+        return rawLabel;
+    }
+    
     /**
      * Public constructor.
      *

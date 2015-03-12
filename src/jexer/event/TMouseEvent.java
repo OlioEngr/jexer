@@ -31,7 +31,9 @@
 package jexer.event;
 
 /**
- * This class encapsulates several kinds of mouse input events.
+ * This class encapsulates several kinds of mouse input events.  Note that
+ * the relative (x,y) ARE MUTABLE: TWidget's onMouse() handlers perform that
+ * update during event dispatching.
  */
 public final class TMouseEvent extends TInputEvent {
 
@@ -85,6 +87,18 @@ public final class TMouseEvent extends TInputEvent {
     }
 
     /**
+     * Set x.
+     *
+     * @param x new relative X value
+     * @see jexer.TWidget#onMouseDown(TMouseEvent mouse)
+     * @see jexer.TWidget#onMouseDown(TMouseEvent mouse)
+     * @see jexer.TWidget#onMouseMotion(TMouseEvent mouse)
+     */
+    public void setX(final int x) {
+        this.x = x;
+    }
+
+    /**
      * Mouse Y - relative coordinates.
      */
     private int y;
@@ -96,6 +110,18 @@ public final class TMouseEvent extends TInputEvent {
      */
     public int getY() {
         return y;
+    }
+
+    /**
+     * Set y.
+     *
+     * @param y new relative Y value
+     * @see jexer.TWidget#onMouseDown(TMouseEvent mouse)
+     * @see jexer.TWidget#onMouseDown(TMouseEvent mouse)
+     * @see jexer.TWidget#onMouseMotion(TMouseEvent mouse)
+     */
+    public void setY(final int y) {
+        this.y = y;
     }
 
     /**

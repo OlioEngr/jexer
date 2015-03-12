@@ -53,32 +53,122 @@ public abstract class Screen {
     /**
      * Drawing offset for x.
      */
-    public int offsetX;
+    protected int offsetX;
+
+    /**
+     * Set drawing offset for x.
+     *
+     * @param offsetX new drawing offset
+     */
+    public final void setOffsetX(final int offsetX) {
+        this.offsetX = offsetX;
+    }
 
     /**
      * Drawing offset for y.
      */
-    public int offsetY;
+    protected int offsetY;
 
+    /**
+     * Set drawing offset for y.
+     *
+     * @param offsetY new drawing offset
+     */
+    public final void setOffsetY(final int offsetY) {
+        this.offsetY = offsetY;
+    }
+    
     /**
      * Ignore anything drawn right of clipRight.
      */
-    public int clipRight;
+    protected int clipRight;
+
+    /**
+     * Get right drawing clipping boundary.
+     *
+     * @return drawing boundary
+     */
+    public final int getClipRight() {
+        return clipRight;
+    }
+
+    /**
+     * Set right drawing clipping boundary.
+     *
+     * @param clipRight new boundary
+     */
+    public final void setClipRight(final int clipRight) {
+        this.clipRight = clipRight;
+    }
 
     /**
      * Ignore anything drawn below clipBottom.
      */
-    public int clipBottom;
+    protected int clipBottom;
+
+    /**
+     * Get bottom drawing clipping boundary.
+     *
+     * @return drawing boundary
+     */
+    public final int getClipBottom() {
+        return clipBottom;
+    }
+
+    /**
+     * Set bottom drawing clipping boundary.
+     *
+     * @param clipBottom new boundary
+     */
+    public final void setClipBottom(final int clipBottom) {
+        this.clipBottom = clipBottom;
+    }
 
     /**
      * Ignore anything drawn left of clipLeft.
      */
-    public int clipLeft;
+    protected int clipLeft;
+
+    /**
+     * Get left drawing clipping boundary.
+     *
+     * @return drawing boundary
+     */
+    public final int getClipLeft() {
+        return clipLeft;
+    }
+
+    /**
+     * Set left drawing clipping boundary.
+     *
+     * @param clipLeft new boundary
+     */
+    public final void setClipLeft(final int clipLeft) {
+        this.clipLeft = clipLeft;
+    }
 
     /**
      * Ignore anything drawn above clipTop.
      */
-    public int clipTop;
+    protected int clipTop;
+
+    /**
+     * Get top drawing clipping boundary.
+     *
+     * @return drawing boundary
+     */
+    public final int getClipTop() {
+        return clipTop;
+    }
+
+    /**
+     * Set top drawing clipping boundary.
+     *
+     * @param clipTop new boundary
+     */
+    public final void setClipTop(final int clipTop) {
+        this.clipTop = clipTop;
+    }
 
     /**
      * The physical screen last sent out on flush().
@@ -93,7 +183,7 @@ public abstract class Screen {
     /**
      * When true, logical != physical.
      */
-    public boolean dirty;
+    protected boolean dirty;
 
     /**
      * Set if the user explicitly wants to redraw everything starting with a

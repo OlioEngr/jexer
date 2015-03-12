@@ -46,6 +46,7 @@ import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.backend.Backend;
 import jexer.backend.ECMA48Backend;
+import jexer.io.Screen;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 
@@ -58,6 +59,15 @@ public class TApplication {
      * Access to the physical screen, keyboard, and mouse.
      */
     private Backend backend;
+
+    /**
+     * Get the Screen.
+     *
+     * @return the Screen
+     */
+    public final Screen getScreen() {
+        return backend.getScreen();
+    }
 
     /**
      * Actual mouse coordinate X.
@@ -91,29 +101,54 @@ public class TApplication {
     /**
      * When true, exit the application.
      */
-    public boolean quit = false;
+    private boolean quit = false;
 
     /**
      * When true, repaint the entire screen.
      */
-    public boolean repaint = true;
+    private boolean repaint = true;
+
+    /**
+     * Request full repaint on next screen refresh.
+     */
+    public void setRepaint() {
+        repaint = true;
+    }
 
     /**
      * When true, just flush updates from the screen.
      */
-    public boolean flush = false;
+    private boolean flush = false;
 
     /**
      * Y coordinate of the top edge of the desktop.  For now this is a
      * constant.  Someday it would be nice to have a multi-line menu or
      * toolbars.
      */
-    public static final int desktopTop = 1;
+    private static final int desktopTop = 1;
+
+    /**
+     * Get Y coordinate of the top edge of the desktop.
+     *
+     * @return Y coordinate of the top edge of the desktop
+     */
+    public final int getDesktopTop() {
+        return desktopTop;
+    }
 
     /**
      * Y coordinate of the bottom edge of the desktop.
      */
-    public int desktopBottom;
+    private int desktopBottom;
+
+    /**
+     * Get Y coordinate of the bottom edge of the desktop.
+     *
+     * @return Y coordinate of the bottom edge of the desktop
+     */
+    public final int getDesktopBottom() {
+        return desktopBottom;
+    }
 
     /**
      * Public constructor.
@@ -449,5 +484,137 @@ public class TApplication {
         // TODO: fix timers.  Until then, come back after 250 millis.
         return 250;
     }
+
+    /**
+     * Close window.  Note that the window's destructor is NOT called by this
+     * method, instead the GC is assumed to do the cleanup.
+     *
+     * @param window the window to remove
+     */
+    public final void closeWindow(final TWindow window) {
+        /*
+         TODO
+
+        uint z = window.z;
+        window.z = -1;
+        windows.sort;
+        windows = windows[1 .. $];
+        TWindow activeWindow = null;
+        foreach (w; windows) {
+            if (w.z > z) {
+                w.z--;
+                if (w.z == 0) {
+                    w.active = true;
+                    assert(activeWindow is null);
+                    activeWindow = w;
+                } else {
+                    w.active = false;
+                }
+            }
+        }
+
+        // Perform window cleanup
+        window.onClose();
+
+        // Refresh screen
+        repaint = true;
+
+        // Check if we are closing a TMessageBox or similar
+        if (secondaryEventReceiver !is null) {
+            assert(secondaryEventFiber !is null);
+
+            // Do not send events to the secondaryEventReceiver anymore, the
+            // window is closed.
+            secondaryEventReceiver = null;
+
+            // Special case: if this is called while executing on a
+            // secondaryEventFiber, call it so that widgetEventHandler() can
+            // terminate.
+            if (secondaryEventFiber.state == Fiber.State.HOLD) {
+                secondaryEventFiber.call();
+            }
+            secondaryEventFiber = null;
+
+            // Unfreeze the logic in handleEvent()
+            if (primaryEventFiber.state == Fiber.State.HOLD) {
+                primaryEventFiber.call();
+            }
+        }
+         */
+    }
+
+    /**
+     * Switch to the next window.
+     *
+     * @param forward if true, then switch to the next window in the list,
+     * otherwise switch to the previous window in the list
+     */
+    public final void switchWindow(final boolean forward) {
+        /*
+         TODO
+
+        // Only switch if there are multiple windows
+        if (windows.length < 2) {
+            return;
+        }
+
+        // Swap z/active between active window and the next in the
+        // list
+        ptrdiff_t activeWindowI = -1;
+        for (auto i = 0; i < windows.length; i++) {
+            if (windows[i].active) {
+                activeWindowI = i;
+                break;
+            }
+        }
+        assert(activeWindowI >= 0);
+
+        // Do not switch if a window is modal
+        if (windows[activeWindowI].isModal()) {
+            return;
+        }
+
+        size_t nextWindowI;
+        if (forward) {
+            nextWindowI = (activeWindowI + 1) % windows.length;
+        } else {
+            if (activeWindowI == 0) {
+                nextWindowI = windows.length - 1;
+            } else {
+                nextWindowI = activeWindowI - 1;
+            }
+        }
+        windows[activeWindowI].active = false;
+        windows[activeWindowI].z = windows[nextWindowI].z;
+        windows[nextWindowI].z = 0;
+        windows[nextWindowI].active = true;
+
+        // Refresh
+        repaint = true;
+        */
+    }
+
+    /**
+     * Add a window to my window list and make it active.
+     *
+     * @param window new window to add
+     */
+    public final void addWindow(final TWindow window) {
+        /*
+         TODO
+        // Do not allow a modal window to spawn a non-modal window
+        if ((windows.length > 0) && (windows[0].isModal())) {
+            assert(window.isModal());
+        }
+        foreach (w; windows) {
+            w.active = false;
+            w.z++;
+        }
+        windows ~= window;
+        window.active = true;
+        window.z = 0;
+         */
+    }
+
 
 }

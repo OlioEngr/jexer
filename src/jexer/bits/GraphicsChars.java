@@ -45,7 +45,7 @@ public final class GraphicsChars {
     /**
      * The CP437 to Unicode translation map.
      */
-    private static final char [] CP437 = {
+    public static final char [] CP437 = {
         '\u2007', '\u263A', '\u263B', '\u2665',
         '\u2666', '\u2663', '\u2660', '\u2022',
         '\u25D8', '\u25CB', '\u25D9', '\u2642',

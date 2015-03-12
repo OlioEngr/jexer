@@ -41,6 +41,9 @@ TARGET_DIR = classes
 JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/TCommand.java \
 	$(SRC_DIR)/jexer/TKeypress.java \
+	$(SRC_DIR)/jexer/THScroller.java \
+	$(SRC_DIR)/jexer/TVScroller.java \
+	$(SRC_DIR)/jexer/TWidget.java \
 	$(SRC_DIR)/jexer/bits/GraphicsChars.java \
 	$(SRC_DIR)/jexer/bits/Color.java \
 	$(SRC_DIR)/jexer/bits/CellAttributes.java \
@@ -65,6 +68,9 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/TCommand.class \
 	$(TARGET_DIR)/jexer/TKeypress.class \
+	$(TARGET_DIR)/jexer/THScroller.class \
+	$(TARGET_DIR)/jexer/TVScroller.class \
+	$(TARGET_DIR)/jexer/TWidget.class \
 	$(TARGET_DIR)/jexer/bits/GraphicsChars.class \
 	$(TARGET_DIR)/jexer/bits/Color.class \
 	$(TARGET_DIR)/jexer/bits/CellAttributes.class \

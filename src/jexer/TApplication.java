@@ -33,6 +33,7 @@ package jexer;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -97,6 +98,11 @@ public class TApplication {
     public final ColorTheme getTheme() {
         return theme;
     }
+
+    /**
+     * The top-level windows (but not menus).
+     */
+    List<TWindow> windows;
 
     /**
      * When true, exit the application.
@@ -168,28 +174,24 @@ public class TApplication {
 
         backend       = new ECMA48Backend(input, output);
         theme         = new ColorTheme();
-        desktopBottom = backend.getScreen().getHeight() - 1;
+        desktopBottom = getScreen().getHeight() - 1;
         eventQueue    = new LinkedList<TInputEvent>();
+        windows       = new LinkedList<TWindow>();
     }
 
     /**
      * Invert the cell at the mouse pointer position.
      */
     private void drawMouse() {
-        CellAttributes attr = backend.getScreen().getAttrXY(mouseX, mouseY);
+        CellAttributes attr = getScreen().getAttrXY(mouseX, mouseY);
         attr.setForeColor(attr.getForeColor().invert());
         attr.setBackColor(attr.getBackColor().invert());
-        backend.getScreen().putAttrXY(mouseX, mouseY, attr, false);
+        getScreen().putAttrXY(mouseX, mouseY, attr, false);
         flush = true;
 
-        /*
-        if (windows.length == 0) {
+        if (windows.size() == 0) {
             repaint = true;
         }
-         */
-        // TODO: remove this repaint after the above if (windows.length == 0)
-        // can be used again.
-        repaint = true;
     }
 
     /**
@@ -210,31 +212,32 @@ public class TApplication {
         boolean cursor = false;
 
         // Start with a clean screen
-        backend.getScreen().clear();
+        getScreen().clear();
 
         // Draw the background
         CellAttributes background = theme.getColor("tapplication.background");
-        backend.getScreen().putAll(GraphicsChars.HATCH, background);
+        getScreen().putAll(GraphicsChars.HATCH, background);
 
-        /*
         // Draw each window in reverse Z order
-        TWindow [] sorted = windows.dup;
-        sorted.sort.reverse;
-        foreach (w; sorted) {
-            w.drawChildren();
+        List<TWindow> sorted = new LinkedList<TWindow>(windows);
+        Collections.sort(sorted);
+        Collections.reverse(sorted);
+        for (TWindow window: sorted) {
+            window.drawChildren();
         }
 
+        /*
         // Draw the blank menubar line - reset the screen clipping first so
         // it won't trim it out.
-        backend.getScreen().resetClipping();
-        backend.getScreen().hLineXY(0, 0, backend.getScreen().getWidth(), ' ',
+        getScreen().resetClipping();
+        getScreen().hLineXY(0, 0, getScreen().getWidth(), ' ',
             theme.getColor("tmenu"));
         // Now draw the menus.
         int x = 1;
-        foreach (m; menus) {
+        for (TMenu m: menus) {
             CellAttributes menuColor;
             CellAttributes menuMnemonicColor;
-            if (m.active) {
+            if (menu.active) {
                 menuColor = theme.getColor("tmenu.highlighted");
                 menuMnemonicColor = theme.getColor("tmenu.mnemonic.highlighted");
             } else {
@@ -242,38 +245,37 @@ public class TApplication {
                 menuMnemonicColor = theme.getColor("tmenu.mnemonic");
             }
             // Draw the menu title
-            backend.getScreen().hLineXY(x, 0, cast(int)m.title.length + 2, ' ',
+            getScreen().hLineXY(x, 0, menu.title.length() + 2, ' ',
                 menuColor);
-            backend.getScreen().putStrXY(x + 1, 0, m.title, menuColor);
+            getScreen().putStrXY(x + 1, 0, menu.title, menuColor);
             // Draw the highlight character
-            backend.getScreen().putCharXY(x + 1 + m.mnemonic.shortcutIdx, 0,
+            getScreen().putCharXY(x + 1 + m.mnemonic.shortcutIdx, 0,
                 m.mnemonic.shortcut, menuMnemonicColor);
 
-            if (m.active) {
-                m.drawChildren();
+            if (menu.active) {
+                menu.drawChildren();
                 // Reset the screen clipping so we can draw the next title.
-                backend.getScreen().resetClipping();
+                getScreen().resetClipping();
             }
-            x += m.title.length + 2;
+            x += menu.title.length + 2;
         }
 
-        foreach (m; subMenus) {
+        for (TMenu menu: subMenus) {
             // Reset the screen clipping so we can draw the next sub-menu.
-            backend.getScreen().resetClipping();
-            m.drawChildren();
+            getScreen().resetClipping();
+            menu.drawChildren();
         }
-         */
+        */
 
         // Draw the mouse pointer
         drawMouse();
 
-        /*
         // Place the cursor if it is visible
         TWidget activeWidget = null;
-        if (sorted.length > 0) {
-            activeWidget = sorted[$ - 1].getActiveChild();
-            if (activeWidget.hasCursor) {
-                backend.getScreen().putCursor(true, activeWidget.getCursorAbsoluteX(),
+        if (sorted.size() > 0) {
+            activeWidget = sorted.get(sorted.size() - 1).getActiveChild();
+            if (activeWidget.visibleCursor()) {
+                getScreen().putCursor(true, activeWidget.getCursorAbsoluteX(),
                     activeWidget.getCursorAbsoluteY());
                 cursor = true;
             }
@@ -281,9 +283,8 @@ public class TApplication {
 
         // Kill the cursor
         if (cursor == false) {
-            backend.getScreen().hideCursor();
+            getScreen().hideCursor();
         }
-         */
 
         // Flush the screen contents
         backend.flushScreen();
@@ -388,9 +389,9 @@ public class TApplication {
             // Screen resize
             if (event instanceof TResizeEvent) {
                 TResizeEvent resize = (TResizeEvent) event;
-                backend.getScreen().setDimensions(resize.getWidth(),
+                getScreen().setDimensions(resize.getWidth(),
                     resize.getHeight());
-                desktopBottom = backend.getScreen().getHeight() - 1;
+                desktopBottom = getScreen().getHeight() - 1;
                 repaint = true;
                 mouseX = 0;
                 mouseY = 0;
@@ -407,6 +408,9 @@ public class TApplication {
                 }
             }
 
+            // TODO: change to two separate threads
+            handleEvent(event);
+            
             /*
 
             // Put into the main queue
@@ -432,10 +436,114 @@ public class TApplication {
     }
 
     /**
+     * Dispatch one event to the appropriate widget or application-level
+     * event handler.
+     *
+     * @param event the input event to consume
+     */
+    private final void handleEvent(TInputEvent event) {
+
+        /*
+	// std.stdio.stderr.writefln("Handle event: %s", event);
+
+	// Special application-wide events -----------------------------------
+
+	// Peek at the mouse position
+	if (auto mouse = cast(TMouseEvent)event) {
+	    // See if we need to switch focus to another window or the menu
+	    checkSwitchFocus(mouse);
+	}
+
+	// Handle menu events
+	if ((activeMenu !is null) && (!cast(TCommandEvent)event)) {
+	    TMenu menu = activeMenu;
+	    if (auto mouse = cast(TMouseEvent)event) {
+
+		while (subMenus.length > 0) {
+		    TMenu subMenu = subMenus[$ - 1];
+		    if (subMenu.mouseWouldHit(mouse)) {
+			break;
+		    }
+		    if ((mouse.type == TMouseEvent.Type.MOUSE_MOTION) &&
+			(!mouse.mouse1) &&
+			(!mouse.mouse2) &&
+			(!mouse.mouse3) &&
+			(!mouse.mouseWheelUp) &&
+			(!mouse.mouseWheelDown)
+		    ) {
+			break;
+		    }
+		    // We navigated away from a sub-menu, so close it
+		    closeSubMenu();
+		}
+
+		// Convert the mouse relative x/y to menu coordinates
+		assert(mouse.x == mouse.absoluteX);
+		assert(mouse.y == mouse.absoluteY);
+		if (subMenus.length > 0) {
+		    menu = subMenus[$ - 1];
+		}
+		mouse.x -= menu.x;
+		mouse.y -= menu.y;
+	    }
+	    menu.handleEvent(event);
+	    return;
+	}
+
+	if (auto keypress = cast(TKeypressEvent)event) {
+	    // See if this key matches an accelerator, and if so dispatch the
+	    // menu event.
+	    TKeypress keypressLowercase = toLower(keypress.key);
+	    TMenuItem *item = (keypressLowercase in accelerators);
+	    if (item !is null) {
+		// Let the menu item dispatch
+		item.dispatch();
+		return;
+	    } else {
+		// Handle the keypress
+		if (onKeypress(keypress)) {
+		    return;
+		}
+	    }
+	}
+
+	if (auto cmd = cast(TCommandEvent)event) {
+	    if (onCommand(cmd)) {
+		return;
+	    }
+	}
+
+	if (auto menu = cast(TMenuEvent)event) {
+	    if (onMenu(menu)) {
+		return;
+	    }
+	}
+         */
+
+	// Dispatch events to the active window -------------------------------
+	for (TWindow window: windows) {
+	    if (window.active) {
+                if (event instanceof TMouseEvent) {
+                    TMouseEvent mouse = (TMouseEvent) event;
+		    // Convert the mouse relative x/y to window coordinates
+		    assert (mouse.getX() == mouse.getAbsoluteX());
+		    assert (mouse.getY() == mouse.getAbsoluteY());
+		    mouse.setX(mouse.getX() - window.x);
+		    mouse.setY(mouse.getY() - window.y);
+		}
+		// System.err("TApplication dispatch event: %s\n", event);
+		window.handleEvent(event);
+		break;
+	    }
+	}
+    }
+
+    /**
      * Do stuff when there is no user input.
      */
     private void doIdle() {
         /*
+         TODO
         // Now run any timers that have timed out
         auto now = Clock.currTime;
         TTimer [] keepTimers;
@@ -600,20 +708,17 @@ public class TApplication {
      * @param window new window to add
      */
     public final void addWindow(final TWindow window) {
-        /*
-         TODO
         // Do not allow a modal window to spawn a non-modal window
-        if ((windows.length > 0) && (windows[0].isModal())) {
-            assert(window.isModal());
+        if ((windows.size() > 0) && (windows.get(0).isModal())) {
+            assert (window.isModal());
         }
-        foreach (w; windows) {
+        for (TWindow w: windows) {
             w.active = false;
-            w.z++;
+            w.setZ(w.getZ() + 1);
         }
-        windows ~= window;
+        windows.add(window);
         window.active = true;
-        window.z = 0;
-         */
+        window.setZ(0);
     }
 
 

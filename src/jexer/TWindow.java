@@ -45,7 +45,7 @@ import static jexer.TKeypress.*;
 /**
  * TWindow is the top-level container and drawing surface for other widgets.
  */
-public class TWindow extends TWidget {
+public class TWindow extends TWidget implements Comparable<TWindow> {
 
     /**
      * Window's parent TApplication.
@@ -99,6 +99,24 @@ public class TWindow extends TWidget {
      * Z order.  Lower number means more in-front.
      */
     private int z = 0;
+
+    /**
+     * Get Z order.  Lower number means more in-front.
+     *
+     * @return Z value.  Lower number means more in-front.
+     */
+    public final int getZ() {
+        return z;
+    }
+
+    /**
+     * Set Z order.  Lower number means more in-front.
+     *
+     * @param z the new Z value.  Lower number means more in-front.
+     */
+    public final void setZ(final int z) {
+        this.z = z;
+    }
 
     /**
      * If true, then the user clicked on the title bar and is moving the
@@ -275,8 +293,9 @@ public class TWindow extends TWidget {
      * @param that another TWindow instance
      * @return difference between this.z and that.z
      */
-    public final int compare(final TWindow that) {
-        return (z - that.z);
+    @Override
+    public final int compareTo(final TWindow that) {
+        return (this.z - that.z);
     }
 
     /**

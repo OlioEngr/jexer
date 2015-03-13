@@ -154,6 +154,15 @@ public abstract class TWidget {
     private boolean hasCursor = false;
 
     /**
+     * See if this widget has a visible cursor.
+     *
+     * @return if true, this widget has a visible cursor
+     */
+    public final boolean visibleCursor() {
+        return hasCursor;
+    }
+
+    /**
      * Cursor column position in relative coordinates.
      */
     private int cursorX = 0;

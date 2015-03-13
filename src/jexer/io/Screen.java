@@ -53,7 +53,7 @@ public abstract class Screen {
     /**
      * Drawing offset for x.
      */
-    protected int offsetX;
+    private int offsetX;
 
     /**
      * Set drawing offset for x.
@@ -67,7 +67,7 @@ public abstract class Screen {
     /**
      * Drawing offset for y.
      */
-    protected int offsetY;
+    private int offsetY;
 
     /**
      * Set drawing offset for y.
@@ -77,11 +77,11 @@ public abstract class Screen {
     public final void setOffsetY(final int offsetY) {
         this.offsetY = offsetY;
     }
-    
+
     /**
      * Ignore anything drawn right of clipRight.
      */
-    protected int clipRight;
+    private int clipRight;
 
     /**
      * Get right drawing clipping boundary.
@@ -104,7 +104,7 @@ public abstract class Screen {
     /**
      * Ignore anything drawn below clipBottom.
      */
-    protected int clipBottom;
+    private int clipBottom;
 
     /**
      * Get bottom drawing clipping boundary.
@@ -127,7 +127,7 @@ public abstract class Screen {
     /**
      * Ignore anything drawn left of clipLeft.
      */
-    protected int clipLeft;
+    private int clipLeft;
 
     /**
      * Get left drawing clipping boundary.
@@ -150,7 +150,7 @@ public abstract class Screen {
     /**
      * Ignore anything drawn above clipTop.
      */
-    protected int clipTop;
+    private int clipTop;
 
     /**
      * Get top drawing clipping boundary.
@@ -214,7 +214,7 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @return attributes at (x, y)
      */
-    public CellAttributes getAttrXY(final int x, final int y) {
+    public final CellAttributes getAttrXY(final int x, final int y) {
         CellAttributes attr = new CellAttributes();
         attr.setTo(logical[x][y]);
         return attr;
@@ -227,7 +227,9 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void putAttrXY(final int x, final int y, final CellAttributes attr) {
+    public final void putAttrXY(final int x, final int y,
+        final CellAttributes attr) {
+
         putAttrXY(x, y, attr, true);
     }
 
@@ -239,8 +241,8 @@ public abstract class Screen {
      * @param attr attributes to use (bold, foreColor, backColor)
      * @param clip if true, honor clipping/offset
      */
-    public void putAttrXY(final int x, final int y, final CellAttributes attr,
-        final boolean clip) {
+    public final void putAttrXY(final int x, final int y,
+        final CellAttributes attr, final boolean clip) {
 
         int X = x;
         int Y = y;
@@ -275,7 +277,7 @@ public abstract class Screen {
      * @param ch character to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void putAll(final char ch, final CellAttributes attr) {
+    public final void putAll(final char ch, final CellAttributes attr) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 putCharXY(x, y, ch, attr);
@@ -290,7 +292,7 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @param ch character + attributes to draw
      */
-    public void putCharXY(final int x, final int y, final Cell ch) {
+    public final void putCharXY(final int x, final int y, final Cell ch) {
         putCharXY(x, y, ch.getChar(), ch);
     }
 
@@ -302,7 +304,7 @@ public abstract class Screen {
      * @param ch character to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void putCharXY(final int x, final int y, final char ch,
+    public final void putCharXY(final int x, final int y, final char ch,
         final CellAttributes attr) {
 
         if ((x < clipLeft)
@@ -343,7 +345,7 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @param ch character to draw
      */
-    public void putCharXY(final int x, final int y, final char ch) {
+    public final void putCharXY(final int x, final int y, final char ch) {
         if ((x < clipLeft)
             || (x >= clipRight)
             || (y < clipTop)
@@ -371,7 +373,7 @@ public abstract class Screen {
      * @param str string to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void putStrXY(final int x, final int y, final String str,
+    public final void putStrXY(final int x, final int y, final String str,
         final CellAttributes attr) {
 
         int i = x;
@@ -393,7 +395,7 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @param str string to draw
      */
-    public void putStrXY(final int x, final int y, final String str) {
+    public final void putStrXY(final int x, final int y, final String str) {
         int i = x;
         for (int j = 0; j < str.length(); j++) {
             char ch = str.charAt(j);
@@ -414,8 +416,8 @@ public abstract class Screen {
      * @param ch character to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void vLineXY(final int x, final int y, final int n, final char ch,
-        final CellAttributes attr) {
+    public final void vLineXY(final int x, final int y, final int n,
+        final char ch, final CellAttributes attr) {
 
         for (int i = y; i < y + n; i++) {
             putCharXY(x, i, ch, attr);
@@ -431,8 +433,8 @@ public abstract class Screen {
      * @param ch character to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public void hLineXY(final int x, final int y, final int n, final char ch,
-        final CellAttributes attr) {
+    public final void hLineXY(final int x, final int y, final int n,
+        final char ch, final CellAttributes attr) {
 
         for (int i = x; i < x + n; i++) {
             putCharXY(i, y, ch, attr);
@@ -490,7 +492,7 @@ public abstract class Screen {
      *
      * @param width new screen width
      */
-    public void setWidth(final int width) {
+    public final void setWidth(final int width) {
         reallocate(width, this.height);
     }
 
@@ -500,7 +502,7 @@ public abstract class Screen {
      *
      * @param height new screen height
      */
-    public void setHeight(final int height) {
+    public final void setHeight(final int height) {
         reallocate(this.width, height);
     }
 
@@ -511,7 +513,7 @@ public abstract class Screen {
      * @param width new screen width
      * @param height new screen height
      */
-    public void setDimensions(final int width, final int height) {
+    public final void setDimensions(final int width, final int height) {
         reallocate(width, height);
     }
 
@@ -520,7 +522,7 @@ public abstract class Screen {
      *
      * @return current screen height
      */
-    public int getHeight() {
+    public final int getHeight() {
         return this.height;
     }
 
@@ -529,14 +531,14 @@ public abstract class Screen {
      *
      * @return current screen width
      */
-    public int getWidth() {
+    public final int getWidth() {
         return this.width;
     }
 
     /**
      * Public constructor.  Sets everything to not-bold, white-on-black.
      */
-    public Screen() {
+    protected Screen() {
         offsetX  = 0;
         offsetY  = 0;
         width    = 80;
@@ -550,7 +552,7 @@ public abstract class Screen {
      * Reset screen to not-bold, white-on-black.  Also flushes the offset and
      * clip variables.
      */
-    public void reset() {
+    public final void reset() {
         dirty = true;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
@@ -563,7 +565,7 @@ public abstract class Screen {
     /**
      * Flush the offset and clip variables.
      */
-    public void resetClipping() {
+    public final void resetClipping() {
         offsetX    = 0;
         offsetY    = 0;
         clipLeft   = 0;
@@ -575,7 +577,7 @@ public abstract class Screen {
     /**
      * Force the screen to be fully cleared and redrawn on the next flush().
      */
-    public void clear() {
+    public final void clear() {
         reset();
     }
 
@@ -589,7 +591,7 @@ public abstract class Screen {
      * @param border attributes to use for the border
      * @param background attributes to use for the background
      */
-    public void drawBox(final int left, final int top,
+    public final void drawBox(final int left, final int top,
         final int right, final int bottom,
         final CellAttributes border, final CellAttributes background) {
 
@@ -610,7 +612,7 @@ public abstract class Screen {
      * single-line left/right edges (like Qmodem)
      * @param shadow if true, draw a "shadow" on the box
      */
-    public void drawBox(final int left, final int top,
+    public final void drawBox(final int left, final int top,
         final int right, final int bottom,
         final CellAttributes border, final CellAttributes background,
         final int borderType, final boolean shadow) {
@@ -684,14 +686,14 @@ public abstract class Screen {
     }
 
     /**
-     * Draw a box shadow
+     * Draw a box shadow.
      *
      * @param left left column of box.  0 is the left-most row.
      * @param top top row of the box.  0 is the top-most row.
      * @param right right column of box
      * @param bottom bottom row of the box
      */
-    public void drawBoxShadow(final int left, final int top,
+    public final void drawBoxShadow(final int left, final int top,
         final int right, final int bottom) {
 
         int boxTop = top;
@@ -734,16 +736,18 @@ public abstract class Screen {
      * @param x column coordinate to put the cursor on
      * @param y row coordinate to put the cursor on
      */
-    public void putCursor(final boolean visible, final int x, final int y) {
+    public final void putCursor(final boolean visible,
+        final int x, final int y) {
+
         cursorVisible = visible;
         cursorX = x;
         cursorY = y;
     }
 
     /**
-     * Hide the cursor
+     * Hide the cursor.
      */
-    public void hideCursor() {
+    public final void hideCursor() {
         cursorVisible = false;
     }
 }

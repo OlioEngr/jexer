@@ -43,6 +43,7 @@ import jexer.bits.GraphicsChars;
 import jexer.event.TCommandEvent;
 import jexer.event.TInputEvent;
 import jexer.event.TKeypressEvent;
+import jexer.event.TMenuEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.backend.Backend;
@@ -86,6 +87,21 @@ public class TApplication {
     private List<TInputEvent> eventQueue;
 
     /**
+     * Top-level menus in this application.
+     */
+    private List<TMenu> menus;
+
+    /**
+     * Stack of activated sub-menus in this application.
+     */
+    private List<TMenu> subMenus;
+
+    /**
+     * The currently acive menu.
+     */
+    private TMenu activeMenu = null;
+
+    /**
      * Windows and widgets pull colors from this ColorTheme.
      */
     private ColorTheme theme;
@@ -102,7 +118,7 @@ public class TApplication {
     /**
      * The top-level windows (but not menus).
      */
-    List<TWindow> windows;
+    private List<TWindow> windows;
 
     /**
      * When true, exit the application.
@@ -117,7 +133,7 @@ public class TApplication {
     /**
      * Request full repaint on next screen refresh.
      */
-    public void setRepaint() {
+    public final void setRepaint() {
         repaint = true;
     }
 
@@ -177,6 +193,8 @@ public class TApplication {
         desktopBottom = getScreen().getHeight() - 1;
         eventQueue    = new LinkedList<TInputEvent>();
         windows       = new LinkedList<TWindow>();
+        menus         = new LinkedList<TMenu>();
+        subMenus      = new LinkedList<TMenu>();
     }
 
     /**
@@ -226,7 +244,6 @@ public class TApplication {
             window.drawChildren();
         }
 
-        /*
         // Draw the blank menubar line - reset the screen clipping first so
         // it won't trim it out.
         getScreen().resetClipping();
@@ -234,10 +251,10 @@ public class TApplication {
             theme.getColor("tmenu"));
         // Now draw the menus.
         int x = 1;
-        for (TMenu m: menus) {
+        for (TMenu menu: menus) {
             CellAttributes menuColor;
             CellAttributes menuMnemonicColor;
-            if (menu.active) {
+            if (menu.getActive()) {
                 menuColor = theme.getColor("tmenu.highlighted");
                 menuMnemonicColor = theme.getColor("tmenu.mnemonic.highlighted");
             } else {
@@ -245,19 +262,19 @@ public class TApplication {
                 menuMnemonicColor = theme.getColor("tmenu.mnemonic");
             }
             // Draw the menu title
-            getScreen().hLineXY(x, 0, menu.title.length() + 2, ' ',
+            getScreen().hLineXY(x, 0, menu.getTitle().length() + 2, ' ',
                 menuColor);
-            getScreen().putStrXY(x + 1, 0, menu.title, menuColor);
+            getScreen().putStrXY(x + 1, 0, menu.getTitle(), menuColor);
             // Draw the highlight character
-            getScreen().putCharXY(x + 1 + m.mnemonic.shortcutIdx, 0,
-                m.mnemonic.shortcut, menuMnemonicColor);
+            getScreen().putCharXY(x + 1 + menu.getMnemonic().getShortcutIdx(),
+                0, menu.getMnemonic().getShortcut(), menuMnemonicColor);
 
-            if (menu.active) {
+            if (menu.getActive()) {
                 menu.drawChildren();
                 // Reset the screen clipping so we can draw the next title.
                 getScreen().resetClipping();
             }
-            x += menu.title.length + 2;
+            x += menu.getTitle().length() + 2;
         }
 
         for (TMenu menu: subMenus) {
@@ -265,7 +282,6 @@ public class TApplication {
             getScreen().resetClipping();
             menu.drawChildren();
         }
-        */
 
         // Draw the mouse pointer
         drawMouse();
@@ -282,7 +298,7 @@ public class TApplication {
         }
 
         // Kill the cursor
-        if (cursor == false) {
+        if (!cursor) {
             getScreen().hideCursor();
         }
 
@@ -409,8 +425,8 @@ public class TApplication {
             }
 
             // TODO: change to two separate threads
-            handleEvent(event);
-            
+            primaryHandleEvent(event);
+
             /*
 
             // Put into the main queue
@@ -437,105 +453,123 @@ public class TApplication {
 
     /**
      * Dispatch one event to the appropriate widget or application-level
-     * event handler.
+     * event handler.  This is the primary event handler, it has the normal
+     * application-wide event handling.
      *
      * @param event the input event to consume
+     * @see #secondaryHandleEvent(TInputEvent event)
      */
-    private final void handleEvent(TInputEvent event) {
+    private void primaryHandleEvent(final TInputEvent event) {
+
+        // System.err.printf("Handle event: %s\n", event);
+
+        // Special application-wide events -----------------------------------
+
+        // Peek at the mouse position
+        if (event instanceof TMouseEvent) {
+            // See if we need to switch focus to another window or the menu
+            checkSwitchFocus((TMouseEvent) event);
+        }
+
+        // Handle menu events
+        if ((activeMenu != null) && !(event instanceof TCommandEvent)) {
+            TMenu menu = activeMenu;
+
+            if (event instanceof TMouseEvent) {
+                TMouseEvent mouse = (TMouseEvent) event;
+
+                while (subMenus.size() > 0) {
+                    TMenu subMenu = subMenus.get(subMenus.size() - 1);
+                    if (subMenu.mouseWouldHit(mouse)) {
+                        break;
+                    }
+                    if ((mouse.getType() == TMouseEvent.Type.MOUSE_MOTION)
+                        && (!mouse.getMouse1())
+                        && (!mouse.getMouse2())
+                        && (!mouse.getMouse3())
+                        && (!mouse.getMouseWheelUp())
+                        && (!mouse.getMouseWheelDown())
+                    ) {
+                        break;
+                    }
+                    // We navigated away from a sub-menu, so close it
+                    closeSubMenu();
+                }
+
+                // Convert the mouse relative x/y to menu coordinates
+                assert (mouse.getX() == mouse.getAbsoluteX());
+                assert (mouse.getY() == mouse.getAbsoluteY());
+                if (subMenus.size() > 0) {
+                    menu = subMenus.get(subMenus.size() - 1);
+                }
+                mouse.setX(mouse.getX() - menu.getX());
+                mouse.setY(mouse.getY() - menu.getY());
+            }
+            menu.handleEvent(event);
+            return;
+        }
 
         /*
-	// std.stdio.stderr.writefln("Handle event: %s", event);
+         TODO
 
-	// Special application-wide events -----------------------------------
-
-	// Peek at the mouse position
-	if (auto mouse = cast(TMouseEvent)event) {
-	    // See if we need to switch focus to another window or the menu
-	    checkSwitchFocus(mouse);
-	}
-
-	// Handle menu events
-	if ((activeMenu !is null) && (!cast(TCommandEvent)event)) {
-	    TMenu menu = activeMenu;
-	    if (auto mouse = cast(TMouseEvent)event) {
-
-		while (subMenus.length > 0) {
-		    TMenu subMenu = subMenus[$ - 1];
-		    if (subMenu.mouseWouldHit(mouse)) {
-			break;
-		    }
-		    if ((mouse.type == TMouseEvent.Type.MOUSE_MOTION) &&
-			(!mouse.mouse1) &&
-			(!mouse.mouse2) &&
-			(!mouse.mouse3) &&
-			(!mouse.mouseWheelUp) &&
-			(!mouse.mouseWheelDown)
-		    ) {
-			break;
-		    }
-		    // We navigated away from a sub-menu, so close it
-		    closeSubMenu();
-		}
-
-		// Convert the mouse relative x/y to menu coordinates
-		assert(mouse.x == mouse.absoluteX);
-		assert(mouse.y == mouse.absoluteY);
-		if (subMenus.length > 0) {
-		    menu = subMenus[$ - 1];
-		}
-		mouse.x -= menu.x;
-		mouse.y -= menu.y;
-	    }
-	    menu.handleEvent(event);
-	    return;
-	}
-
-	if (auto keypress = cast(TKeypressEvent)event) {
-	    // See if this key matches an accelerator, and if so dispatch the
-	    // menu event.
-	    TKeypress keypressLowercase = toLower(keypress.key);
-	    TMenuItem *item = (keypressLowercase in accelerators);
-	    if (item !is null) {
-		// Let the menu item dispatch
-		item.dispatch();
-		return;
-	    } else {
-		// Handle the keypress
-		if (onKeypress(keypress)) {
-		    return;
-		}
-	    }
-	}
-
-	if (auto cmd = cast(TCommandEvent)event) {
-	    if (onCommand(cmd)) {
-		return;
-	    }
-	}
-
-	if (auto menu = cast(TMenuEvent)event) {
-	    if (onMenu(menu)) {
-		return;
-	    }
-	}
+        if (event instanceof TKeypressEvent) {
+            TKeypressEvent keypress = (TKeypressEvent) event;
+            // See if this key matches an accelerator, and if so dispatch the
+            // menu event.
+            TKeypress keypressLowercase = keypress.getKey().toLowerCase();
+            TMenuItem item = accelerators.get(keypressLowercase);
+            if (item != null) {
+                // Let the menu item dispatch
+                item.dispatch();
+                return;
+            } else {
+                // Handle the keypress
+                if (onKeypress(keypress)) {
+                    return;
+                }
+            }
+        }
          */
 
-	// Dispatch events to the active window -------------------------------
-	for (TWindow window: windows) {
-	    if (window.active) {
+        if (event instanceof TCommandEvent) {
+            if (onCommand((TCommandEvent) event)) {
+                return;
+            }
+        }
+
+        if (event instanceof TMenuEvent) {
+            if (onMenu((TMenuEvent) event)) {
+                return;
+            }
+        }
+
+        // Dispatch events to the active window -------------------------------
+        for (TWindow window: windows) {
+            if (window.getActive()) {
                 if (event instanceof TMouseEvent) {
                     TMouseEvent mouse = (TMouseEvent) event;
-		    // Convert the mouse relative x/y to window coordinates
-		    assert (mouse.getX() == mouse.getAbsoluteX());
-		    assert (mouse.getY() == mouse.getAbsoluteY());
-		    mouse.setX(mouse.getX() - window.x);
-		    mouse.setY(mouse.getY() - window.y);
-		}
-		// System.err("TApplication dispatch event: %s\n", event);
-		window.handleEvent(event);
-		break;
-	    }
-	}
+                    // Convert the mouse relative x/y to window coordinates
+                    assert (mouse.getX() == mouse.getAbsoluteX());
+                    assert (mouse.getY() == mouse.getAbsoluteY());
+                    mouse.setX(mouse.getX() - window.getX());
+                    mouse.setY(mouse.getY() - window.getY());
+                }
+                // System.err("TApplication dispatch event: %s\n", event);
+                window.handleEvent(event);
+                break;
+            }
+        }
+    }
+    /**
+     * Dispatch one event to the appropriate widget or application-level
+     * event handler.  This is the secondary event handler used by certain
+     * special dialogs (currently TMessageBox and TFileOpenBox).
+     *
+     * @param event the input event to consume
+     * @see #primaryHandleEvent(TInputEvent event)
+     */
+    private void secondaryHandleEvent(final TInputEvent event) {
+        // TODO
     }
 
     /**
@@ -600,23 +634,20 @@ public class TApplication {
      * @param window the window to remove
      */
     public final void closeWindow(final TWindow window) {
-        /*
-         TODO
-
-        uint z = window.z;
-        window.z = -1;
-        windows.sort;
-        windows = windows[1 .. $];
+        int z = window.getZ();
+        window.setZ(-1);
+        Collections.sort(windows);
+        windows.remove(0);
         TWindow activeWindow = null;
-        foreach (w; windows) {
-            if (w.z > z) {
-                w.z--;
-                if (w.z == 0) {
-                    w.active = true;
-                    assert(activeWindow is null);
+        for (TWindow w: windows) {
+            if (w.getZ() > z) {
+                w.setZ(w.getZ() - 1);
+                if (w.getZ() == 0) {
+                    w.setActive(true);
+                    assert (activeWindow == null);
                     activeWindow = w;
                 } else {
-                    w.active = false;
+                    w.setActive(false);
                 }
             }
         }
@@ -626,6 +657,10 @@ public class TApplication {
 
         // Refresh screen
         repaint = true;
+
+        /*
+         TODO
+
 
         // Check if we are closing a TMessageBox or similar
         if (secondaryEventReceiver !is null) {
@@ -658,48 +693,43 @@ public class TApplication {
      * otherwise switch to the previous window in the list
      */
     public final void switchWindow(final boolean forward) {
-        /*
-         TODO
-
         // Only switch if there are multiple windows
-        if (windows.length < 2) {
+        if (windows.size() < 2) {
             return;
         }
 
-        // Swap z/active between active window and the next in the
-        // list
-        ptrdiff_t activeWindowI = -1;
-        for (auto i = 0; i < windows.length; i++) {
-            if (windows[i].active) {
+        // Swap z/active between active window and the next in the list
+        int activeWindowI = -1;
+        for (int i = 0; i < windows.size(); i++) {
+            if (windows.get(i).getActive()) {
                 activeWindowI = i;
                 break;
             }
         }
-        assert(activeWindowI >= 0);
+        assert (activeWindowI >= 0);
 
         // Do not switch if a window is modal
-        if (windows[activeWindowI].isModal()) {
+        if (windows.get(activeWindowI).isModal()) {
             return;
         }
 
-        size_t nextWindowI;
+        int nextWindowI;
         if (forward) {
-            nextWindowI = (activeWindowI + 1) % windows.length;
+            nextWindowI = (activeWindowI + 1) % windows.size();
         } else {
             if (activeWindowI == 0) {
-                nextWindowI = windows.length - 1;
+                nextWindowI = windows.size() - 1;
             } else {
                 nextWindowI = activeWindowI - 1;
             }
         }
-        windows[activeWindowI].active = false;
-        windows[activeWindowI].z = windows[nextWindowI].z;
-        windows[nextWindowI].z = 0;
-        windows[nextWindowI].active = true;
+        windows.get(activeWindowI).setActive(false);
+        windows.get(activeWindowI).setZ(windows.get(nextWindowI).getZ());
+        windows.get(nextWindowI).setZ(0);
+        windows.get(nextWindowI).setActive(true);
 
         // Refresh
         repaint = true;
-        */
     }
 
     /**
@@ -713,13 +743,352 @@ public class TApplication {
             assert (window.isModal());
         }
         for (TWindow w: windows) {
-            w.active = false;
+            w.setActive(false);
             w.setZ(w.getZ() + 1);
         }
         windows.add(window);
-        window.active = true;
+        window.setActive(true);
         window.setZ(0);
     }
 
+    /**
+     * Check if there is a system-modal window on top.
+     *
+     * @return true if the active window is modal
+     */
+    private boolean modalWindowActive() {
+        if (windows.size() == 0) {
+            return false;
+        }
+        return windows.get(windows.size() - 1).isModal();
+    }
+
+    /**
+     * Check if a mouse event would hit either the active menu or any open
+     * sub-menus.
+     *
+     * @param mouse mouse event
+     * @return true if the mouse would hit the active menu or an open
+     * sub-menu
+     */
+    private boolean mouseOnMenu(final TMouseEvent mouse) {
+        assert (activeMenu != null);
+        List<TMenu> menus = new LinkedList<TMenu>(subMenus);
+        Collections.reverse(menus);
+        for (TMenu menu: menus) {
+            if (menu.mouseWouldHit(mouse)) {
+                return true;
+            }
+        }
+        return activeMenu.mouseWouldHit(mouse);
+    }
+
+    /**
+     * See if we need to switch window or activate the menu based on
+     * a mouse click.
+     *
+     * @param mouse mouse event
+     */
+    private void checkSwitchFocus(final TMouseEvent mouse) {
+
+        if ((mouse.getType() == TMouseEvent.Type.MOUSE_DOWN)
+            && (activeMenu != null)
+            && (mouse.getAbsoluteY() != 0)
+            && (!mouseOnMenu(mouse))
+        ) {
+            // They clicked outside the active menu, turn it off
+            activeMenu.setActive(false);
+            activeMenu = null;
+            for (TMenu menu: subMenus) {
+                menu.setActive(false);
+            }
+            subMenus.clear();
+            // Continue checks
+        }
+
+        // See if they hit the menu bar
+        if ((mouse.getType() == TMouseEvent.Type.MOUSE_DOWN)
+            && (mouse.getMouse1())
+            && (!modalWindowActive())
+            && (mouse.getAbsoluteY() == 0)
+        ) {
+
+            for (TMenu menu: subMenus) {
+                menu.setActive(false);
+            }
+            subMenus.clear();
+
+            // They selected the menu, go activate it
+            for (TMenu menu: menus) {
+                if ((mouse.getAbsoluteX() >= menu.getX())
+                    && (mouse.getAbsoluteX() < menu.getX()
+                        + menu.getTitle().length() + 2)
+                ) {
+                    menu.setActive(true);
+                    activeMenu = menu;
+                } else {
+                    menu.setActive(false);
+                }
+            }
+            repaint = true;
+            return;
+        }
+
+        // See if they hit the menu bar
+        if ((mouse.getType() == TMouseEvent.Type.MOUSE_MOTION)
+            && (mouse.getMouse1())
+            && (activeMenu != null)
+            && (mouse.getAbsoluteY() == 0)
+        ) {
+
+            TMenu oldMenu = activeMenu;
+            for (TMenu menu: subMenus) {
+                menu.setActive(false);
+            }
+            subMenus.clear();
+
+            // See if we should switch menus
+            for (TMenu menu: menus) {
+                if ((mouse.getAbsoluteX() >= menu.getX())
+                    && (mouse.getAbsoluteX() < menu.getX()
+                        + menu.getTitle().length() + 2)
+                ) {
+                    menu.setActive(true);
+                    activeMenu = menu;
+                }
+            }
+            if (oldMenu != activeMenu) {
+                // They switched menus
+                oldMenu.setActive(false);
+            }
+            repaint = true;
+            return;
+        }
+
+        // Only switch if there are multiple windows
+        if (windows.size() < 2) {
+            return;
+        }
+
+        // Switch on the upclick
+        if (mouse.getType() != TMouseEvent.Type.MOUSE_UP) {
+            return;
+        }
+
+        Collections.sort(windows);
+        if (windows.get(0).isModal()) {
+            // Modal windows don't switch
+            return;
+        }
+
+        for (TWindow window: windows) {
+            assert (!window.isModal());
+            if (window.mouseWouldHit(mouse)) {
+                if (window == windows.get(0)) {
+                    // Clicked on the same window, nothing to do
+                    return;
+                }
+
+                // We will be switching to another window
+                assert (windows.get(0).getActive());
+                assert (!window.getActive());
+                windows.get(0).setActive(false);
+                windows.get(0).setZ(window.getZ());
+                window.setZ(0);
+                window.setActive(true);
+                repaint = true;
+                return;
+            }
+        }
+
+        // Clicked on the background, nothing to do
+        return;
+    }
+
+    /**
+     * Turn off the menu.
+     */
+    private void closeMenu() {
+        if (activeMenu != null) {
+            activeMenu.setActive(false);
+            activeMenu = null;
+            for (TMenu menu: subMenus) {
+                menu.setActive(false);
+            }
+            subMenus.clear();
+        }
+        repaint = true;
+    }
+
+    /**
+     * Turn off a sub-menu.
+     */
+    private void closeSubMenu() {
+        assert (activeMenu != null);
+        TMenu item = subMenus.get(subMenus.size() - 1);
+        assert (item != null);
+        item.setActive(false);
+        subMenus.remove(subMenus.size() - 1);
+        repaint = true;
+    }
+
+    /**
+     * Switch to the next menu.
+     *
+     * @param forward if true, then switch to the next menu in the list,
+     * otherwise switch to the previous menu in the list
+     */
+    private void switchMenu(final boolean forward) {
+        assert (activeMenu != null);
+
+        for (TMenu menu: subMenus) {
+            menu.setActive(false);
+        }
+        subMenus.clear();
+
+        for (int i = 0; i < menus.size(); i++) {
+            if (activeMenu == menus.get(i)) {
+                if (forward) {
+                    if (i < menus.size() - 1) {
+                        i++;
+                    }
+                } else {
+                    if (i > 0) {
+                        i--;
+                    }
+                }
+                activeMenu.setActive(false);
+                activeMenu = menus.get(i);
+                activeMenu.setActive(true);
+                repaint = true;
+                return;
+            }
+        }
+    }
+
+    /**
+     * Method that TApplication subclasses can override to handle menu or
+     * posted command events.
+     *
+     * @param command command event
+     * @return if true, this event was consumed
+     */
+    protected boolean onCommand(final TCommandEvent command) {
+        /*
+         TODO
+        // Default: handle cmExit
+        if (command.equals(cmExit)) {
+            if (messageBox("Confirmation", "Exit application?",
+                    TMessageBox.Type.YESNO).result == TMessageBox.Result.YES) {
+                quit = true;
+            }
+            repaint = true;
+            return true;
+        }
+
+        if (command.equals(cmShell)) {
+            openTerminal(0, 0, TWindow.Flag.RESIZABLE);
+            repaint = true;
+            return true;
+        }
+
+        if (command.equals(cmTile)) {
+            tileWindows();
+            repaint = true;
+            return true;
+        }
+        if (command.equals(cmCascade)) {
+            cascadeWindows();
+            repaint = true;
+            return true;
+        }
+        if (command.equals(cmCloseAll)) {
+            closeAllWindows();
+            repaint = true;
+            return true;
+        }
+         */
+        return false;
+    }
+
+    /**
+     * Method that TApplication subclasses can override to handle menu
+     * events.
+     *
+     * @param menu menu event
+     * @return if true, this event was consumed
+     */
+    protected boolean onMenu(final TMenuEvent menu) {
+
+        /*
+         TODO
+        // Default: handle MID_EXIT
+        if (menu.id == TMenu.MID_EXIT) {
+            if (messageBox("Confirmation", "Exit application?",
+                    TMessageBox.Type.YESNO).result == TMessageBox.Result.YES) {
+                quit = true;
+            }
+            // System.err.printf("onMenu MID_EXIT result: quit = %s\n", quit);
+            repaint = true;
+            return true;
+        }
+
+        if (menu.id == TMenu.MID_SHELL) {
+            openTerminal(0, 0, TWindow.Flag.RESIZABLE);
+            repaint = true;
+            return true;
+        }
+
+        if (menu.id == TMenu.MID_TILE) {
+            tileWindows();
+            repaint = true;
+            return true;
+        }
+        if (menu.id == TMenu.MID_CASCADE) {
+            cascadeWindows();
+            repaint = true;
+            return true;
+        }
+        if (menu.id == TMenu.MID_CLOSE_ALL) {
+            closeAllWindows();
+            repaint = true;
+            return true;
+        }
+        */
+        return false;
+    }
+
+    /**
+     * Method that TApplication subclasses can override to handle keystrokes.
+     *
+     * @param keypress keystroke event
+     * @return if true, this event was consumed
+     */
+    protected boolean onKeypress(final TKeypressEvent keypress) {
+        // Default: only menu shortcuts
+
+        // Process Alt-F, Alt-E, etc. menu shortcut keys
+        if (!keypress.getKey().getIsKey()
+            && keypress.getKey().getAlt()
+            && !keypress.getKey().getCtrl()
+            && (activeMenu == null)
+        ) {
+
+            assert (subMenus.size() == 0);
+
+            for (TMenu menu: menus) {
+                if (Character.toLowerCase(menu.getMnemonic().getShortcut())
+                    == Character.toLowerCase(keypress.getKey().getCh())
+                ) {
+                    activeMenu = menu;
+                    menu.setActive(true);
+                    repaint = true;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
 }

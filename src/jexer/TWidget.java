@@ -53,7 +53,27 @@ public abstract class TWidget {
      * example, a TWindow might contain several TTextFields, or a TComboBox
      * may contain a TScrollBar.
      */
-    protected TWidget parent = null;
+    private TWidget parent = null;
+
+    /**
+     * Backdoor access for TWindow's constructor.  ONLY TWindow USES THIS.
+     *
+     * @param window the top-level window
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of window
+     * @param height height of window
+     */
+    protected final void setupForTWindow(final TWindow window,
+        final int x, final int y, final int width, final int height) {
+
+        this.parent = window;
+        this.window = window;
+        this.x      = x;
+        this.y      = y;
+        this.width  = width;
+        this.height = height;
+    }
 
     /**
      * Child widgets that this widget contains.
@@ -68,32 +88,122 @@ public abstract class TWidget {
     /**
      * If true, this widget will receive events.
      */
-    protected boolean active = false;
+    private boolean active = false;
+
+    /**
+     * Get active flag.
+     *
+     * @return if true, this widget will receive events
+     */
+    public final boolean getActive() {
+        return active;
+    }
+
+    /**
+     * Set active flag.
+     *
+     * @param active if true, this widget will receive events
+     */
+    public final void setActive(boolean active) {
+        this.active = active;
+    }
 
     /**
      * The window that this widget draws to.
      */
-    protected TWindow window = null;
+    private TWindow window = null;
 
     /**
      * Absolute X position of the top-left corner.
      */
-    protected int x = 0;
+    private int x = 0;
+
+    /**
+     * Get X position.
+     *
+     * @return absolute X position of the top-left corner
+     */
+    public final int getX() {
+        return x;
+    }
+
+    /**
+     * Set X position.
+     *
+     * @param x absolute X position of the top-left corner
+     */
+    public final void setX(final int x) {
+        this.x = x;
+    }
 
     /**
      * Absolute Y position of the top-left corner.
      */
-    protected int y = 0;
+    private int y = 0;
+
+    /**
+     * Get Y position.
+     *
+     * @return absolute Y position of the top-left corner
+     */
+    public final int getY() {
+        return y;
+    }
+
+    /**
+     * Set Y position.
+     *
+     * @param y absolute Y position of the top-left corner
+     */
+    public final void setY(final int y) {
+        this.y = y;
+    }
 
     /**
      * Width.
      */
-    protected int width = 0;
+    private int width = 0;
+
+    /**
+     * Get the width.
+     *
+     * @return widget width
+     */
+    public final int getWidth() {
+        return this.width;
+    }
+
+    /**
+     * Change the width.
+     *
+     * @param width new widget width
+     */
+    public final void setWidth(final int width) {
+        this.width = width;
+    }
 
     /**
      * Height.
      */
-    protected int height = 0;
+    private int height = 0;
+
+    /**
+     * Get the height.
+     *
+     * @return widget height
+     */
+    public final int getHeight() {
+        return this.height;
+    }
+
+    /**
+     * Change the height.
+     *
+     * @param height new widget height
+     */
+    public final void setHeight(final int height) {
+        this.height = height;
+    }
 
     /**
      * My tab order inside a window or containing widget.
@@ -121,19 +231,15 @@ public abstract class TWidget {
      */
     public final void setEnabled(final boolean enabled) {
         this.enabled = enabled;
-        /*
-
-        // TODO: get this working after scrollers are going again
-
-        if (enabled == false) {
+        if (!enabled) {
             active = false;
             // See if there are any active siblings to switch to
             boolean foundSibling = false;
-            if (parent !is null) {
-                foreach (w; parent.children) {
-                    if ((w.enabled) &&
-                        (!cast(THScroller)this) &&
-                        (!cast(TVScroller)this)
+            if (parent != null) {
+                for (TWidget w: parent.children) {
+                    if ((w.enabled)
+                        && !(this instanceof THScroller)
+                        && !(this instanceof TVScroller)
                     ) {
                         parent.activate(w);
                         foundSibling = true;
@@ -145,7 +251,6 @@ public abstract class TWidget {
                 }
             }
         }
-         */
     }
 
     /**
@@ -312,7 +417,7 @@ public abstract class TWidget {
     }
 
     /**
-     * Subclasses need this constructor to setup children.
+     * Default constructor for subclasses.
      */
     protected TWidget() {
         children = new LinkedList<TWidget>();
@@ -326,7 +431,7 @@ public abstract class TWidget {
     protected TWidget(final TWidget parent) {
         this.parent = parent;
         this.window = parent.window;
-
+        children = new LinkedList<TWidget>();
         parent.addChild(this);
     }
 
@@ -490,6 +595,7 @@ public abstract class TWidget {
     public void onKeypress(final TKeypressEvent keypress) {
 
         if ((children.size() == 0)
+            // TODO
             // || (cast(TTreeView)this)
             // || (cast(TText)this)
         ) {

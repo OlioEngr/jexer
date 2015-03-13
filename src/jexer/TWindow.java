@@ -50,7 +50,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
     /**
      * Window's parent TApplication.
      */
-    protected TApplication application;
+    private TApplication application;
 
     /**
      * Get this TWindow's parent TApplication.
@@ -73,7 +73,25 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
     /**
      * Window title.
      */
-    protected String title = "";
+    private String title = "";
+
+    /**
+     * Get window title.
+     *
+     * @return window title
+     */
+    public final String getTitle() {
+        return title;
+    }
+
+    /**
+     * Set window title.
+     *
+     * @param title new window title
+     */
+    public final void setTitle(final String title) {
+        this.title = title;
+    }
 
     /**
      * Window is resizable (default yes).
@@ -144,7 +162,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
     /**
      * Remember mouse state.
      */
-    protected TMouseEvent mouse;
+    private TMouseEvent mouse;
 
     // For moving the window.  resizing also uses moveWindowMouseX/Y
     private int moveWindowMouseX;
@@ -226,22 +244,20 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
         final int x, final int y, final int width, final int height,
         final int flags) {
 
+        super();
+
         // I am my own window and parent
-        this.parent = this;
-        this.window = this;
+        setupForTWindow(this, x, y + application.getDesktopTop(),
+            width, height);
 
         // Save fields
         this.title       = title;
         this.application = application;
-        this.x           = x;
-        this.y           = y + application.getDesktopTop();
-        this.width       = width;
-        this.height      = height;
         this.flags       = flags;
 
         // Minimum width/height are 10 and 2
         assert (width >= 10);
-        assert (height >= 2);
+        assert (getHeight() >= 2);
 
         // MODAL implies CENTERED
         if (isModal()) {
@@ -260,18 +276,17 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      */
     public final void center() {
         if ((flags & CENTERED) != 0) {
-            if (width < getScreen().getWidth()) {
-                x = (getScreen().getWidth() - width) / 2;
+            if (getWidth() < getScreen().getWidth()) {
+                setX((getScreen().getWidth() - getWidth()) / 2);
             } else {
-                x = 0;
+                setX(0);
             }
-            y = (application.getDesktopBottom() - application.getDesktopTop());
-            y -= height;
-            y /= 2;
-            if (y < 0) {
-                y = 0;
+            setY(((application.getDesktopBottom()
+                    - application.getDesktopTop()) - getHeight()) / 2);
+            if (getY() < 0) {
+                setY(0);
             }
-            y += application.getDesktopTop();
+            setY(getY() + application.getDesktopTop());
         }
     }
 
@@ -305,8 +320,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      */
     private boolean mouseOnClose() {
         if ((mouse != null)
-            && (mouse.getAbsoluteY() == y)
-            && (mouse.getAbsoluteX() == x + 3)
+            && (mouse.getAbsoluteY() == getY())
+            && (mouse.getAbsoluteX() == getX() + 3)
         ) {
             return true;
         }
@@ -321,8 +336,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
     private boolean mouseOnMaximize() {
         if ((mouse != null)
             && !isModal()
-            && (mouse.getAbsoluteY() == y)
-            && (mouse.getAbsoluteX() == x + width - 4)
+            && (mouse.getAbsoluteY() == getY())
+            && (mouse.getAbsoluteX() == getX() + getWidth() - 4)
         ) {
             return true;
         }
@@ -340,9 +355,9 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
         if (((flags & RESIZABLE) != 0)
             && !isModal()
             && (mouse != null)
-            && (mouse.getAbsoluteY() == y + height - 1)
-            && ((mouse.getAbsoluteX() == x + width - 1)
-                || (mouse.getAbsoluteX() == x + width - 2))
+            && (mouse.getAbsoluteY() == getY() + getHeight() - 1)
+            && ((mouse.getAbsoluteX() == getX() + getWidth() - 1)
+                || (mouse.getAbsoluteX() == getX() + getWidth() - 2))
         ) {
             return true;
         }
@@ -354,21 +369,21 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the background color
      */
-    protected final CellAttributes getBackground() {
+    private final CellAttributes getBackground() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (active);
+            assert (getActive());
             return application.getTheme().getColor("twindow.background.windowmove");
         } else if (isModal() && inWindowMove) {
-            assert (active);
+            assert (getActive());
             return application.getTheme().getColor("twindow.background.modal");
         } else if (isModal()) {
-            if (active) {
+            if (getActive()) {
                 return application.getTheme().getColor("twindow.background.modal");
             }
             return application.getTheme().getColor("twindow.background.modal.inactive");
-        } else if (active) {
+        } else if (getActive()) {
             assert (!isModal());
             return application.getTheme().getColor("twindow.background");
         } else {
@@ -382,22 +397,22 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the border color
      */
-    protected final CellAttributes getBorder() {
+    private final CellAttributes getBorder() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (active);
+            assert (getActive());
             return application.getTheme().getColor("twindow.border.windowmove");
         } else if (isModal() && inWindowMove) {
-            assert (active);
+            assert (getActive());
             return application.getTheme().getColor("twindow.border.modal.windowmove");
         } else if (isModal()) {
-            if (active) {
+            if (getActive()) {
                 return application.getTheme().getColor("twindow.border.modal");
             } else {
                 return application.getTheme().getColor("twindow.border.modal.inactive");
             }
-        } else if (active) {
+        } else if (getActive()) {
             assert (!isModal());
             return application.getTheme().getColor("twindow.border");
         } else {
@@ -411,22 +426,22 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the border line type
      */
-    protected final int getBorderType() {
+    private final int getBorderType() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (active);
+            assert (getActive());
             return 1;
         } else if (isModal() && inWindowMove) {
-            assert (active);
+            assert (getActive());
             return 1;
         } else if (isModal()) {
-            if (active) {
+            if (getActive()) {
                 return 2;
             } else {
                 return 1;
             }
-        } else if (active) {
+        } else if (getActive()) {
             return 2;
         } else {
             return 1;
@@ -451,16 +466,16 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
         CellAttributes background = getBackground();
         int borderType = getBorderType();
 
-        getScreen().drawBox(0, 0, width, height, border,
+        getScreen().drawBox(0, 0, getWidth(), getHeight(), border,
             background, borderType, true);
 
         // Draw the title
-        int titleLeft = (width - title.length() - 2) / 2;
+        int titleLeft = (getWidth() - title.length() - 2) / 2;
         putCharXY(titleLeft, 0, ' ', border);
         putStrXY(titleLeft + 1, 0, title);
         putCharXY(titleLeft + title.length() + 1, 0, ' ', border);
 
-        if (active) {
+        if (getActive()) {
 
             // Draw the close button
             putCharXY(2, 0, '[', border);
@@ -480,26 +495,26 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             // Draw the maximize button
             if (!isModal()) {
 
-                putCharXY(width - 5, 0, '[', border);
-                putCharXY(width - 3, 0, ']', border);
+                putCharXY(getWidth() - 5, 0, '[', border);
+                putCharXY(getWidth() - 3, 0, ']', border);
                 if (mouseOnMaximize() && mouse.getMouse1()) {
-                    putCharXY(width - 4, 0, GraphicsChars.CP437[0x0F],
+                    putCharXY(getWidth() - 4, 0, GraphicsChars.CP437[0x0F],
                         application.getTheme().getColor("twindow.border.windowmove"));
                 } else {
                     if (maximized) {
-                        putCharXY(width - 4, 0, GraphicsChars.CP437[0x12],
+                        putCharXY(getWidth() - 4, 0, GraphicsChars.CP437[0x12],
                             application.getTheme().getColor("twindow.border.windowmove"));
                     } else {
-                        putCharXY(width - 4, 0, GraphicsChars.UPARROW,
+                        putCharXY(getWidth() - 4, 0, GraphicsChars.UPARROW,
                             application.getTheme().getColor("twindow.border.windowmove"));
                     }
                 }
 
                 // Draw the resize corner
                 if ((flags & RESIZABLE) != 0) {
-                    putCharXY(width - 2, height - 1, GraphicsChars.SINGLE_BAR,
+                    putCharXY(getWidth() - 2, getHeight() - 1, GraphicsChars.SINGLE_BAR,
                         application.getTheme().getColor("twindow.border.windowmove"));
-                    putCharXY(width - 1, height - 1, GraphicsChars.LRCORNER,
+                    putCharXY(getWidth() - 1, getHeight() - 1, GraphicsChars.LRCORNER,
                         application.getTheme().getColor("twindow.border.windowmove"));
                 }
             }
@@ -518,10 +533,10 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
 
         inKeyboardResize = false;
 
-        if ((mouse.getAbsoluteY() == y)
+        if ((mouse.getAbsoluteY() == getY())
             && mouse.getMouse1()
-            && (x <= mouse.getAbsoluteX())
-            && (mouse.getAbsoluteX() < x + width)
+            && (getX() <= mouse.getAbsoluteX())
+            && (mouse.getAbsoluteX() < getX() + getWidth())
             && !mouseOnClose()
             && !mouseOnMaximize()
         ) {
@@ -529,8 +544,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             inWindowMove = true;
             moveWindowMouseX = mouse.getAbsoluteX();
             moveWindowMouseY = mouse.getAbsoluteY();
-            oldWindowX = x;
-            oldWindowY = y;
+            oldWindowX = getX();
+            oldWindowY = getY();
             if (maximized) {
                 maximized = false;
             }
@@ -541,8 +556,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             inWindowResize = true;
             moveWindowMouseX = mouse.getAbsoluteX();
             moveWindowMouseY = mouse.getAbsoluteY();
-            resizeWindowWidth = width;
-            resizeWindowHeight = height;
+            resizeWindowWidth = getWidth();
+            resizeWindowHeight = getHeight();
             if (maximized) {
                 maximized = false;
             }
@@ -557,14 +572,14 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      * Maximize window.
      */
     private void maximize() {
-        restoreWindowWidth = width;
-        restoreWindowHeight = height;
-        restoreWindowX = x;
-        restoreWindowY = y;
-        width = getScreen().getWidth();
-        height = application.getDesktopBottom() - 1;
-        x = 0;
-        y = 1;
+        restoreWindowWidth = getWidth();
+        restoreWindowHeight = getHeight();
+        restoreWindowX = getX();
+        restoreWindowY = getY();
+        setWidth(getScreen().getWidth());
+        setHeight(application.getDesktopBottom() - 1);
+        setX(0);
+        setY(1);
         maximized = true;
     }
 
@@ -572,10 +587,10 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      * Restote (unmaximize) window.
      */
     private void restore() {
-        width = restoreWindowWidth;
-        height = restoreWindowHeight;
-        x = restoreWindowX;
-        y = restoreWindowY;
+        setWidth(restoreWindowWidth);
+        setHeight(restoreWindowHeight);
+        setX(restoreWindowX);
+        setY(restoreWindowY);
         maximized = false;
     }
 
@@ -607,7 +622,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             return;
         }
 
-        if ((mouse.getAbsoluteY() == y) && mouse.getMouse1()
+        if ((mouse.getAbsoluteY() == getY())
+            && mouse.getMouse1()
             && mouseOnMaximize()) {
             if (maximized) {
                 // Restore
@@ -617,7 +633,8 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
                 maximize();
             }
             // Pass a resize event to my children
-            onResize(new TResizeEvent(TResizeEvent.Type.WIDGET, width, height));
+            onResize(new TResizeEvent(TResizeEvent.Type.WIDGET,
+                    getWidth(), getHeight()));
             return;
         }
 
@@ -637,50 +654,57 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
 
         if (inWindowMove) {
             // Move window over
-            x = oldWindowX + (mouse.getAbsoluteX() - moveWindowMouseX);
-            y = oldWindowY + (mouse.getAbsoluteY() - moveWindowMouseY);
+            setX(oldWindowX + (mouse.getAbsoluteX() - moveWindowMouseX));
+            setY(oldWindowY + (mouse.getAbsoluteY() - moveWindowMouseY));
             // Don't cover up the menu bar
-            if (y < application.getDesktopTop()) {
-                y = application.getDesktopTop();
+            if (getY() < application.getDesktopTop()) {
+                setY(application.getDesktopTop());
             }
             return;
         }
 
         if (inWindowResize) {
             // Move window over
-            width = resizeWindowWidth + (mouse.getAbsoluteX() - moveWindowMouseX);
-            height = resizeWindowHeight + (mouse.getAbsoluteY() - moveWindowMouseY);
-            if (x + width > getScreen().getWidth()) {
-                width = getScreen().getWidth() - x;
+            setWidth(resizeWindowWidth + (mouse.getAbsoluteX()
+                    - moveWindowMouseX));
+            setHeight(resizeWindowHeight + (mouse.getAbsoluteY()
+                    - moveWindowMouseY));
+            if (getX() + getWidth() > getScreen().getWidth()) {
+                setWidth(getScreen().getWidth() - getX());
             }
-            if (y + height > application.getDesktopBottom()) {
-                y = application.getDesktopBottom() - height + 1;
+            if (getY() + getHeight() > application.getDesktopBottom()) {
+                setY(application.getDesktopBottom() - getHeight() + 1);
             }
             // Don't cover up the menu bar
-            if (y < application.getDesktopTop()) {
-                y = application.getDesktopTop();
+            if (getY() < application.getDesktopTop()) {
+                setY(application.getDesktopTop());
             }
 
             // Keep within min/max bounds
-            if (width < minimumWindowWidth) {
-                width = minimumWindowWidth;
+            if (getWidth() < minimumWindowWidth) {
+                setWidth(minimumWindowWidth);
                 inWindowResize = false;
             }
-            if (height < minimumWindowHeight) {
-                height = minimumWindowHeight;
+            if (getHeight() < minimumWindowHeight) {
+                setHeight(minimumWindowHeight);
                 inWindowResize = false;
             }
-            if ((maximumWindowWidth > 0) && (width > maximumWindowWidth)) {
-                width = maximumWindowWidth;
+            if ((maximumWindowWidth > 0)
+                && (getWidth() > maximumWindowWidth)
+            ) {
+                setWidth(maximumWindowWidth);
                 inWindowResize = false;
             }
-            if ((maximumWindowHeight > 0) && (height > maximumWindowHeight)) {
-                height = maximumWindowHeight;
+            if ((maximumWindowHeight > 0)
+                && (getHeight() > maximumWindowHeight)
+            ) {
+                setHeight(maximumWindowHeight);
                 inWindowResize = false;
             }
 
             // Pass a resize event to my children
-            onResize(new TResizeEvent(TResizeEvent.Type.WIDGET, width, height));
+            onResize(new TResizeEvent(TResizeEvent.Type.WIDGET,
+                    getWidth(), getHeight()));
             return;
         }
 
@@ -704,43 +728,43 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             }
 
             if (keypress.equals(kbLeft)) {
-                if (x > 0) {
-                    x--;
+                if (getX() > 0) {
+                    setX(getX() - 1);
                 }
             }
             if (keypress.equals(kbRight)) {
-                if (x < getScreen().getWidth() - 1) {
-                    x++;
+                if (getX() < getScreen().getWidth() - 1) {
+                    setX(getX() + 1);
                 }
             }
             if (keypress.equals(kbDown)) {
-                if (y < application.getDesktopBottom() - 1) {
-                    y++;
+                if (getY() < application.getDesktopBottom() - 1) {
+                    setY(getY() + 1);
                 }
             }
             if (keypress.equals(kbUp)) {
-                if (y > 1) {
-                    y--;
+                if (getY() > 1) {
+                    setY(getY() - 1);
                 }
             }
             if (keypress.equals(kbShiftLeft)) {
-                if (width > minimumWindowWidth) {
-                    width--;
+                if (getWidth() > minimumWindowWidth) {
+                    setWidth(getWidth() - 1);
                 }
             }
             if (keypress.equals(kbShiftRight)) {
-                if (width < maximumWindowWidth) {
-                    width++;
+                if (getWidth() < maximumWindowWidth) {
+                    setWidth(getWidth() + 1);
                 }
             }
             if (keypress.equals(kbShiftUp)) {
-                if (height > minimumWindowHeight) {
-                    height--;
+                if (getHeight() > minimumWindowHeight) {
+                    setHeight(getHeight() - 1);
                 }
             }
             if (keypress.equals(kbShiftDown)) {
-                if (height < maximumWindowHeight) {
-                    height++;
+                if (getHeight() < maximumWindowHeight) {
+                    setHeight(getHeight() + 1);
                 }
             }
 

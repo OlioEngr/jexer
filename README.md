@@ -31,21 +31,21 @@ import jexer.*;
 public class MyApplication extends TApplication {
 
     public MyApplication() {
-	super();
+        super();
 
-	// Create an editor window that has support for
-	// copy/paste, search text, arrow keys, horizontal
-	// and vertical scrollbar, etc.
-	addEditor();
+        // Create an editor window that has support for
+        // copy/paste, search text, arrow keys, horizontal
+        // and vertical scrollbar, etc.
+        addEditor();
 
-	// Create standard menus for File and Window
-	addFileMenu();
-	addWindowMenu();
+        // Create standard menus for File and Window
+        addFileMenu();
+        addWindowMenu();
     }
 
     public static void main(String [] args) {
-	MyApplication app = new MyApplication();
-	app.run();
+        MyApplication app = new MyApplication();
+        app.run();
     }
 }
 ```
@@ -59,10 +59,8 @@ version 1.0:
 
 0.0.1:
 
-- Get a movable window on screen
-  - TWidget
-  - TWindow
-  - TLabel
+- TMenu
+- TButton
 
 0.0.2:
 

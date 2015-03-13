@@ -44,6 +44,15 @@ public final class MnemonicString {
     private char shortcut;
 
     /**
+     * Get the keyboard shortcut character.
+     *
+     * @return the highlighted character
+     */
+    public char getShortcut() {
+        return shortcut;
+    }
+
+    /**
      * Location of the highlighted character.
      */
     private int shortcutIdx = -1;

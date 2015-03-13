@@ -47,6 +47,15 @@ public class TMenu extends TWindow {
      */
     private MnemonicString mnemonic;
 
+    /**
+     * Get the mnemonic string.
+     *
+     * @return the full mnemonic string
+     */
+    public final MnemonicString getMnemonic() {
+        return mnemonic;
+    }
+
     // Reserved menu item IDs
     public static final int MID_UNUSED          = -1;
 
@@ -92,15 +101,15 @@ public class TMenu extends TWindow {
         parent.closeWindow(this);
 
         // Setup the menu shortcut
-        mnemonic = new MnemonicString(title);
-        this.title = mnemonic.getRawLabel();
+        mnemonic = new MnemonicString(label);
+        setTitle(mnemonic.getRawLabel());
         assert (mnemonic.getShortcutIdx() >= 0);
 
         // Recompute width and height to reflect an empty menu
-        width = this.title.length() + 4;
-        height = 2;
+        setWidth(getTitle().length() + 4);
+        setHeight(2);
 
-        this.active = false;
+        setActive(false);
     }
 
 }

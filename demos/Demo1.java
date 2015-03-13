@@ -67,20 +67,24 @@ class DemoMainWindow extends TWindow {
     }
      */
 
-    /// Constructor
+    /**
+     * Construct demo window.  It will be centered on screen.
+     */
     public DemoMainWindow(TApplication parent) {
 	this(parent, CENTERED | RESIZABLE);
     }
 
-    /// Constructor
-    public DemoMainWindow(TApplication parent, int flags) {
+    /**
+     * Constructor.
+     */
+    private DemoMainWindow(TApplication parent, int flags) {
 	// Construct a demo window.  X and Y don't matter because it will be
 	// centered on screen.
 	super(parent, "Demo Window", 0, 0, 60, 23, flags);
 
+        /*
 	int row = 1;
 
-        /*
 	// Add some widgets
 	if (!isModal) {
 	    addLabel("Message Boxes", 1, row);
@@ -186,6 +190,11 @@ class DemoApplication extends TApplication {
     public DemoApplication() throws Exception {
 	super(null, null);
 	new DemoMainWindow(this);
+	TWindow window2 = new DemoMainWindow(this);
+        window2.setHeight(5);
+        window2.setWidth(25);
+        window2.setX(17);
+        window2.setY(6);
     }
 }
 

@@ -61,17 +61,34 @@ version 1.0:
 
 - TMenu
 - TButton
+- TCheckbox
+- TDirectoryList
+- TField
+- TMessageBox
+- TProgressBar
+- TTimer
+- TRadioGroup / TRadioButton
+- THScroller / TVScroller
+- TText
+- TTreeView
 
 0.0.2:
 
-- Port remaining d-tui functionality over
-  - All widgets except modal (e.g. messagebox/fileopen)
+- TEditor
+- TFileOpen
+- TTerminal
 
 0.0.3:
 
-- Get modal messagebox running without fibers (use two reader threads
-  with syncronization, don't bother with coroutines)
-- TEditor, fixup keyboard movement
+- Bugs
+  - TSubMenu keyboard mnemonic not working
+  - kbDel assertion failure in TMenu (MID_CLEAR)
+- TEditor
+  - Word wrap
+  - Forward/backward word
+  - Search
+  - Replace
+  - Cut/Copy/Paste
 
 0.0.4:
 

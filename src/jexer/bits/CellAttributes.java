@@ -243,11 +243,31 @@ public class CellAttributes {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        int A = 13;
+        int B = 23;
+        int hash = A;
+        hash = (B * hash) + (bold ? 1 : 0);
+        hash = (B * hash) + (blink ? 1 : 0);
+        hash = (B * hash) + (underline ? 1 : 0);
+        hash = (B * hash) + (reverse ? 1 : 0);
+        hash = (B * hash) + (protect ? 1 : 0);
+        hash = (B * hash) + foreColor.hashCode();
+        hash = (B * hash) + backColor.hashCode();
+        return hash;
+    }
+
+    /**
      * Set my field values to that's field.
      *
      * @param rhs another CellAttributes instance
      */
-    public void setTo(Object rhs) {
+    public void setTo(final Object rhs) {
         CellAttributes that = (CellAttributes) rhs;
 
         this.bold      = that.bold;

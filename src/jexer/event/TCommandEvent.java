@@ -87,6 +87,21 @@ public final class TCommandEvent extends TInputEvent {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        int A = 13;
+        int B = 23;
+        int hash = A;
+        hash = (B * hash) + getTime().hashCode();
+        hash = (B * hash) + cmd.hashCode();
+        return hash;
+    }
+
+    /**
      * Make human-readable description of this TCommandEvent.
      *
      * @return displayable String

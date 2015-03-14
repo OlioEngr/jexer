@@ -34,8 +34,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import jexer.bits.CellAttributes;
 import jexer.bits.ColorTheme;
@@ -108,6 +110,11 @@ public class TApplication {
      * The currently acive menu.
      */
     private TMenu activeMenu = null;
+
+    /**
+     * Active keyboard accelerators.
+     */
+    private Map<TKeypress, TMenuItem> accelerators;
 
     /**
      * Windows and widgets pull colors from this ColorTheme.
@@ -204,6 +211,7 @@ public class TApplication {
         windows         = new LinkedList<TWindow>();
         menus           = new LinkedList<TMenu>();
         subMenus        = new LinkedList<TMenu>();
+        accelerators    = new HashMap<TKeypress, TMenuItem>();
     }
 
     /**
@@ -394,8 +402,8 @@ public class TApplication {
     private void metaHandleEvent(final TInputEvent event) {
 
         /*
-         System.err.printf(String.format("metaHandleEvents event: %s\n",
-         event)); System.err.flush();
+        System.err.printf(String.format("metaHandleEvents event: %s\n",
+                event)); System.err.flush();
          */
 
         if (quit) {
@@ -403,16 +411,6 @@ public class TApplication {
             // to exit.
             return;
         }
-
-        // DEBUG
-        if (event instanceof TKeypressEvent) {
-            TKeypressEvent keypress = (TKeypressEvent) event;
-            if (keypress.equals(kbAltX)) {
-                quit = true;
-                return;
-            }
-        }
-        // DEBUG
 
         // Special application-wide events -------------------------------
 
@@ -530,15 +528,16 @@ public class TApplication {
             return;
         }
 
-        /*
-         TODO
-
         if (event instanceof TKeypressEvent) {
             TKeypressEvent keypress = (TKeypressEvent) event;
+
             // See if this key matches an accelerator, and if so dispatch the
             // menu event.
             TKeypress keypressLowercase = keypress.getKey().toLowerCase();
-            TMenuItem item = accelerators.get(keypressLowercase);
+            TMenuItem item = null;
+            synchronized (accelerators) {
+                item = accelerators.get(keypressLowercase);
+            }
             if (item != null) {
                 // Let the menu item dispatch
                 item.dispatch();
@@ -550,7 +549,6 @@ public class TApplication {
                 }
             }
         }
-         */
 
         if (event instanceof TCommandEvent) {
             if (onCommand((TCommandEvent) event)) {
@@ -1126,11 +1124,13 @@ public class TApplication {
      */
     public final void addAccelerator(final TMenuItem item,
         final TKeypress keypress) {
-        /*
-         TODO
-        assert((keypress in accelerators) is null);
-        accelerators[keypress] = item;
-         */
+
+        // System.err.printf("addAccelerator: key %s item %s\n", keypress, item);
+
+        synchronized (accelerators) {
+            assert (accelerators.get(keypress) == null);
+            accelerators.put(keypress, item);
+        }
     }
 
     /**

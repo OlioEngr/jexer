@@ -108,6 +108,21 @@ public final class Cell extends CellAttributes {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        int A = 13;
+        int B = 23;
+        int hash = A;
+        hash = (B * hash) + super.hashCode();
+        hash = (B * hash) + (int)ch;
+        return hash;
+    }
+
+    /**
      * Set my field values to that's field.
      *
      * @param rhs an instance of either Cell or CellAttributes

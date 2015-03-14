@@ -216,6 +216,16 @@ public final class Color {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        return value;
+    }
+
+    /**
      * Make human-readable description of this Color.
      *
      * @return displayable String "red", "blue", etc.
@@ -239,8 +249,9 @@ public final class Color {
             return "blue";
         case SGRYELLOW:
             return "yellow";
+        default:
+            throw new IllegalArgumentException("Invalid Color value: " + value);
         }
-        throw new IllegalArgumentException("Invalid Color value: " + value);
     }
 
 }

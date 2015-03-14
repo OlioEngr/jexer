@@ -299,6 +299,25 @@ public final class TKeypress {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        int A = 13;
+        int B = 23;
+        int hash = A;
+        hash = (B * hash) + (isKey ? 1 : 0);
+        hash = (B * hash) + fnKey;
+        hash = (B * hash) + (int)ch;
+        hash = (B * hash) + (alt ? 1 : 0);
+        hash = (B * hash) + (ctrl ? 1 : 0);
+        hash = (B * hash) + (shift ? 1 : 0);
+        return hash;
+    }
+
+    /**
      * Make human-readable description of this TKeypress.
      *
      * @return displayable String
@@ -471,16 +490,14 @@ public final class TKeypress {
     }
 
     /**
-     * Convert a keypress to lowercase.  Function keys and ctrl keys are not
-     * converted.
+     * Convert a keypress to lowercase.  Function keys and alt/ctrl keys are
+     * not converted.
      *
-     * @param key keypress to convert
      * @return a new instance with the key converted
      */
-    public static TKeypress toLower(final TKeypress key) {
-        TKeypress newKey = new TKeypress(key.isKey, key.fnKey, key.ch,
-            key.alt, key.ctrl, key.shift);
-        if (!(key.isKey) && (key.ch >= 'A') && (key.ch <= 'Z') && (!key.ctrl)) {
+    public TKeypress toLowerCase() {
+        TKeypress newKey = new TKeypress(isKey, fnKey, ch, alt, ctrl, shift);
+        if (!isKey && (ch >= 'A') && (ch <= 'Z') && !ctrl && !alt) {
             newKey.shift = false;
             newKey.ch += 32;
         }
@@ -488,16 +505,14 @@ public final class TKeypress {
     }
 
     /**
-     * Convert a keypress to uppercase.  Function keys and ctrl keys are not
-     * converted.
+     * Convert a keypress to uppercase.  Function keys and alt/ctrl keys are
+     * not converted.
      *
-     * @param key keypress to convert
      * @return a new instance with the key converted
      */
-    public static TKeypress toUpper(final TKeypress key) {
-        TKeypress newKey = new TKeypress(key.isKey, key.fnKey, key.ch,
-            key.alt, key.ctrl, key.shift);
-        if (!(key.isKey) && (key.ch >= 'a') && (key.ch <= 'z') && (!key.ctrl)) {
+    public TKeypress toUpperCase() {
+        TKeypress newKey = new TKeypress(isKey, fnKey, ch, alt, ctrl, shift);
+        if (!isKey && (ch >= 'a') && (ch <= 'z') && !ctrl && !alt) {
             newKey.shift = true;
             newKey.ch -= 32;
         }

@@ -158,6 +158,16 @@ public class TCommand {
         return (type == that.type);
     }
 
+    /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        return type;
+    }
+
     public static final TCommand cmAbort      = new TCommand(ABORT);
     public static final TCommand cmExit       = new TCommand(EXIT);
     public static final TCommand cmQuit       = new TCommand(EXIT);

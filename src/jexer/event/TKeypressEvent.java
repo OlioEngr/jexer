@@ -116,6 +116,21 @@ public final class TKeypressEvent extends TInputEvent {
     }
 
     /**
+     * Hashcode uses all fields in equals().
+     *
+     * @return the hash
+     */
+    @Override
+    public int hashCode() {
+        int A = 13;
+        int B = 23;
+        int hash = A;
+        hash = (B * hash) + getTime().hashCode();
+        hash = (B * hash) + key.hashCode();
+        return hash;
+    }
+
+    /**
      * Make human-readable description of this TKeypressEvent.
      *
      * @return displayable String

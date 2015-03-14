@@ -351,7 +351,7 @@ public final class TMenu extends TWindow {
         for (TWidget widget: getChildren()) {
             widget.setWidth(getWidth() - 2);
         }
-        getApplication().addAccelerator(menuItem, toLower(key));
+        getApplication().addAccelerator(menuItem, key.toLowerCase());
         getApplication().recomputeMenuX();
         activate(0);
         return menuItem;

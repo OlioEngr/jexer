@@ -30,6 +30,7 @@
  */
 package jexer.menu;
 
+import jexer.TKeypress;
 import jexer.TWidget;
 import jexer.bits.CellAttributes;
 import jexer.bits.GraphicsChars;
@@ -172,5 +173,60 @@ public class TSubMenu extends TMenuItem {
         // Menu not active, return me
         return this;
     }
+
+    /**
+     * Convenience function to add a custom menu item.
+     *
+     * @param id menu item ID.  Must be greater than 1024.
+     * @param label menu item label
+     * @param key global keyboard accelerator
+     * @return the new menu item
+     */
+    public final TMenuItem addItem(final int id, final String label,
+        final TKeypress key) {
+
+        return menu.addItem(id, label, key);
+    }
+
+    /**
+     * Convenience function to add a menu item.
+     *
+     * @param id menu item ID.  Must be greater than 1024.
+     * @param label menu item label
+     * @return the new menu item
+     */
+    public final TMenuItem addItem(final int id, final String label) {
+        return menu.addItem(id, label);
+    }
+
+    /**
+     * Convenience function to add one of the default menu items.
+     *
+     * @param id menu item ID.  Must be between 0 (inclusive) and 1023
+     * (inclusive).
+     * @return the new menu item
+     */
+    public final TMenuItem addDefaultItem(final int id) {
+        return menu.addDefaultItem(id);
+    }
+
+    /**
+     * Convenience function to add a menu separator.
+     */
+    public final void addSeparator() {
+        menu.addSeparator();
+    }
+
+    /**
+     * Convenience function to add a sub-menu.
+     *
+     * @param title menu title.  Title must contain a keyboard shortcut,
+     * denoted by prefixing a letter with "&", e.g. "&File"
+     * @return the new sub-menu
+     */
+    public final TSubMenu addSubMenu(final String title) {
+        return menu.addSubMenu(title);
+    }
+
 
 }

@@ -84,9 +84,15 @@ public class TApplication {
     private int mouseY;
 
     /**
-     * Event queue that will be drained by either primary or secondary Fiber.
+     * Event queue that is filled by run().
      */
-    private List<TInputEvent> eventQueue;
+    private List<TInputEvent> fillEventQueue;
+
+    /**
+     * Event queue that will be drained by either primary or secondary
+     * Thread.
+     */
+    private List<TInputEvent> drainEventQueue;
 
     /**
      * Top-level menus in this application.
@@ -190,13 +196,14 @@ public class TApplication {
     public TApplication(final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
-        backend       = new ECMA48Backend(input, output);
-        theme         = new ColorTheme();
-        desktopBottom = getScreen().getHeight() - 1;
-        eventQueue    = new LinkedList<TInputEvent>();
-        windows       = new LinkedList<TWindow>();
-        menus         = new LinkedList<TMenu>();
-        subMenus      = new LinkedList<TMenu>();
+        backend         = new ECMA48Backend(input, output);
+        theme           = new ColorTheme();
+        desktopBottom   = getScreen().getHeight() - 1;
+        fillEventQueue  = new LinkedList<TInputEvent>();
+        drainEventQueue = new LinkedList<TInputEvent>();
+        windows         = new LinkedList<TWindow>();
+        menus           = new LinkedList<TMenu>();
+        subMenus        = new LinkedList<TMenu>();
     }
 
     /**
@@ -315,23 +322,39 @@ public class TApplication {
      * Run this application until it exits.
      */
     public final void run() {
-        List<TInputEvent> events = new LinkedList<TInputEvent>();
-
         while (!quit) {
             // Timeout is in milliseconds, so default timeout after 1 second
             // of inactivity.
             int timeout = getSleepTime(1000);
 
-            if (eventQueue.size() > 0) {
-                // Do not wait if there are definitely events waiting to be
-                // processed or a screen redraw to do.
-                timeout = 0;
+            // See if there are any definitely events waiting to be processed
+            // or a screen redraw to do.  If so, do not wait if there is no
+            // I/O coming in.
+            synchronized (drainEventQueue) {
+                if (drainEventQueue.size() > 0) {
+                    timeout = 0;
+                }
+            }
+            synchronized (fillEventQueue) {
+                if (fillEventQueue.size() > 0) {
+                    timeout = 0;
+                }
             }
 
-            // Pull any pending input events
-            backend.getEvents(events, timeout);
-            metaHandleEvents(events);
-            events.clear();
+            // Pull any pending I/O events
+            backend.getEvents(fillEventQueue, timeout);
+
+            // Dispatch each event to the appropriate handler, one at a time.
+            for (;;) {
+                TInputEvent event = null;
+                synchronized (fillEventQueue) {
+                    if (fillEventQueue.size() == 0) {
+                        break;
+                    }
+                    event = fillEventQueue.remove(0);
+                }
+                metaHandleEvent(event);
+            }
 
             // Process timers and call doIdle()'s
             doIdle();
@@ -364,92 +387,88 @@ public class TApplication {
 
     /**
      * Peek at certain application-level events, add to eventQueue, and wake
-     * up the consuming Fiber.
+     * up the consuming Thread.
      *
-     * @param events the input events to consume
+     * @param event the input event to consume
      */
-    private void metaHandleEvents(final List<TInputEvent> events) {
+    private void metaHandleEvent(final TInputEvent event) {
 
-        for (TInputEvent event: events) {
+        /*
+         System.err.printf(String.format("metaHandleEvents event: %s\n",
+         event)); System.err.flush();
+         */
 
-            /*
-            System.err.printf(String.format("metaHandleEvents event: %s\n",
-                    event)); System.err.flush();
-             */
+        if (quit) {
+            // Do no more processing if the application is already trying
+            // to exit.
+            return;
+        }
 
-            if (quit) {
-                // Do no more processing if the application is already trying
-                // to exit.
+        // DEBUG
+        if (event instanceof TKeypressEvent) {
+            TKeypressEvent keypress = (TKeypressEvent) event;
+            if (keypress.equals(kbAltX)) {
+                quit = true;
                 return;
             }
+        }
+        // DEBUG
 
-            // DEBUG
-            if (event instanceof TKeypressEvent) {
-                TKeypressEvent keypress = (TKeypressEvent) event;
-                if (keypress.equals(kbAltX)) {
-                    quit = true;
-                    return;
-                }
+        // Special application-wide events -------------------------------
+
+        // Abort everything
+        if (event instanceof TCommandEvent) {
+            TCommandEvent command = (TCommandEvent) event;
+            if (command.getCmd().equals(cmAbort)) {
+                quit = true;
+                return;
             }
-            // DEBUG
+        }
 
-            // Special application-wide events -------------------------------
+        // Screen resize
+        if (event instanceof TResizeEvent) {
+            TResizeEvent resize = (TResizeEvent) event;
+            getScreen().setDimensions(resize.getWidth(),
+                resize.getHeight());
+            desktopBottom = getScreen().getHeight() - 1;
+            repaint = true;
+            mouseX = 0;
+            mouseY = 0;
+            return;
+        }
 
-            // Abort everything
-            if (event instanceof TCommandEvent) {
-                TCommandEvent command = (TCommandEvent) event;
-                if (command.getCmd().equals(cmAbort)) {
-                    quit = true;
-                    return;
-                }
+        // Peek at the mouse position
+        if (event instanceof TMouseEvent) {
+            TMouseEvent mouse = (TMouseEvent) event;
+            if ((mouseX != mouse.getX()) || (mouseY != mouse.getY())) {
+                mouseX = mouse.getX();
+                mouseY = mouse.getY();
+                drawMouse();
             }
+        }
 
-            // Screen resize
-            if (event instanceof TResizeEvent) {
-                TResizeEvent resize = (TResizeEvent) event;
-                getScreen().setDimensions(resize.getWidth(),
-                    resize.getHeight());
-                desktopBottom = getScreen().getHeight() - 1;
-                repaint = true;
-                mouseX = 0;
-                mouseY = 0;
-                continue;
-            }
+        // TODO: change to two separate threads
+        primaryHandleEvent(event);
 
-            // Peek at the mouse position
-            if (event instanceof TMouseEvent) {
-                TMouseEvent mouse = (TMouseEvent) event;
-                if ((mouseX != mouse.getX()) || (mouseY != mouse.getY())) {
-                    mouseX = mouse.getX();
-                    mouseY = mouse.getY();
-                    drawMouse();
-                }
-            }
+        /*
 
-            // TODO: change to two separate threads
-            primaryHandleEvent(event);
+         // Put into the main queue
+         addEvent(event);
 
-            /*
+         // Have one of the two consumer Fibers peel the events off
+         // the queue.
+         if (secondaryEventFiber !is null) {
+         assert(secondaryEventFiber.state == Fiber.State.HOLD);
 
-            // Put into the main queue
-            addEvent(event);
+         // Wake up the secondary handler for these events
+         secondaryEventFiber.call();
+         } else {
+         assert(primaryEventFiber.state == Fiber.State.HOLD);
 
-            // Have one of the two consumer Fibers peel the events off
-            // the queue.
-            if (secondaryEventFiber !is null) {
-                assert(secondaryEventFiber.state == Fiber.State.HOLD);
-
-                // Wake up the secondary handler for these events
-                secondaryEventFiber.call();
-            } else {
-                assert(primaryEventFiber.state == Fiber.State.HOLD);
-
-                // Wake up the primary handler for these events
-                primaryEventFiber.call();
-            }
-             */
-
-        } // for (TInputEvent event: events)
+         // Wake up the primary handler for these events
+         primaryEventFiber.call();
+         }
+         */
 
     }
 
@@ -1022,10 +1041,10 @@ public class TApplication {
      */
     protected boolean onMenu(final TMenuEvent menu) {
 
-        /*
-         TODO
         // Default: handle MID_EXIT
-        if (menu.id == TMenu.MID_EXIT) {
+        if (menu.getId() == TMenu.MID_EXIT) {
+            /*
+             TODO
             if (messageBox("Confirmation", "Exit application?",
                     TMessageBox.Type.YESNO).result == TMessageBox.Result.YES) {
                 quit = true;
@@ -1033,30 +1052,36 @@ public class TApplication {
             // System.err.printf("onMenu MID_EXIT result: quit = %s\n", quit);
             repaint = true;
             return true;
+             */
+            quit = true;
+            repaint = true;
+            return true;
         }
 
+        /*
+         TODO
         if (menu.id == TMenu.MID_SHELL) {
             openTerminal(0, 0, TWindow.Flag.RESIZABLE);
             repaint = true;
             return true;
         }
+         */
 
-        if (menu.id == TMenu.MID_TILE) {
+        if (menu.getId() == TMenu.MID_TILE) {
             tileWindows();
             repaint = true;
             return true;
         }
-        if (menu.id == TMenu.MID_CASCADE) {
+        if (menu.getId() == TMenu.MID_CASCADE) {
             cascadeWindows();
             repaint = true;
             return true;
         }
-        if (menu.id == TMenu.MID_CLOSE_ALL) {
+        if (menu.getId() == TMenu.MID_CLOSE_ALL) {
             closeAllWindows();
             repaint = true;
             return true;
         }
-        */
         return false;
     }
 
@@ -1125,10 +1150,9 @@ public class TApplication {
      * @param event new event to add to the queue
      */
     public final void addMenuEvent(final TInputEvent event) {
-        /*
-         TODO - synchronize correctly
-        eventQueue ~= event;
-         */
+        synchronized (fillEventQueue) {
+            fillEventQueue.add(event);
+        }
         closeMenu();
     }
 
@@ -1139,6 +1163,165 @@ public class TApplication {
      */
     public final void addSubMenu(final TMenu menu) {
         subMenus.add(menu);
+    }
+
+    /**
+     * Convenience function to add a top-level menu.
+     *
+     * @param title menu title
+     * @return the new menu
+     */
+    public final TMenu addMenu(String title) {
+        int x = 0;
+        int y = 0;
+        TMenu menu = new TMenu(this, x, y, title);
+        menus.add(menu);
+        recomputeMenuX();
+        return menu;
+    }
+
+    /**
+     * Convenience function to add a default "File" menu.
+     *
+     * @return the new menu
+     */
+    public final TMenu addFileMenu() {
+        TMenu fileMenu = addMenu("&File");
+        fileMenu.addDefaultItem(TMenu.MID_OPEN_FILE);
+        fileMenu.addSeparator();
+        fileMenu.addDefaultItem(TMenu.MID_SHELL);
+        fileMenu.addDefaultItem(TMenu.MID_EXIT);
+        return fileMenu;
+    }
+
+    /**
+     * Convenience function to add a default "Edit" menu.
+     *
+     * @return the new menu
+     */
+    public final TMenu addEditMenu() {
+        TMenu editMenu = addMenu("&Edit");
+        editMenu.addDefaultItem(TMenu.MID_CUT);
+        editMenu.addDefaultItem(TMenu.MID_COPY);
+        editMenu.addDefaultItem(TMenu.MID_PASTE);
+        editMenu.addDefaultItem(TMenu.MID_CLEAR);
+        return editMenu;
+    }
+
+    /**
+     * Convenience function to add a default "Window" menu.
+     *
+     * @return the new menu
+     */
+    final public TMenu addWindowMenu() {
+        TMenu windowMenu = addMenu("&Window");
+        windowMenu.addDefaultItem(TMenu.MID_TILE);
+        windowMenu.addDefaultItem(TMenu.MID_CASCADE);
+        windowMenu.addDefaultItem(TMenu.MID_CLOSE_ALL);
+        windowMenu.addSeparator();
+        windowMenu.addDefaultItem(TMenu.MID_WINDOW_MOVE);
+        windowMenu.addDefaultItem(TMenu.MID_WINDOW_ZOOM);
+        windowMenu.addDefaultItem(TMenu.MID_WINDOW_NEXT);
+        windowMenu.addDefaultItem(TMenu.MID_WINDOW_PREVIOUS);
+        windowMenu.addDefaultItem(TMenu.MID_WINDOW_CLOSE);
+        return windowMenu;
+    }
+
+    /**
+     * Close all open windows.
+     */
+    private void closeAllWindows() {
+        // Don't do anything if we are in the menu
+        if (activeMenu != null) {
+            return;
+        }
+        for (TWindow window: windows) {
+            closeWindow(window);
+        }
+    }
+
+    /**
+     * Re-layout the open windows as non-overlapping tiles.  This produces
+     * almost the same results as Turbo Pascal 7.0's IDE.
+     */
+    private void tileWindows() {
+        // Don't do anything if we are in the menu
+        if (activeMenu != null) {
+            return;
+        }
+        int z = windows.size();
+        if (z == 0) {
+            return;
+        }
+        int a = 0;
+        int b = 0;
+        a = (int)(Math.sqrt(z));
+        int c = 0;
+        while (c < a) {
+            b = (z - c) / a;
+            if (((a * b) + c) == z) {
+                break;
+            }
+            c++;
+        }
+        assert (a > 0);
+        assert (b > 0);
+        assert (c < a);
+        int newWidth = (getScreen().getWidth() / a);
+        int newHeight1 = ((getScreen().getHeight() - 1) / b);
+        int newHeight2 = ((getScreen().getHeight() - 1) / (b + c));
+        // System.err.printf("Z %s a %s b %s c %s newWidth %s newHeight1 %s newHeight2 %s",
+        //     z, a, b, c, newWidth, newHeight1, newHeight2);
+
+        List<TWindow> sorted = new LinkedList<TWindow>(windows);
+        Collections.sort(sorted);
+        Collections.reverse(sorted);
+        for (int i = 0; i < sorted.size(); i++) {
+            int logicalX = i / b;
+            int logicalY = i % b;
+            if (i >= ((a - 1) * b)) {
+                logicalX = a - 1;
+                logicalY = i - ((a - 1) * b);
+            }
+
+            TWindow w = sorted.get(i);
+            w.setX(logicalX * newWidth);
+            w.setWidth(newWidth);
+            if (i >= ((a - 1) * b)) {
+                w.setY((logicalY * newHeight2) + 1);
+                w.setHeight(newHeight2);
+            } else {
+                w.setY((logicalY * newHeight1) + 1);
+                w.setHeight(newHeight1);
+            }
+        }
+    }
+
+    /**
+     * Re-layout the open windows as overlapping cascaded windows.
+     */
+    private void cascadeWindows() {
+        // Don't do anything if we are in the menu
+        if (activeMenu != null) {
+            return;
+        }
+        int x = 0;
+        int y = 1;
+        List<TWindow> sorted = new LinkedList<TWindow>(windows);
+        Collections.sort(sorted);
+        Collections.reverse(sorted);
+        for (TWindow w: sorted) {
+            w.setX(x);
+            w.setY(y);
+            x++;
+            y++;
+            if (x > getScreen().getWidth()) {
+                x = 0;
+            }
+            if (y >= getScreen().getHeight()) {
+                y = 1;
+            }
+        }
     }
 
 }

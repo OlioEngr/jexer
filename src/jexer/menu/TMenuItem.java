@@ -62,6 +62,15 @@ public class TMenuItem extends TWidget {
     private boolean checkable = false;
 
     /**
+     * Set checkable flag.
+     *
+     * @param checkable if true, this menu item can be checked/unchecked
+     */
+    public final void setCheckable(final boolean checkable) {
+        this.checkable = checkable;
+    }
+    
+    /**
      * When true, this item is checked.
      */
     private boolean checked = false;

@@ -634,7 +634,9 @@ public class ECMA48Terminal implements Runnable {
     public void getEvents(final List<TInputEvent> queue) {
         synchronized (eventQueue) {
             if (eventQueue.size() > 0) {
-                queue.addAll(eventQueue);
+                synchronized (queue) {
+                    queue.addAll(eventQueue);
+                }
                 eventQueue.clear();
             }
         }
@@ -665,7 +667,9 @@ public class ECMA48Terminal implements Runnable {
 
         synchronized (eventQueue) {
             if (eventQueue.size() > 0) {
-                queue.addAll(eventQueue);
+                synchronized (queue) {
+                    queue.addAll(eventQueue);
+                }
                 eventQueue.clear();
             }
         }

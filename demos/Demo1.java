@@ -32,6 +32,7 @@
  */
 
 import jexer.*;
+import jexer.menu.*;
 
 class DemoMainWindow extends TWindow {
     /*
@@ -43,27 +44,27 @@ class DemoMainWindow extends TWindow {
     // do this kind of logic on their own.
     private TWindow modalWindow;
     private void openModalWindow() {
-	modalWindow = application.addWindow("Demo Modal Window", 0, 0,
-	    58, 15, TWindow.Flag.MODAL);
-	modalWindow.addLabel("This is an example of a very braindead modal window.", 1, 1);
-	modalWindow.addLabel("Modal windows are centered by default.", 1, 2);
-	modalWindow.addButton("&Close", (modalWindow.width - 8)/2,
-	    modalWindow.height - 4, &modalWindowClose);
+        modalWindow = application.addWindow("Demo Modal Window", 0, 0,
+            58, 15, TWindow.Flag.MODAL);
+        modalWindow.addLabel("This is an example of a very braindead modal window.", 1, 1);
+        modalWindow.addLabel("Modal windows are centered by default.", 1, 2);
+        modalWindow.addButton("&Close", (modalWindow.width - 8)/2,
+            modalWindow.height - 4, &modalWindowClose);
     }
     private void modalWindowClose() {
-	application.closeWindow(modalWindow);
+        application.closeWindow(modalWindow);
     }
 
     /// This is an example of having a button call a function.
     private void openCheckboxWindow() {
-	new DemoCheckboxWindow(application);
+        new DemoCheckboxWindow(application);
     }
 
     /// We need to override onClose so that the timer will no longer be
     /// called after we close the window.  TTimers currently are completely
     /// unaware of the rest of the UI classes.
     override public void onClose() {
-	application.removeTimer(timer);
+        application.removeTimer(timer);
     }
      */
 
@@ -71,111 +72,111 @@ class DemoMainWindow extends TWindow {
      * Construct demo window.  It will be centered on screen.
      */
     public DemoMainWindow(TApplication parent) {
-	this(parent, CENTERED | RESIZABLE);
+        this(parent, CENTERED | RESIZABLE);
     }
 
     /**
      * Constructor.
      */
     private DemoMainWindow(TApplication parent, int flags) {
-	// Construct a demo window.  X and Y don't matter because it will be
-	// centered on screen.
-	super(parent, "Demo Window", 0, 0, 60, 23, flags);
+        // Construct a demo window.  X and Y don't matter because it will be
+        // centered on screen.
+        super(parent, "Demo Window", 0, 0, 60, 23, flags);
 
         /*
-	int row = 1;
+        int row = 1;
 
-	// Add some widgets
-	if (!isModal) {
-	    addLabel("Message Boxes", 1, row);
-	    addButton("&MessageBoxes", 35, row,
-		{
-		    new DemoMsgBoxWindow(application);
-		}
-	    );
-	}
-	row += 2;
+        // Add some widgets
+        if (!isModal) {
+            addLabel("Message Boxes", 1, row);
+            addButton("&MessageBoxes", 35, row,
+                {
+                    new DemoMsgBoxWindow(application);
+                }
+            );
+        }
+        row += 2;
 
-	addLabel("Open me as modal", 1, row);
-	addButton("W&indow", 35, row,
-	    {
-		new DemoMainWindow(application, Flag.MODAL);
-	    }
-	);
+        addLabel("Open me as modal", 1, row);
+        addButton("W&indow", 35, row,
+            {
+                new DemoMainWindow(application, Flag.MODAL);
+            }
+        );
 
-	row += 2;
+        row += 2;
 
-	addLabel("Variable-width text field:", 1, row);
-	addField(35, row++, 15, false, "Field text");
+        addLabel("Variable-width text field:", 1, row);
+        addField(35, row++, 15, false, "Field text");
 
-	addLabel("Fixed-width text field:", 1, row);
-	addField(35, row, 15, true);
-	row += 2;
+        addLabel("Fixed-width text field:", 1, row);
+        addField(35, row, 15, true);
+        row += 2;
 
-	if (!isModal) {
-	    addLabel("Radio buttons and checkboxes", 1, row);
-	    addButton("&Checkboxes", 35, row, &openCheckboxWindow);
-	}
-	row += 2;
+        if (!isModal) {
+            addLabel("Radio buttons and checkboxes", 1, row);
+            addButton("&Checkboxes", 35, row, &openCheckboxWindow);
+        }
+        row += 2;
 
-	if (!isModal) {
-	    addLabel("Editor window", 1, row);
-	    addButton("Edito&r", 35, row,
-		{
-		    new TEditor(application, 0, 0, 60, 15);
-		}
-	    );
-	}
-	row += 2;
+        if (!isModal) {
+            addLabel("Editor window", 1, row);
+            addButton("Edito&r", 35, row,
+                {
+                    new TEditor(application, 0, 0, 60, 15);
+                }
+            );
+        }
+        row += 2;
 
-	if (!isModal) {
-	    addLabel("Text areas", 1, row);
-	    addButton("&Text", 35, row,
-		{
-		    new DemoTextWindow(application);
-		}
-	    );
-	}
-	row += 2;
+        if (!isModal) {
+            addLabel("Text areas", 1, row);
+            addButton("&Text", 35, row,
+                {
+                    new DemoTextWindow(application);
+                }
+            );
+        }
+        row += 2;
 
-	if (!isModal) {
-	    addLabel("Tree views", 1, row);
-	    addButton("Tree&View", 35, row,
-		{
-		    new DemoTreeViewWindow(application);
-		}
-	    );
-	}
-	row += 2;
+        if (!isModal) {
+            addLabel("Tree views", 1, row);
+            addButton("Tree&View", 35, row,
+                {
+                    new DemoTreeViewWindow(application);
+                }
+            );
+        }
+        row += 2;
 
-	version(Posix) {
-	    if (!isModal) {
-		addLabel("Terminal", 1, row);
-		addButton("Termi&nal", 35, row,
-		    {
-			application.openTerminal(0, 0);
-		    }
-		);
-	    }
-	    row += 2;
-	}
+        version(Posix) {
+            if (!isModal) {
+                addLabel("Terminal", 1, row);
+                addButton("Termi&nal", 35, row,
+                    {
+                        application.openTerminal(0, 0);
+                    }
+                );
+            }
+            row += 2;
+        }
 
-	TProgressBar bar = addProgressBar(1, row, 22);
-	row++;
-	TLabel timerLabel = addLabel("Timer", 1, row);
-	timer = parent.addTimer(100,
-	    {
-		static int i = 0;
-		auto writer = appender!dstring();
-		formattedWrite(writer, "Timer: %d", i);
-		timerLabel.text = writer.data;
-		timerLabel.width = cast(uint)timerLabel.text.length;
-		if (i < 100) {
-		    i++;
-		}
-		bar.value = i;
-		parent.repaint = true;
-	    }, true);
+        TProgressBar bar = addProgressBar(1, row, 22);
+        row++;
+        TLabel timerLabel = addLabel("Timer", 1, row);
+        timer = parent.addTimer(100,
+            {
+                static int i = 0;
+                auto writer = appender!dstring();
+                formattedWrite(writer, "Timer: %d", i);
+                timerLabel.text = writer.data;
+                timerLabel.width = cast(uint)timerLabel.text.length;
+                if (i < 100) {
+                    i++;
+                }
+                bar.value = i;
+                parent.repaint = true;
+            }, true);
          */
     }
 }
@@ -188,13 +189,45 @@ class DemoApplication extends TApplication {
      * Public constructor
      */
     public DemoApplication() throws Exception {
-	super(null, null);
-	new DemoMainWindow(this);
-	TWindow window2 = new DemoMainWindow(this);
+        super(null, null);
+        new DemoMainWindow(this);
+
+        // TEMPORARY
+        TWindow window2 = new DemoMainWindow(this);
         window2.setHeight(5);
         window2.setWidth(25);
         window2.setX(17);
         window2.setY(6);
+        // TEMPORARY
+
+        // Add the menus
+        addFileMenu();
+        addEditMenu();
+
+        TMenu demoMenu = addMenu("&Demo");
+        TMenuItem item = demoMenu.addItem(2000, "&Checkable");
+        item.setCheckable(true);
+        item = demoMenu.addItem(2001, "Disabled");
+        item.setEnabled(false);
+        item = demoMenu.addItem(2002, "&Normal");
+        TSubMenu subMenu = demoMenu.addSubMenu("Sub-&Menu");
+        item = demoMenu.addItem(2010, "N&ormal A&&D");
+
+        item = subMenu.addItem(2000, "&Checkable (sub)");
+        item.setCheckable(true);
+        item = subMenu.addItem(2001, "Disabled (sub)");
+        item.setEnabled(false);
+        item = subMenu.addItem(2002, "&Normal (sub)");
+
+        subMenu = subMenu.addSubMenu("Sub-&Menu");
+        item = subMenu.addItem(2000, "&Checkable (sub)");
+        item.setCheckable(true);
+        item = subMenu.addItem(2001, "Disabled (sub)");
+        item.setEnabled(false);
+        item = subMenu.addItem(2002, "&Normal (sub)");
+
+        addWindowMenu();
+
     }
 }
 
@@ -208,12 +241,12 @@ public class Demo1 {
      * @param  args Command line arguments
      */
     public static void main(String [] args) {
-	try {
-	    DemoApplication app = new DemoApplication();
-	    app.run();
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        try {
+            DemoApplication app = new DemoApplication();
+            app.run();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

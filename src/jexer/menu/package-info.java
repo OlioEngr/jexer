@@ -1,4 +1,4 @@
-/**
+/*
  * Jexer - Java Text User Interface
  *
  * License: LGPLv3 or later
@@ -28,45 +28,8 @@
  * @author Kevin Lamonte [kevin.lamonte@gmail.com]
  * @version 1
  */
-package jexer.event;
 
 /**
- * This class encapsulates a menu selection event.
- * TApplication.getMenuItem(id) can be used to obtain the TMenuItem itself,
- * say for setting enabled/disabled/checked/etc.
+ * This package contains the menu bar classes.
  */
-public final class TMenuEvent extends TInputEvent {
-
-    /**
-     * MenuItem ID.
-     */
-    private int id;
-
-    /**
-     * Get the MenuItem ID.
-     *
-     * @return the ID
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Public contructor.
-     *
-     * @param id the MenuItem ID
-     */
-    public TMenuEvent(final int id) {
-        this.id = id;
-    }
-
-    /**
-     * Make human-readable description of this TMenuEvent.
-     *
-     * @return displayable String
-     */
-    @Override
-    public String toString() {
-        return String.format("MenuEvent: %d", id);
-    }
-}
+package jexer.menu;

@@ -39,6 +39,7 @@ import jexer.event.TMenuEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.io.Screen;
+import jexer.menu.TMenu;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 
@@ -57,6 +58,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return this TWindow's parent TApplication
      */
+    @Override
     public final TApplication getApplication() {
         return application;
     }
@@ -66,6 +68,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the Screen
      */
+    @Override
     public final Screen getScreen() {
         return application.getScreen();
     }
@@ -162,7 +165,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
     /**
      * Remember mouse state.
      */
-    private TMouseEvent mouse;
+    protected TMouseEvent mouse;
 
     // For moving the window.  resizing also uses moveWindowMouseX/Y
     private int moveWindowMouseX;
@@ -369,26 +372,26 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the background color
      */
-    private final CellAttributes getBackground() {
+    private CellAttributes getBackground() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
             assert (getActive());
-            return application.getTheme().getColor("twindow.background.windowmove");
+            return getTheme().getColor("twindow.background.windowmove");
         } else if (isModal() && inWindowMove) {
             assert (getActive());
-            return application.getTheme().getColor("twindow.background.modal");
+            return getTheme().getColor("twindow.background.modal");
         } else if (isModal()) {
             if (getActive()) {
-                return application.getTheme().getColor("twindow.background.modal");
+                return getTheme().getColor("twindow.background.modal");
             }
-            return application.getTheme().getColor("twindow.background.modal.inactive");
+            return getTheme().getColor("twindow.background.modal.inactive");
         } else if (getActive()) {
             assert (!isModal());
-            return application.getTheme().getColor("twindow.background");
+            return getTheme().getColor("twindow.background");
         } else {
             assert (!isModal());
-            return application.getTheme().getColor("twindow.background.inactive");
+            return getTheme().getColor("twindow.background.inactive");
         }
     }
 
@@ -397,27 +400,27 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the border color
      */
-    private final CellAttributes getBorder() {
+    private CellAttributes getBorder() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
             assert (getActive());
-            return application.getTheme().getColor("twindow.border.windowmove");
+            return getTheme().getColor("twindow.border.windowmove");
         } else if (isModal() && inWindowMove) {
             assert (getActive());
-            return application.getTheme().getColor("twindow.border.modal.windowmove");
+            return getTheme().getColor("twindow.border.modal.windowmove");
         } else if (isModal()) {
             if (getActive()) {
-                return application.getTheme().getColor("twindow.border.modal");
+                return getTheme().getColor("twindow.border.modal");
             } else {
-                return application.getTheme().getColor("twindow.border.modal.inactive");
+                return getTheme().getColor("twindow.border.modal.inactive");
             }
         } else if (getActive()) {
             assert (!isModal());
-            return application.getTheme().getColor("twindow.border");
+            return getTheme().getColor("twindow.border");
         } else {
             assert (!isModal());
-            return application.getTheme().getColor("twindow.border.inactive");
+            return getTheme().getColor("twindow.border.inactive");
         }
     }
 
@@ -426,7 +429,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the border line type
      */
-    private final int getBorderType() {
+    private int getBorderType() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
@@ -483,13 +486,13 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             if (mouseOnClose() && mouse.getMouse1()) {
                 putCharXY(3, 0, GraphicsChars.CP437[0x0F],
                     !isModal()
-                    ? application.getTheme().getColor("twindow.border.windowmove")
-                    : application.getTheme().getColor("twindow.border.modal.windowmove"));
+                    ? getTheme().getColor("twindow.border.windowmove")
+                    : getTheme().getColor("twindow.border.modal.windowmove"));
             } else {
                 putCharXY(3, 0, GraphicsChars.CP437[0xFE],
                     !isModal()
-                    ? application.getTheme().getColor("twindow.border.windowmove")
-                    : application.getTheme().getColor("twindow.border.modal.windowmove"));
+                    ? getTheme().getColor("twindow.border.windowmove")
+                    : getTheme().getColor("twindow.border.modal.windowmove"));
             }
 
             // Draw the maximize button
@@ -499,23 +502,25 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
                 putCharXY(getWidth() - 3, 0, ']', border);
                 if (mouseOnMaximize() && mouse.getMouse1()) {
                     putCharXY(getWidth() - 4, 0, GraphicsChars.CP437[0x0F],
-                        application.getTheme().getColor("twindow.border.windowmove"));
+                        getTheme().getColor("twindow.border.windowmove"));
                 } else {
                     if (maximized) {
                         putCharXY(getWidth() - 4, 0, GraphicsChars.CP437[0x12],
-                            application.getTheme().getColor("twindow.border.windowmove"));
+                            getTheme().getColor("twindow.border.windowmove"));
                     } else {
                         putCharXY(getWidth() - 4, 0, GraphicsChars.UPARROW,
-                            application.getTheme().getColor("twindow.border.windowmove"));
+                            getTheme().getColor("twindow.border.windowmove"));
                     }
                 }
 
                 // Draw the resize corner
                 if ((flags & RESIZABLE) != 0) {
-                    putCharXY(getWidth() - 2, getHeight() - 1, GraphicsChars.SINGLE_BAR,
-                        application.getTheme().getColor("twindow.border.windowmove"));
-                    putCharXY(getWidth() - 1, getHeight() - 1, GraphicsChars.LRCORNER,
-                        application.getTheme().getColor("twindow.border.windowmove"));
+                    putCharXY(getWidth() - 2, getHeight() - 1,
+                        GraphicsChars.SINGLE_BAR,
+                        getTheme().getColor("twindow.border.windowmove"));
+                    putCharXY(getWidth() - 1, getHeight() - 1,
+                        GraphicsChars.LRCORNER,
+                        getTheme().getColor("twindow.border.windowmove"));
                 }
             }
         }

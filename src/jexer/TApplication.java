@@ -49,6 +49,8 @@ import jexer.event.TResizeEvent;
 import jexer.backend.Backend;
 import jexer.backend.ECMA48Backend;
 import jexer.io.Screen;
+import jexer.menu.TMenu;
+import jexer.menu.TMenuItem;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 
@@ -908,7 +910,7 @@ public class TApplication {
     /**
      * Turn off the menu.
      */
-    private void closeMenu() {
+    public final void closeMenu() {
         if (activeMenu != null) {
             activeMenu.setActive(false);
             activeMenu = null;
@@ -923,7 +925,7 @@ public class TApplication {
     /**
      * Turn off a sub-menu.
      */
-    private void closeSubMenu() {
+    public final void closeSubMenu() {
         assert (activeMenu != null);
         TMenu item = subMenus.get(subMenus.size() - 1);
         assert (item != null);
@@ -938,7 +940,7 @@ public class TApplication {
      * @param forward if true, then switch to the next menu in the list,
      * otherwise switch to the previous menu in the list
      */
-    private void switchMenu(final boolean forward) {
+    public final void switchMenu(final boolean forward) {
         assert (activeMenu != null);
 
         for (TMenu menu: subMenus) {
@@ -1089,6 +1091,54 @@ public class TApplication {
         }
 
         return false;
+    }
+
+    /**
+     * Add a keyboard accelerator to the global hash.
+     *
+     * @param item menu item this accelerator relates to
+     * @param keypress keypress that will dispatch a TMenuEvent
+     */
+    public final void addAccelerator(final TMenuItem item,
+        final TKeypress keypress) {
+        /*
+         TODO
+        assert((keypress in accelerators) is null);
+        accelerators[keypress] = item;
+         */
+    }
+
+    /**
+     * Recompute menu x positions based on their title length.
+     */
+    public final void recomputeMenuX() {
+        int x = 0;
+        for (TMenu menu: menus) {
+            menu.setX(x);
+            x += menu.getTitle().length() + 2;
+        }
+    }
+
+    /**
+     * Post an event to process and turn off the menu.
+     *
+     * @param event new event to add to the queue
+     */
+    public final void addMenuEvent(final TInputEvent event) {
+        /*
+         TODO - synchronize correctly
+        eventQueue ~= event;
+         */
+        closeMenu();
+    }
+
+    /**
+     * Add a sub-menu to the list of open sub-menus.
+     *
+     * @param menu sub-menu
+     */
+    public final void addSubMenu(final TMenu menu) {
+        subMenus.add(menu);
     }
 
 }

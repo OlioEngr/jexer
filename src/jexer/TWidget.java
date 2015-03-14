@@ -33,6 +33,7 @@ package jexer;
 import java.util.List;
 import java.util.LinkedList;
 
+import jexer.bits.ColorTheme;
 import jexer.event.TCommandEvent;
 import jexer.event.TInputEvent;
 import jexer.event.TKeypressEvent;
@@ -40,6 +41,7 @@ import jexer.event.TMenuEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.io.Screen;
+import jexer.menu.TMenu;
 import static jexer.TKeypress.*;
 
 /**
@@ -54,6 +56,15 @@ public abstract class TWidget {
      * may contain a TScrollBar.
      */
     private TWidget parent = null;
+
+    /**
+     * Get parent widget.
+     *
+     * @return parent widget
+     */
+    public final TWidget getParent() {
+        return parent;
+    }
 
     /**
      * Backdoor access for TWindow's constructor.  ONLY TWindow USES THIS.
@@ -76,9 +87,43 @@ public abstract class TWidget {
     }
 
     /**
+     * Request full repaint on next screen refresh.
+     */
+    protected final void setRepaint() {
+        window.getApplication().setRepaint();
+    }
+
+    /**
+     * Get this TWidget's parent TApplication.
+     *
+     * @return the parent TApplication
+     */
+    public TApplication getApplication() {
+        return window.getApplication();
+    }
+
+    /**
+     * Get the Screen.
+     *
+     * @return the Screen
+     */
+    public Screen getScreen() {
+        return window.getScreen();
+    }
+
+    /**
      * Child widgets that this widget contains.
      */
     private List<TWidget> children;
+
+    /**
+     * Get the list of child widgets that this widget contains.
+     *
+     * @return the list of child widgets
+     */
+    public List<TWidget> getChildren() {
+        return children;
+    }
 
     /**
      * The currently active child widget that will receive keypress events.
@@ -104,7 +149,7 @@ public abstract class TWidget {
      *
      * @param active if true, this widget will receive events
      */
-    public final void setActive(boolean active) {
+    public final void setActive(final boolean active) {
         this.active = active;
     }
 
@@ -359,6 +404,15 @@ public abstract class TWidget {
     }
 
     /**
+     * Get the global color theme.
+     *
+     * @return the ColorTheme
+     */
+    public final ColorTheme getTheme() {
+        return window.getApplication().getTheme();
+    }
+
+    /**
      * Draw my specific widget.  When called, the screen rectangle I draw
      * into is already setup (offset and clipping).
      */
@@ -571,7 +625,7 @@ public abstract class TWidget {
      *
      * @return widget that is active, or this if no children
      */
-    public final TWidget getActiveChild() {
+    public TWidget getActiveChild() {
         if ((this instanceof THScroller)
             || (this instanceof TVScroller)
         ) {

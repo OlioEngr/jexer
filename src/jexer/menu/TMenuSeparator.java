@@ -28,45 +28,42 @@
  * @author Kevin Lamonte [kevin.lamonte@gmail.com]
  * @version 1
  */
-package jexer.event;
+package jexer.menu;
+
+import jexer.bits.CellAttributes;
+import jexer.bits.GraphicsChars;
 
 /**
- * This class encapsulates a menu selection event.
- * TApplication.getMenuItem(id) can be used to obtain the TMenuItem itself,
- * say for setting enabled/disabled/checked/etc.
+ * TMenuSeparator is a special case menu item.
  */
-public final class TMenuEvent extends TInputEvent {
+public class TMenuSeparator extends TMenuItem {
 
     /**
-     * MenuItem ID.
-     */
-    private int id;
-
-    /**
-     * Get the MenuItem ID.
+     * Package private constructor.
      *
-     * @return the ID
+     * @param parent parent widget
+     * @param x column relative to parent
+     * @param y row relative to parent
      */
-    public int getId() {
-        return id;
+    TMenuSeparator(final TMenu parent, final int x, final int y) {
+        super(parent, TMenu.MID_UNUSED, x, y, "");
+        setEnabled(false);
+        setActive(false);
+        setWidth(parent.getWidth() - 2);
     }
 
     /**
-     * Public contructor.
-     *
-     * @param id the MenuItem ID
-     */
-    public TMenuEvent(final int id) {
-        this.id = id;
-    }
-
-    /**
-     * Make human-readable description of this TMenuEvent.
-     *
-     * @return displayable String
+     * Draw a menu separator.
      */
     @Override
-    public String toString() {
-        return String.format("MenuEvent: %d", id);
+    public void draw() {
+        CellAttributes background = getTheme().getColor("tmenu");
+
+        getScreen().putCharXY(0, 0, GraphicsChars.CP437[0xC3], background);
+        getScreen().putCharXY(getWidth() - 1, 0, GraphicsChars.CP437[0xB4],
+            background);
+        getScreen().hLineXY(1, 0, getWidth() - 2, GraphicsChars.SINGLE_BAR,
+            background);
     }
+
 }

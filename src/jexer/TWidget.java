@@ -159,6 +159,15 @@ public abstract class TWidget {
     private TWindow window = null;
 
     /**
+     * Get the window this widget is on.
+     *
+     * @return the window
+     */
+    public final TWindow getWindow() {
+        return window;
+    }
+
+    /**
      * Absolute X position of the top-left corner.
      */
     private int x = 0;
@@ -483,6 +492,17 @@ public abstract class TWidget {
      * @param parent parent widget
      */
     protected TWidget(final TWidget parent) {
+        this(parent, true);
+    }
+
+    /**
+     * Protected constructor used by subclasses that are disabled by default.
+     *
+     * @param parent parent widget
+     * @param enabled if true assume enabled
+     */
+    protected TWidget(final TWidget parent, final boolean enabled) {
+        this.enabled = enabled;
         this.parent = parent;
         this.window = parent.window;
         children = new LinkedList<TWidget>();
@@ -885,5 +905,49 @@ public abstract class TWidget {
         }
         return false;
     }
+
+    /**
+     * Convenience function to add a label to this container/window.
+     *
+     * @param text label
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @return the new label
+     */
+    public final TLabel addLabel(final String text, final int x, final int y) {
+        return addLabel(text, x, y, "tlabel");
+    }
+
+    /**
+     * Convenience function to add a label to this container/window.
+     *
+     * @param text label
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param colorKey ColorTheme key color to use for foreground text.
+     * Default is "tlabel"
+     * @return the new label
+     */
+    public final TLabel addLabel(final String text, final int x, final int y,
+        final String colorKey) {
+
+        return new TLabel(this, text, x, y, colorKey);
+    }
+
+    /**
+     * Convenience function to add a button to this container/window.
+     *
+     * @param text label on the button
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param action to call when button is pressed
+     * @return the new button
+     */
+    public final TButton addButton(final String text, final int x, final int y,
+        final TAction action) {
+
+        return new TButton(this, text, x, y, action);
+    }
+
 
 }

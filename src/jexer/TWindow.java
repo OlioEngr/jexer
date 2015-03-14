@@ -372,7 +372,7 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
      *
      * @return the background color
      */
-    private CellAttributes getBackground() {
+    public final CellAttributes getBackground() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {

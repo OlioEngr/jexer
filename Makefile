@@ -39,6 +39,9 @@ ANT_TARGET_DIR = build
 TARGET_DIR = classes
 
 JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
+	$(SRC_DIR)/jexer/TAction.java \
+	$(SRC_DIR)/jexer/TButton.java \
+	$(SRC_DIR)/jexer/TLabel.java \
 	$(SRC_DIR)/jexer/TCommand.java \
 	$(SRC_DIR)/jexer/TKeypress.java \
 	$(SRC_DIR)/jexer/THScroller.java \
@@ -56,6 +59,10 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/event/TMenuEvent.java \
 	$(SRC_DIR)/jexer/event/TMouseEvent.java \
 	$(SRC_DIR)/jexer/event/TResizeEvent.java \
+	$(SRC_DIR)/jexer/menu/TMenu.java \
+	$(SRC_DIR)/jexer/menu/TMenuItem.java \
+	$(SRC_DIR)/jexer/menu/TMenuSeparator.java \
+	$(SRC_DIR)/jexer/menu/TSubMenu.java \
 	$(SRC_DIR)/jexer/session/SessionInfo.java \
 	$(SRC_DIR)/jexer/session/TSessionInfo.java \
 	$(SRC_DIR)/jexer/session/TTYSessionInfo.java \
@@ -66,6 +73,9 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/backend/ECMA48Backend.java
 
 JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
+	$(TARGET_DIR)/jexer/TAction.class \
+	$(TARGET_DIR)/jexer/TButton.class \
+	$(TARGET_DIR)/jexer/TLabel.class \
 	$(TARGET_DIR)/jexer/TCommand.class \
 	$(TARGET_DIR)/jexer/TKeypress.class \
 	$(TARGET_DIR)/jexer/THScroller.class \
@@ -83,6 +93,10 @@ JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/event/TMenuEvent.class \
 	$(TARGET_DIR)/jexer/event/TMouseEvent.class \
 	$(TARGET_DIR)/jexer/event/TResizeEvent.class \
+	$(TARGET_DIR)/jexer/menu/TMenu.class \
+	$(TARGET_DIR)/jexer/menu/TMenuItem.class \
+	$(TARGET_DIR)/jexer/menu/TMenuSeparator.class \
+	$(TARGET_DIR)/jexer/menu/TSubMenu.class \
 	$(TARGET_DIR)/jexer/session/SessionInfo.class \
 	$(TARGET_DIR)/jexer/session/TSessionInfo.class \
 	$(TARGET_DIR)/jexer/session/TTYSessionInfo.class \

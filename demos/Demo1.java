@@ -34,6 +34,125 @@
 import jexer.*;
 import jexer.menu.*;
 
+class DemoMsgBoxWindow extends TWindow {
+    /*
+    private void openYNCMessageBox() {
+	application.messageBox("Yes/No/Cancel MessageBox",
+	    q"EOS
+This is an example of a Yes/No/Cancel MessageBox.
+
+Note that the MessageBox text can span multiple
+lines.
+
+The default result (if someone hits the top-left
+close button) is CANCEL.
+EOS",
+	TMessageBox.Type.YESNOCANCEL);
+    }
+
+    private void openYNMessageBox() {
+	application.messageBox("Yes/No MessageBox",
+	    q"EOS
+This is an example of a Yes/No MessageBox.
+
+Note that the MessageBox text can span multiple
+lines.
+
+The default result (if someone hits the top-left
+close button) is NO.
+EOS",
+	TMessageBox.Type.YESNO);
+    }
+
+    private void openOKCMessageBox() {
+	application.messageBox("OK/Cancel MessageBox",
+	    q"EOS
+This is an example of a OK/Cancel MessageBox.
+
+Note that the MessageBox text can span multiple
+lines.
+
+The default result (if someone hits the top-left
+close button) is CANCEL.
+EOS",
+	TMessageBox.Type.OKCANCEL);
+    }
+
+    private void openOKMessageBox() {
+	application.messageBox("OK MessageBox",
+	    q"EOS
+This is an example of a OK MessageBox.  This is the
+default MessageBox.
+
+Note that the MessageBox text can span multiple
+lines.
+
+The default result (if someone hits the top-left
+close button) is OK.
+EOS",
+	TMessageBox.Type.OK);
+    }
+
+     */
+
+    /**
+     * Constructor.
+     */
+    DemoMsgBoxWindow(final TApplication parent) {
+	this(parent, TWindow.CENTERED | TWindow.RESIZABLE);
+    }
+
+    /**
+     * Constructor.
+     */
+    DemoMsgBoxWindow(final TApplication parent, final int flags) {
+	// Construct a demo window.  X and Y don't matter because it
+	// will be centered on screen.
+	super(parent, "Message Boxes", 0, 0, 60, 15, flags);
+        /*
+	uint row = 1;
+
+	// Add some widgets
+	addLabel("Default OK message box", 1, row);
+	addButton("Open O&K MB", 35, row, &openOKMessageBox);
+	row += 2;
+
+	addLabel("OK/Cancel message box", 1, row);
+	addButton("O&pen OKC MB", 35, row, &openOKCMessageBox);
+	row += 2;
+
+	addLabel("Yes/No message box", 1, row);
+	addButton("Open &YN MB", 35, row, &openYNMessageBox);
+	row += 2;
+
+	addLabel("Yes/No/Cancel message box", 1, row);
+	addButton("Ope&n YNC MB", 35, row, &openYNCMessageBox);
+	row += 2;
+
+	addLabel("Input box", 1, row);
+	addButton("Open &input box", 35, row,
+	    {
+		application.inputBox("Input Box",
+	    q"EOS
+This is an example of an InputBox.
+
+Note that the InputBox text can span multiple
+lines.
+EOS",
+		    "some input text");
+	    }
+	);
+
+	addButton("&Close Window", (width - 14) / 2, height - 4,
+	    {
+		application.closeWindow(this);
+	    }
+	);
+         */
+    }
+}
+
+
 class DemoMainWindow extends TWindow {
     /*
     // Timer that increments a number
@@ -83,20 +202,22 @@ class DemoMainWindow extends TWindow {
         // centered on screen.
         super(parent, "Demo Window", 0, 0, 60, 23, flags);
 
-        /*
         int row = 1;
 
         // Add some widgets
-        if (!isModal) {
+        if (!isModal()) {
             addLabel("Message Boxes", 1, row);
             addButton("&MessageBoxes", 35, row,
-                {
-                    new DemoMsgBoxWindow(application);
+                new TAction() {
+                    public void DO() {
+                        new DemoMsgBoxWindow(getApplication());
+                    }
                 }
             );
         }
         row += 2;
 
+        /*
         addLabel("Open me as modal", 1, row);
         addButton("W&indow", 35, row,
             {
@@ -191,14 +312,6 @@ class DemoApplication extends TApplication {
     public DemoApplication() throws Exception {
         super(null, null);
         new DemoMainWindow(this);
-
-        // TEMPORARY
-        TWindow window2 = new DemoMainWindow(this);
-        window2.setHeight(5);
-        window2.setWidth(25);
-        window2.setX(17);
-        window2.setY(6);
-        // TEMPORARY
 
         // Add the menus
         addFileMenu();

@@ -54,12 +54,10 @@ public class MyApplication extends TApplication {
 Roadmap
 -------
 
-This is a work in progress.  Many tasks remain before calling this
-version 1.0:
+Many tasks remain before calling this version 1.0:
 
 0.0.1:
 
-- TButton
 - TCheckbox
 - TDirectoryList
 - TField

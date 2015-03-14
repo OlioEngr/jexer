@@ -34,11 +34,55 @@
 import jexer.*;
 import jexer.menu.*;
 
+class DemoCheckboxWindow extends TWindow {
+
+    /**
+     * Constructor
+     */
+    DemoCheckboxWindow(TApplication parent) {
+        this(parent, CENTERED | RESIZABLE);
+    }
+
+    /**
+     * Constructor
+     */
+    DemoCheckboxWindow(TApplication parent, int flags) {
+        // Construct a demo window.  X and Y don't matter because it
+        // will be centered on screen.
+        super(parent, "Radiobuttons and Checkboxes", 0, 0, 60, 15, flags);
+
+        int row = 1;
+
+        // Add some widgets
+        addLabel("Check box example 1", 1, row);
+        addCheckbox(35, row++, "Checkbox 1", false);
+        addLabel("Check box example 2", 1, row);
+        addCheckbox(35, row++, "Checkbox 2", true);
+        row += 2;
+
+        /*
+        auto group = addRadioGroup(1, row, "Group 1");
+        group.addRadioButton("Radio option 1");
+        group.addRadioButton("Radio option 2");
+        group.addRadioButton("Radio option 3");
+
+        addButton("&Close Window", (width - 14) / 2, height - 4,
+            {
+                application.closeWindow(this);
+            }
+
+        );
+         */
+    }
+
+}
+
+
 class DemoMsgBoxWindow extends TWindow {
     /*
     private void openYNCMessageBox() {
-	application.messageBox("Yes/No/Cancel MessageBox",
-	    q"EOS
+        application.messageBox("Yes/No/Cancel MessageBox",
+            q"EOS
 This is an example of a Yes/No/Cancel MessageBox.
 
 Note that the MessageBox text can span multiple
@@ -47,12 +91,12 @@ lines.
 The default result (if someone hits the top-left
 close button) is CANCEL.
 EOS",
-	TMessageBox.Type.YESNOCANCEL);
+        TMessageBox.Type.YESNOCANCEL);
     }
 
     private void openYNMessageBox() {
-	application.messageBox("Yes/No MessageBox",
-	    q"EOS
+        application.messageBox("Yes/No MessageBox",
+            q"EOS
 This is an example of a Yes/No MessageBox.
 
 Note that the MessageBox text can span multiple
@@ -61,12 +105,12 @@ lines.
 The default result (if someone hits the top-left
 close button) is NO.
 EOS",
-	TMessageBox.Type.YESNO);
+        TMessageBox.Type.YESNO);
     }
 
     private void openOKCMessageBox() {
-	application.messageBox("OK/Cancel MessageBox",
-	    q"EOS
+        application.messageBox("OK/Cancel MessageBox",
+            q"EOS
 This is an example of a OK/Cancel MessageBox.
 
 Note that the MessageBox text can span multiple
@@ -75,12 +119,12 @@ lines.
 The default result (if someone hits the top-left
 close button) is CANCEL.
 EOS",
-	TMessageBox.Type.OKCANCEL);
+        TMessageBox.Type.OKCANCEL);
     }
 
     private void openOKMessageBox() {
-	application.messageBox("OK MessageBox",
-	    q"EOS
+        application.messageBox("OK MessageBox",
+            q"EOS
 This is an example of a OK MessageBox.  This is the
 default MessageBox.
 
@@ -90,7 +134,7 @@ lines.
 The default result (if someone hits the top-left
 close button) is OK.
 EOS",
-	TMessageBox.Type.OK);
+        TMessageBox.Type.OK);
     }
 
      */
@@ -99,55 +143,55 @@ EOS",
      * Constructor.
      */
     DemoMsgBoxWindow(final TApplication parent) {
-	this(parent, TWindow.CENTERED | TWindow.RESIZABLE);
+        this(parent, TWindow.CENTERED | TWindow.RESIZABLE);
     }
 
     /**
      * Constructor.
      */
     DemoMsgBoxWindow(final TApplication parent, final int flags) {
-	// Construct a demo window.  X and Y don't matter because it
-	// will be centered on screen.
-	super(parent, "Message Boxes", 0, 0, 60, 15, flags);
+        // Construct a demo window.  X and Y don't matter because it
+        // will be centered on screen.
+        super(parent, "Message Boxes", 0, 0, 60, 15, flags);
         /*
-	uint row = 1;
+        uint row = 1;
 
-	// Add some widgets
-	addLabel("Default OK message box", 1, row);
-	addButton("Open O&K MB", 35, row, &openOKMessageBox);
-	row += 2;
+        // Add some widgets
+        addLabel("Default OK message box", 1, row);
+        addButton("Open O&K MB", 35, row, &openOKMessageBox);
+        row += 2;
 
-	addLabel("OK/Cancel message box", 1, row);
-	addButton("O&pen OKC MB", 35, row, &openOKCMessageBox);
-	row += 2;
+        addLabel("OK/Cancel message box", 1, row);
+        addButton("O&pen OKC MB", 35, row, &openOKCMessageBox);
+        row += 2;
 
-	addLabel("Yes/No message box", 1, row);
-	addButton("Open &YN MB", 35, row, &openYNMessageBox);
-	row += 2;
+        addLabel("Yes/No message box", 1, row);
+        addButton("Open &YN MB", 35, row, &openYNMessageBox);
+        row += 2;
 
-	addLabel("Yes/No/Cancel message box", 1, row);
-	addButton("Ope&n YNC MB", 35, row, &openYNCMessageBox);
-	row += 2;
+        addLabel("Yes/No/Cancel message box", 1, row);
+        addButton("Ope&n YNC MB", 35, row, &openYNCMessageBox);
+        row += 2;
 
-	addLabel("Input box", 1, row);
-	addButton("Open &input box", 35, row,
-	    {
-		application.inputBox("Input Box",
-	    q"EOS
+        addLabel("Input box", 1, row);
+        addButton("Open &input box", 35, row,
+            {
+                application.inputBox("Input Box",
+            q"EOS
 This is an example of an InputBox.
 
 Note that the InputBox text can span multiple
 lines.
 EOS",
-		    "some input text");
-	    }
-	);
+                    "some input text");
+            }
+        );
 
-	addButton("&Close Window", (width - 14) / 2, height - 4,
-	    {
-		application.closeWindow(this);
-	    }
-	);
+        addButton("&Close Window", (width - 14) / 2, height - 4,
+            {
+                application.closeWindow(this);
+            }
+        );
          */
     }
 }
@@ -172,11 +216,6 @@ class DemoMainWindow extends TWindow {
     }
     private void modalWindowClose() {
         application.closeWindow(modalWindow);
-    }
-
-    /// This is an example of having a button call a function.
-    private void openCheckboxWindow() {
-        new DemoCheckboxWindow(application);
     }
 
     /// We need to override onClose so that the timer will no longer be
@@ -217,30 +256,40 @@ class DemoMainWindow extends TWindow {
         }
         row += 2;
 
-        /*
         addLabel("Open me as modal", 1, row);
         addButton("W&indow", 35, row,
-            {
-                new DemoMainWindow(application, Flag.MODAL);
+            new TAction() {
+                public void DO() {
+                    new DemoMainWindow(getApplication(), MODAL);
+                }
             }
         );
 
         row += 2;
 
+        /*
         addLabel("Variable-width text field:", 1, row);
         addField(35, row++, 15, false, "Field text");
 
         addLabel("Fixed-width text field:", 1, row);
         addField(35, row, 15, true);
         row += 2;
+         */
 
-        if (!isModal) {
+        if (!isModal()) {
             addLabel("Radio buttons and checkboxes", 1, row);
-            addButton("&Checkboxes", 35, row, &openCheckboxWindow);
+            addButton("&Checkboxes", 35, row,
+                new TAction() {
+                    public void DO() {
+                        new DemoCheckboxWindow(getApplication(), MODAL);
+                    }
+                }
+            );
         }
         row += 2;
 
-        if (!isModal) {
+        /*
+        if (!isModal()) {
             addLabel("Editor window", 1, row);
             addButton("Edito&r", 35, row,
                 {
@@ -250,7 +299,7 @@ class DemoMainWindow extends TWindow {
         }
         row += 2;
 
-        if (!isModal) {
+        if (!isModal()) {
             addLabel("Text areas", 1, row);
             addButton("&Text", 35, row,
                 {
@@ -260,7 +309,7 @@ class DemoMainWindow extends TWindow {
         }
         row += 2;
 
-        if (!isModal) {
+        if (!isModal()) {
             addLabel("Tree views", 1, row);
             addButton("Tree&View", 35, row,
                 {
@@ -270,17 +319,15 @@ class DemoMainWindow extends TWindow {
         }
         row += 2;
 
-        version(Posix) {
-            if (!isModal) {
-                addLabel("Terminal", 1, row);
-                addButton("Termi&nal", 35, row,
-                    {
-                        application.openTerminal(0, 0);
-                    }
-                );
-            }
-            row += 2;
+        if (!isModal()) {
+            addLabel("Terminal", 1, row);
+            addButton("Termi&nal", 35, row,
+                {
+                    application.openTerminal(0, 0);
+                }
+            );
         }
+        row += 2;
 
         TProgressBar bar = addProgressBar(1, row, 22);
         row++;

@@ -313,6 +313,15 @@ public abstract class TWidget implements Comparable<TWidget> {
     private boolean hasCursor = false;
 
     /**
+     * Set visible cursor flag.
+     *
+     * @param hasCursor if true, this widget has a cursor
+     */
+    public final void setHasCursor(final boolean hasCursor) {
+        this.hasCursor = hasCursor;
+    }
+
+    /**
      * See if this widget has a visible cursor.
      *
      * @return if true, this widget has a visible cursor
@@ -327,9 +336,45 @@ public abstract class TWidget implements Comparable<TWidget> {
     private int cursorX = 0;
 
     /**
+     * Get cursor X value.
+     *
+     * @return cursor column position in relative coordinates
+     */
+    public final int getCursorX() {
+        return cursorX;
+    }
+
+    /**
+     * Set cursor X value.
+     *
+     * @param cursorX column position in relative coordinates
+     */
+    public final void setCursorX(final int cursorX) {
+        this.cursorX = cursorX;
+    }
+
+    /**
      * Cursor row position in relative coordinates.
      */
     private int cursorY = 0;
+
+    /**
+     * Get cursor Y value.
+     *
+     * @return cursor row position in relative coordinates
+     */
+    public final int getCursorY() {
+        return cursorY;
+    }
+
+    /**
+     * Set cursor Y value.
+     *
+     * @param cursorY row position in relative coordinates
+     */
+    public final void setCursorY(final int cursorY) {
+        this.cursorY = cursorY;
+    }
 
     /**
      * Comparison operator sorts on tabOrder for TWidgets and z for TWindows.
@@ -341,7 +386,7 @@ public abstract class TWidget implements Comparable<TWidget> {
     @Override
     public final int compareTo(final TWidget that) {
         if ((this instanceof TWindow)
-            && (that instanceof TWindow) 
+            && (that instanceof TWindow)
         ) {
             return (((TWindow) this).getZ() - ((TWindow) that).getZ());
         }
@@ -956,5 +1001,19 @@ public abstract class TWidget implements Comparable<TWidget> {
         return new TButton(this, text, x, y, action);
     }
 
+    /**
+     * Convenience function to add a checkbox to this container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param label label to display next to (right of) the checkbox
+     * @param checked initial check state
+     * @return the new checkbox
+     */
+    public final TCheckbox addCheckbox(final int x, final int y,
+        final String label, final boolean checked) {
+
+        return new TCheckbox(this, x, y, label, checked);
+    }
 
 }

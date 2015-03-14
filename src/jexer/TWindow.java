@@ -46,7 +46,7 @@ import static jexer.TKeypress.*;
 /**
  * TWindow is the top-level container and drawing surface for other widgets.
  */
-public class TWindow extends TWidget implements Comparable<TWindow> {
+public class TWindow extends TWidget {
 
     /**
      * Window's parent TApplication.
@@ -303,17 +303,6 @@ public class TWindow extends TWidget implements Comparable<TWindow> {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Comparison operator sorts on z.
-     *
-     * @param that another TWindow instance
-     * @return difference between this.z and that.z
-     */
-    @Override
-    public final int compareTo(final TWindow that) {
-        return (this.z - that.z);
     }
 
     /**

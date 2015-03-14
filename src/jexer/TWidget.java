@@ -48,7 +48,7 @@ import static jexer.TKeypress.*;
  * TWidget is the base class of all objects that can be drawn on screen or
  * handle user input events.
  */
-public abstract class TWidget {
+public abstract class TWidget implements Comparable<TWidget> {
 
     /**
      * Every widget has a parent widget that it may be "contained" in.  For
@@ -332,12 +332,19 @@ public abstract class TWidget {
     private int cursorY = 0;
 
     /**
-     * Comparison operator sorts on tabOrder.
+     * Comparison operator sorts on tabOrder for TWidgets and z for TWindows.
      *
-     * @param that another TWidget instance
-     * @return difference between this.tabOrder and that.tabOrder
+     * @param that another TWidget or TWindow instance
+     * @return difference between this.tabOrder and that.tabOrder, or
+     * difference between this.z and that.z
      */
-    public final int compare(final TWidget that) {
+    @Override
+    public final int compareTo(final TWidget that) {
+        if ((this instanceof TWindow)
+            && (that instanceof TWindow) 
+        ) {
+            return (((TWindow) this).getZ() - ((TWindow) that).getZ());
+        }
         return (this.tabOrder - that.tabOrder);
     }
 

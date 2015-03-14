@@ -40,7 +40,7 @@ import static jexer.TKeypress.*;
 /**
  * TSubMenu is a special case menu item that wraps another TMenu.
  */
-public class TSubMenu extends TMenuItem {
+public final class TSubMenu extends TMenuItem {
 
     /**
      * The menu window.  Note package private access.
@@ -182,7 +182,7 @@ public class TSubMenu extends TMenuItem {
      * @param key global keyboard accelerator
      * @return the new menu item
      */
-    public final TMenuItem addItem(final int id, final String label,
+    public TMenuItem addItem(final int id, final String label,
         final TKeypress key) {
 
         return menu.addItem(id, label, key);
@@ -195,7 +195,7 @@ public class TSubMenu extends TMenuItem {
      * @param label menu item label
      * @return the new menu item
      */
-    public final TMenuItem addItem(final int id, final String label) {
+    public TMenuItem addItem(final int id, final String label) {
         return menu.addItem(id, label);
     }
 
@@ -206,14 +206,14 @@ public class TSubMenu extends TMenuItem {
      * (inclusive).
      * @return the new menu item
      */
-    public final TMenuItem addDefaultItem(final int id) {
+    public TMenuItem addDefaultItem(final int id) {
         return menu.addDefaultItem(id);
     }
 
     /**
      * Convenience function to add a menu separator.
      */
-    public final void addSeparator() {
+    public void addSeparator() {
         menu.addSeparator();
     }
 
@@ -224,7 +224,7 @@ public class TSubMenu extends TMenuItem {
      * denoted by prefixing a letter with "&", e.g. "&File"
      * @return the new sub-menu
      */
-    public final TSubMenu addSubMenu(final String title) {
+    public TSubMenu addSubMenu(final String title) {
         return menu.addSubMenu(title);
     }
 

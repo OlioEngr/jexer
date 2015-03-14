@@ -34,9 +34,10 @@ import jexer.bits.Cell;
 import jexer.bits.CellAttributes;
 
 /**
- * This Screen class draws to an xterm/ANSI X3.64/ECMA-48 type terminal.
+ * This Screen implementation draws to an xterm/ANSI X3.64/ECMA-48 type
+ * terminal.
  */
-public class ECMA48Screen extends Screen {
+public final class ECMA48Screen extends Screen {
 
     /**
      * Emit debugging to stderr.

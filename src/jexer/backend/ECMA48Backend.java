@@ -43,7 +43,7 @@ import jexer.io.ECMA48Terminal;
  * This class uses an xterm/ANSI X3.64/ECMA-48 type terminal to provide a
  * screen, keyboard, and mouse to TApplication.
  */
-public class ECMA48Backend extends Backend {
+public final class ECMA48Backend extends Backend {
 
     /**
      * Input events are processed by this Terminal.
@@ -84,7 +84,7 @@ public class ECMA48Backend extends Backend {
      * Sync the logical screen to the physical device.
      */
     @Override
-    public final void flushScreen() {
+    public void flushScreen() {
         screen.flushPhysical();
     }
 
@@ -130,7 +130,7 @@ public class ECMA48Backend extends Backend {
      * Close the I/O, restore the console, etc.
      */
     @Override
-    public final void shutdown() {
+    public void shutdown() {
         terminal.shutdown();
     }
 

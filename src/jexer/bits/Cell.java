@@ -33,7 +33,7 @@ package jexer.bits;
 /**
  * This class represents a single text cell on the screen.
  */
-public class Cell extends CellAttributes {
+public final class Cell extends CellAttributes {
 
     /**
      * The character at this cell.
@@ -45,7 +45,7 @@ public class Cell extends CellAttributes {
      *
      * @return cell character
      */
-    public final char getChar() {
+    public char getChar() {
         return ch;
     }
 
@@ -54,7 +54,7 @@ public class Cell extends CellAttributes {
      *
      * @param ch new cell character
      */
-    public final void setChar(final char ch) {
+    public void setChar(final char ch) {
         this.ch = ch;
     }
 
@@ -62,7 +62,7 @@ public class Cell extends CellAttributes {
      * Reset this cell to a blank.
      */
     @Override
-    public final void reset() {
+    public void reset() {
         super.reset();
         ch = ' ';
     }
@@ -74,7 +74,7 @@ public class Cell extends CellAttributes {
      *
      * @return true if this cell has default attributes.
      */
-    public final boolean isBlank() {
+    public boolean isBlank() {
         if ((getForeColor().equals(Color.WHITE))
             && (getBackColor().equals(Color.BLACK))
             && !getBold()
@@ -97,7 +97,7 @@ public class Cell extends CellAttributes {
      * @return true if all fields are equal
      */
     @Override
-    public final boolean equals(final Object rhs) {
+    public boolean equals(final Object rhs) {
         if (!(rhs instanceof Cell)) {
             return false;
         }
@@ -113,7 +113,7 @@ public class Cell extends CellAttributes {
      * @param rhs an instance of either Cell or CellAttributes
      */
     @Override
-    public final void setTo(final Object rhs) {
+    public void setTo(final Object rhs) {
         // Let this throw a ClassCastException
         CellAttributes thatAttr = (CellAttributes) rhs;
         super.setTo(thatAttr);
@@ -129,7 +129,7 @@ public class Cell extends CellAttributes {
      *
      * @param that a CellAttributes instance
      */
-    public final void setAttr(final CellAttributes that) {
+    public void setAttr(final CellAttributes that) {
         super.setTo(that);
     }
 
@@ -161,7 +161,7 @@ public class Cell extends CellAttributes {
      * @return displayable String
      */
     @Override
-    public final String toString() {
+    public String toString() {
         return String.format("fore: %d back: %d bold: %s blink: %s ch %c",
             getForeColor(), getBackColor(), getBold(), getBlink(), ch);
     }

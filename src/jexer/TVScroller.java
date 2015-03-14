@@ -33,6 +33,6 @@ package jexer;
 /**
  * TVScroller implements a simple vertical scroll bar.
  */
-public class TVScroller extends TWidget {
+public final class TVScroller extends TWidget {
 
 }

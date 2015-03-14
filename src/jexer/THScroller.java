@@ -33,6 +33,6 @@ package jexer;
 /**
  * THScroller implements a simple horizontal scroll bar.
  */
-public class THScroller extends TWidget {
+public final class THScroller extends TWidget {
 
 }

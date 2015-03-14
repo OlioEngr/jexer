@@ -61,7 +61,7 @@ import static jexer.TKeypress.*;
  * This class reads keystrokes and mouse events and emits output to ANSI
  * X3.64 / ECMA-48 type terminals e.g. xterm, linux, vt100, ansi.sys, etc.
  */
-public class ECMA48Terminal implements Runnable {
+public final class ECMA48Terminal implements Runnable {
 
     /**
      * The session information.
@@ -73,7 +73,7 @@ public class ECMA48Terminal implements Runnable {
      *
      * @return the SessionInfo
      */
-    public final SessionInfo getSessionInfo() {
+    public SessionInfo getSessionInfo() {
         return sessionInfo;
     }
 
@@ -243,7 +243,7 @@ public class ECMA48Terminal implements Runnable {
         };
         try {
             Process process;
-            if (mode == true) {
+            if (mode) {
                 process = Runtime.getRuntime().exec(cmdRaw);
             } else {
                 process = Runtime.getRuntime().exec(cmdCooked);

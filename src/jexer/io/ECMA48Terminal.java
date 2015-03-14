@@ -1445,8 +1445,8 @@ public class ECMA48Terminal implements Runnable {
                         }
                     }
                 } else {
-                    // Wait 5 millis for more data
-                    Thread.sleep(5);
+                    // Wait 10 millis for more data
+                    Thread.sleep(10);
                 }
                 // System.err.println("end while loop"); System.err.flush();
             } catch (InterruptedException e) {

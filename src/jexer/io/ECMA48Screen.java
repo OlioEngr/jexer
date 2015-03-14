@@ -91,7 +91,7 @@ public class ECMA48Screen extends Screen {
             Cell lCell = logical[x][y];
             Cell pCell = physical[x][y];
 
-            if ((lCell != pCell) || reallyCleared) {
+            if (!lCell.equals(pCell) || reallyCleared) {
 
                 if (debugToStderr) {
                     System.err.printf("\n--\n");
@@ -222,10 +222,10 @@ public class ECMA48Screen extends Screen {
                 lastX = x;
                 lastAttr.setTo(lCell);
 
-                // Physical is always updatesd
+                // Physical is always updated
                 physical[x][y].setTo(lCell);
 
-            } // if ((lCell != pCell) || (reallyCleared == true))
+            } // if (!lCell.equals(pCell) || (reallyCleared == true))
 
         } // for (int x = 0; x < width; x++)
     }

@@ -61,8 +61,6 @@ Many tasks remain before calling this version 1.0:
 - TDirectoryList
 - TField
 - TMessageBox
-- TProgressBar
-- TTimer
 - TRadioGroup / TRadioButton
 - THScroller / TVScroller
 - TText

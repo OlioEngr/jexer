@@ -198,10 +198,13 @@ EOS",
 
 
 class DemoMainWindow extends TWindow {
-    /*
     // Timer that increments a number
     private TTimer timer;
 
+    // Timer label is updated with timerrr ticks
+    TLabel timerLabel;
+
+    /*
     // The modal window is a more low-level example of controlling a window
     // "from the outside".  Most windows will probably subclass TWindow and
     // do this kind of logic on their own.
@@ -217,14 +220,17 @@ class DemoMainWindow extends TWindow {
     private void modalWindowClose() {
         application.closeWindow(modalWindow);
     }
-
-    /// We need to override onClose so that the timer will no longer be
-    /// called after we close the window.  TTimers currently are completely
-    /// unaware of the rest of the UI classes.
-    override public void onClose() {
-        application.removeTimer(timer);
-    }
      */
+
+    /**
+     * We need to override onClose so that the timer will no longer be called
+     * after we close the window.  TTimers currently are completely unaware
+     * of the rest of the UI classes.
+     */
+    @Override
+    public void onClose() {
+        getApplication().removeTimer(timer);
+    }
 
     /**
      * Construct demo window.  It will be centered on screen.
@@ -232,6 +238,9 @@ class DemoMainWindow extends TWindow {
     public DemoMainWindow(TApplication parent) {
         this(parent, CENTERED | RESIZABLE);
     }
+
+    int timerI = 0;
+    TProgressBar progressBar;
 
     /**
      * Constructor.
@@ -281,7 +290,7 @@ class DemoMainWindow extends TWindow {
             addButton("&Checkboxes", 35, row,
                 new TAction() {
                     public void DO() {
-                        new DemoCheckboxWindow(getApplication(), MODAL);
+                        new DemoCheckboxWindow(getApplication());
                     }
                 }
             );
@@ -328,24 +337,25 @@ class DemoMainWindow extends TWindow {
             );
         }
         row += 2;
-
-        TProgressBar bar = addProgressBar(1, row, 22);
-        row++;
-        TLabel timerLabel = addLabel("Timer", 1, row);
-        timer = parent.addTimer(100,
-            {
-                static int i = 0;
-                auto writer = appender!dstring();
-                formattedWrite(writer, "Timer: %d", i);
-                timerLabel.text = writer.data;
-                timerLabel.width = cast(uint)timerLabel.text.length;
-                if (i < 100) {
-                    i++;
-                }
-                bar.value = i;
-                parent.repaint = true;
-            }, true);
          */
+
+        progressBar = addProgressBar(1, row, 22, 0);
+        row++;
+        timerLabel = addLabel("Timer", 1, row);
+        timer = getApplication().addTimer(100, true,
+            new TAction() {
+
+                public void DO() {
+                    timerLabel.setText(String.format("Timer: %d", timerI));
+                    timerLabel.setWidth(timerLabel.getText().length());
+                    if (timerI < 100) {
+                        timerI++;
+                    }
+                    progressBar.setValue(timerI);
+                    DemoMainWindow.this.setRepaint();
+                }
+            }
+        );
     }
 }
 

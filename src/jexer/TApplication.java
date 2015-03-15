@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,6 +137,11 @@ public class TApplication {
     private List<TWindow> windows;
 
     /**
+     * Timers that are being ticked.
+     */
+    private List<TTimer> timers;
+
+    /**
      * When true, exit the application.
      */
     private boolean quit = false;
@@ -211,6 +217,7 @@ public class TApplication {
         windows         = new LinkedList<TWindow>();
         menus           = new LinkedList<TMenu>();
         subMenus        = new LinkedList<TMenu>();
+        timers          = new LinkedList<TTimer>();
         accelerators    = new HashMap<TKeypress, TMenuItem>();
     }
 
@@ -595,28 +602,25 @@ public class TApplication {
      * Do stuff when there is no user input.
      */
     private void doIdle() {
-        /*
-         TODO
         // Now run any timers that have timed out
-        auto now = Clock.currTime;
-        TTimer [] keepTimers;
-        foreach (t; timers) {
-            if (t.nextTick < now) {
-                t.tick();
-                if (t.recurring == true) {
-                    keepTimers ~= t;
+        Date now = new Date();
+        List<TTimer> keepTimers = new LinkedList<TTimer>();
+        for (TTimer timer: timers) {
+            if (timer.getNextTick().getTime() < now.getTime()) {
+                timer.tick();
+                if (timer.recurring == true) {
+                    keepTimers.add(timer);
                 }
             } else {
-                keepTimers ~= t;
+                keepTimers.add(timer);
             }
         }
         timers = keepTimers;
 
         // Call onIdle's
-        foreach (w; windows) {
-            w.onIdle();
+        for (TWindow window: windows) {
+            window.onIdle();
         }
-         */
     }
 
     /**
@@ -626,24 +630,20 @@ public class TApplication {
      * @return number of milliseconds between now and the next timer event
      */
     protected int getSleepTime(final int timeout) {
-        /*
-        auto now = Clock.currTime;
-        auto sleepTime = dur!("msecs")(timeout);
-        foreach (t; timers) {
-            if (t.nextTick < now) {
+        Date now = new Date();
+        long sleepTime = timeout;
+        for (TTimer timer: timers) {
+            if (timer.getNextTick().getTime() < now.getTime()) {
                 return 0;
             }
-            if ((t.nextTick > now) &&
-                ((t.nextTick - now) < sleepTime)
+            if ((timer.getNextTick().getTime() > now.getTime())
+                && ((timer.getNextTick().getTime() - now.getTime()) < sleepTime)
             ) {
-                sleepTime = t.nextTick - now;
+                sleepTime = timer.getNextTick().getTime() - now.getTime();
             }
         }
-        assert(sleepTime.total!("msecs")() >= 0);
-        return cast(uint)sleepTime.total!("msecs")();
-         */
-        // TODO: fix timers.  Until then, come back after 250 millis.
-        return 250;
+        assert (sleepTime >= 0);
+        return (int)sleepTime;
     }
 
     /**
@@ -1310,9 +1310,9 @@ public class TApplication {
         List<TWindow> sorted = new LinkedList<TWindow>(windows);
         Collections.sort(sorted);
         Collections.reverse(sorted);
-        for (TWindow w: sorted) {
-            w.setX(x);
-            w.setY(y);
+        for (TWindow window: sorted) {
+            window.setX(x);
+            window.setY(y);
             x++;
             y++;
             if (x > getScreen().getWidth()) {
@@ -1321,6 +1321,34 @@ public class TApplication {
             if (y >= getScreen().getHeight()) {
                 y = 1;
             }
+        }
+    }
+
+    /**
+     * Convenience function to add a timer.
+     *
+     * @param duration number of milliseconds to wait between ticks
+     * @param recurring if true, re-schedule this timer after every tick
+     * @param action function to call when button is pressed
+     */
+    public final TTimer addTimer(final long duration, final boolean recurring,
+        final TAction action) {
+
+        TTimer timer = new TTimer(duration, recurring, action);
+        synchronized (timers) {
+            timers.add(timer);
+        }
+        return timer;
+    }
+
+    /**
+     * Convenience function to remove a timer.
+     *
+     * @param timer timer to remove
+     */
+    public final void removeTimer(final TTimer timer) {
+        synchronized (timers) {
+            timers.remove(timer);
         }
     }
 

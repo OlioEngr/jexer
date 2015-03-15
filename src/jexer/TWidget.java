@@ -1016,4 +1016,18 @@ public abstract class TWidget implements Comparable<TWidget> {
         return new TCheckbox(this, x, y, label, checked);
     }
 
+    /**
+     * Convenience function to add a progress bar to this container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of progress bar
+     * @param value initial value of percent complete
+     */
+    public final TProgressBar addProgressBar(final int x, final int y,
+        final int width, final int value) {
+
+        return new TProgressBar(this, x, y, width, value);
+    }
+
 }

@@ -43,6 +43,24 @@ public final class TLabel extends TWidget {
     private String text = "";
 
     /**
+     * Get label text.
+     *
+     * @return label text
+     */
+    public String getText() {
+        return text;
+    }
+
+    /**
+     * Set label text.
+     *
+     * @param text new label text
+     */
+    public void setText(final String text) {
+        this.text = text;
+    }
+
+    /**
      * Label color.
      */
     private String colorKey;

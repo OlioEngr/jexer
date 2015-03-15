@@ -275,14 +275,12 @@ class DemoMainWindow extends TWindow {
 
         row += 2;
 
-        /*
         addLabel("Variable-width text field:", 1, row);
         addField(35, row++, 15, false, "Field text");
 
         addLabel("Fixed-width text field:", 1, row);
         addField(35, row, 15, true);
         row += 2;
-         */
 
         if (!isModal()) {
             addLabel("Radio buttons and checkboxes", 1, row);

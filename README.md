@@ -59,7 +59,6 @@ Many tasks remain before calling this version 1.0:
 0.0.1:
 
 - TDirectoryList
-- TField
 - TMessageBox
 - THScroller / TVScroller
 - TText

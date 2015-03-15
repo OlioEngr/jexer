@@ -60,19 +60,18 @@ class DemoCheckboxWindow extends TWindow {
         addCheckbox(35, row++, "Checkbox 2", true);
         row += 2;
 
-        /*
-        auto group = addRadioGroup(1, row, "Group 1");
+        TRadioGroup group = addRadioGroup(1, row, "Group 1");
         group.addRadioButton("Radio option 1");
         group.addRadioButton("Radio option 2");
         group.addRadioButton("Radio option 3");
 
-        addButton("&Close Window", (width - 14) / 2, height - 4,
-            {
-                application.closeWindow(this);
+        addButton("&Close Window", (getWidth() - 14) / 2, getHeight() - 4,
+            new TAction() {
+                public void DO() {
+                    DemoCheckboxWindow.this.getApplication().closeWindow(DemoCheckboxWindow.this);
+                }
             }
-
         );
-         */
     }
 
 }

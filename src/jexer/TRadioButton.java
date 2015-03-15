@@ -37,19 +37,56 @@ import jexer.event.TMouseEvent;
 import static jexer.TKeypress.*;
 
 /**
- * TCheckbox implements an on/off checkbox.
+ * TRadioButton implements a selectable radio button.
  */
-public final class TCheckbox extends TWidget {
+public final class TRadioButton extends TWidget {
 
     /**
-     * Checkbox state, true means checked.
+     * RadioButton state, true means selected.
      */
-    private boolean checked = false;
+    private boolean selected = false;
 
     /**
-     * Label for this checkbox.
+     * Get RadioButton state, true means selected.
+     *
+     * @return if true then this is the one button in the group that is
+     * selected
+     */
+    public boolean getSelected() {
+        return selected;
+    }
+
+    /**
+     * Set RadioButton state, true means selected.  Note package private
+     * access.
+     *
+     * @param selected if true then this is the one button in the group that
+     * is selected
+     */
+    void setSelected(final boolean selected) {
+        this.selected = selected;
+    }
+
+    /**
+     * Label for this radio button.
      */
     private String label;
+
+    /**
+     * ID for this radio button.  Buttons start counting at 1 in the
+     * RadioGroup.
+     */
+    private int id;
+
+    /**
+     * Get ID for this radio button.  Buttons start counting at 1 in the
+     * RadioGroup.
+     *
+     * @return the ID
+     */
+    public int getId() {
+        return id;
+    }
 
     /**
      * Public constructor.
@@ -57,11 +94,11 @@ public final class TCheckbox extends TWidget {
      * @param parent parent widget
      * @param x column relative to parent
      * @param y row relative to parent
-     * @param label label to display next to (right of) the checkbox
-     * @param checked initial check state
+     * @param label label to display next to (right of) the radiobutton
+     * @param id ID for this radio button
      */
-    public TCheckbox(final TWidget parent, final int x, final int y,
-        final String label, final boolean checked) {
+    public TRadioButton(final TRadioGroup parent, final int x, final int y,
+        final String label, final int id) {
 
         // Set parent and window
         super(parent);
@@ -71,19 +108,19 @@ public final class TCheckbox extends TWidget {
         setHeight(1);
         this.label = label;
         setWidth(label.length() + 4);
-        this.checked = checked;
+        this.id = id;
 
         setHasCursor(true);
         setCursorX(1);
     }
 
     /**
-     * Returns true if the mouse is currently on the checkbox.
+     * Returns true if the mouse is currently on the radio button.
      *
      * @param mouse mouse event
-     * @return true if the mouse is currently on the checkbox
+     * @return if true the mouse is currently on the radio button
      */
-    private boolean mouseOnCheckbox(final TMouseEvent mouse) {
+    private boolean mouseOnRadioButton(final TMouseEvent mouse) {
         if ((mouse.getY() == 0)
             && (mouse.getX() >= 0)
             && (mouse.getX() <= 2)
@@ -94,38 +131,42 @@ public final class TCheckbox extends TWidget {
     }
 
     /**
-     * Draw a checkbox with label.
+     * Draw a radio button with label.
      */
     @Override
     public void draw() {
-        CellAttributes checkboxColor;
+        CellAttributes radioButtonColor;
 
         if (getAbsoluteActive()) {
-            checkboxColor = getTheme().getColor("tcheckbox.active");
+            radioButtonColor = getTheme().getColor("tradiobutton.active");
         } else {
-            checkboxColor = getTheme().getColor("tcheckbox.inactive");
+            radioButtonColor = getTheme().getColor("tradiobutton.inactive");
         }
 
-        getScreen().putCharXY(0, 0, '[', checkboxColor);
-        if (checked) {
-            getScreen().putCharXY(1, 0, GraphicsChars.CHECK, checkboxColor);
+        getScreen().putCharXY(0, 0, '(', radioButtonColor);
+        if (selected) {
+            getScreen().putCharXY(1, 0, GraphicsChars.CP437[0x07],
+                radioButtonColor);
         } else {
-            getScreen().putCharXY(1, 0, ' ', checkboxColor);
+            getScreen().putCharXY(1, 0, ' ', radioButtonColor);
         }
-        getScreen().putCharXY(2, 0, ']', checkboxColor);
-        getScreen().putStrXY(4, 0, label, checkboxColor);
+        getScreen().putCharXY(2, 0, ')', radioButtonColor);
+        getScreen().putStrXY(4, 0, label, radioButtonColor);
     }
 
     /**
-     * Handle mouse checkbox presses.
+     * Handle mouse button presses.
      *
-     * @param mouse mouse button down event
+     * @param mouse mouse button press event
      */
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
-        if ((mouseOnCheckbox(mouse)) && (mouse.getMouse1())) {
+        if ((mouseOnRadioButton(mouse)) && (mouse.getMouse1())) {
             // Switch state
-            checked = !checked;
+            selected = !selected;
+            if (selected) {
+                ((TRadioGroup) getParent()).setSelected(this);
+            }
         }
     }
 
@@ -136,8 +177,12 @@ public final class TCheckbox extends TWidget {
      */
     @Override
     public void onKeypress(final TKeypressEvent keypress) {
+
         if (keypress.equals(kbSpace)) {
-            checked = !checked;
+            selected = !selected;
+            if (selected) {
+                ((TRadioGroup) getParent()).setSelected(this);
+            }
             return;
         }
 

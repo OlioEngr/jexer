@@ -1023,11 +1023,28 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param y row relative to parent
      * @param width width of progress bar
      * @param value initial value of percent complete
+     * @return the new progress bar
      */
     public final TProgressBar addProgressBar(final int x, final int y,
         final int width, final int value) {
 
         return new TProgressBar(this, x, y, width, value);
     }
+
+    /**
+     * Convenience function to add a radio button group to this
+     * container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param label label to display on the group box
+     * @return the new radio button group
+     */
+    public final TRadioGroup addRadioGroup(final int x, final int y,
+        final String label) {
+
+        return new TRadioGroup(this, x, y, label);
+    }
+
 
 }

@@ -152,7 +152,7 @@ public final class TVScroller extends TWidget {
      * @param parent parent widget
      * @param x column relative to parent
      * @param y row relative to parent
-     * @param width height of scroll bar
+     * @param height height of scroll bar
      */
     public TVScroller(final TWidget parent, final int x, final int y,
         final int height) {
@@ -169,7 +169,7 @@ public final class TVScroller extends TWidget {
     /**
      * Compute the position of the scroll box (a.k.a. grip, thumb).
      *
-     * @param Y position of the box, between 1 and height - 2
+     * @return Y position of the box, between 1 and height - 2
      */
     private int boxPosition() {
         return (getHeight() - 3) * (value - topValue) / (bottomValue - topValue) + 1;

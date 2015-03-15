@@ -58,23 +58,29 @@ Many tasks remain before calling this version 1.0:
 
 0.0.1:
 
-- TDirectoryList
 - TMessageBox
-- THScroller / TVScroller
-- TText
-- TTreeView
+- AWTBackend
 
 0.0.2:
 
-- TEditor
+- TTreeView
+- TDirectoryList
 - TFileOpen
-- TTerminal
 
 0.0.3:
 
+- TEditor
+- TTerminal
+
+0.0.4:
+
 - Bugs
+  - TTimer is jittery with I/O
   - TSubMenu keyboard mnemonic not working
   - kbDel assertion failure in TMenu (MID_CLEAR)
+  - TDirectoryList cannot be navigated only with keyboard
+  - TTreeView cannot be navigated only with keyboard
+  - RangeViolation after dragging scrollbar up/down
 - TEditor
   - Word wrap
   - Forward/backward word
@@ -82,22 +88,18 @@ Many tasks remain before calling this version 1.0:
   - Replace
   - Cut/Copy/Paste
 
-0.0.4:
+0.1.0:
 
+- TWindow
+  - "Smart placement" for new windows
 - ECMATerminal
   - Mouse 1006 mode parsing
-- Bugs
-  - TDirectoryList cannot be navigated only with keyboard
-  - TTreeView cannot be navigated only with keyboard
-  - RangeViolation after dragging scrollbar up/down
 
 Wishlist features (2.0):
 
 - TTerminal
   - Handle resize events (pass to child process)
   - xterm mouse handling
-- TWindow
-  - "Smart placement" for new windows
 - Screen
   - Allow complex characters in putCharXY() and detect them in putStrXY().
 - TComboBox
@@ -111,4 +113,3 @@ Wishlist features (2.0):
   - TText
   - TTerminal
   - TComboBox
-- AWTBackend

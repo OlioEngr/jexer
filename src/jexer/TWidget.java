@@ -1097,4 +1097,40 @@ public abstract class TWidget implements Comparable<TWidget> {
             updateAction);
     }
 
+    /**
+     * Convenience function to add a scrollable text box to this
+     * container/window.
+     *
+     * @param text text on the screen
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @param colorKey ColorTheme key color to use for foreground text
+     * @return the new text box
+     */
+    public TText addText(final String text, final int x,
+        final int y, final int width, final int height, final String colorKey) {
+
+        return new TText(this, text, x, y, width, height, colorKey);
+    }
+
+    /**
+     * Convenience function to add a scrollable text box to this
+     * container/window.
+     *
+     * @param text text on the screen
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @return the new text box
+     */
+    public TText addText(final String text, final int x, final int y,
+        final int width, final int height) {
+
+        return new TText(this, text, x, y, width, height, "ttext");
+    }
+
+
 }

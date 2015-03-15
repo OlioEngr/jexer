@@ -44,6 +44,7 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/TLabel.java \
 	$(SRC_DIR)/jexer/TCommand.java \
 	$(SRC_DIR)/jexer/TKeypress.java \
+	$(SRC_DIR)/jexer/TText.java \
 	$(SRC_DIR)/jexer/THScroller.java \
 	$(SRC_DIR)/jexer/TVScroller.java \
 	$(SRC_DIR)/jexer/TWidget.java \
@@ -78,6 +79,7 @@ JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/TLabel.class \
 	$(TARGET_DIR)/jexer/TCommand.class \
 	$(TARGET_DIR)/jexer/TKeypress.class \
+	$(TARGET_DIR)/jexer/TText.class \
 	$(TARGET_DIR)/jexer/THScroller.class \
 	$(TARGET_DIR)/jexer/TVScroller.class \
 	$(TARGET_DIR)/jexer/TWidget.class \

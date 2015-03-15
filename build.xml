@@ -35,58 +35,46 @@
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.dir"     value="${build.dir}/jar"/>
 
-    <property name="demo.class"  value="Demo1"/>
-
     <target name="clean">
-        <delete dir="${build.dir}"/>
+	<delete dir="${build.dir}"/>
     </target>
 
     <target name="compile">
-        <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}"
+	<mkdir dir="${classes.dir}"/>
+	<javac srcdir="${src.dir}" destdir="${classes.dir}"
 	       includeantruntime="false"/>
     </target>
 
     <target name="jar" depends="compile">
-        <mkdir dir="${jar.dir}"/>
-        <jar destfile="${jar.dir}/${ant.project.name}.jar"
-	     basedir="${classes.dir}"
-	     excludes="**/Demo*" >
-        </jar>
+	<mkdir dir="${jar.dir}"/>
+	<jar destfile="${jar.dir}/${ant.project.name}.jar"
+	     basedir="${classes.dir}">
+	  <manifest>
+	    <attribute name="Main-Class" value="jexer.demos.Demo1"/>
+	  </manifest>
+	</jar>
     </target>
 
-    <target name="demos" depends="jar">
-      <mkdir dir="${classes.dir}"/>
-      <javac srcdir="demos" destdir="${classes.dir}"
-	     includeantruntime="false"/>
-    </target>
-
-    <target name="run" depends="jar,docs,demos">
-      <java classname="${demo.class}" fork="false">
-	<classpath>
-          <path location="${jar.dir}/${ant.project.name}.jar"/>
-          <path location="${classes.dir}"/>
-	</classpath>
-      </java>
+    <target name="run" depends="jar">
+      <java jar="${jar.dir}/${ant.project.name}.jar" fork="true"/>
     </target>
 
     <target name="clean-build" depends="clean,jar"/>
 
     <target name="main" depends="clean,run"/>
-    
+
     <target name="docs" depends="jar">
       <javadoc
-          destdir="docs/api"
-          author="true"
-          version="true"
-          use="true"
+	  destdir="docs/api"
+	  author="true"
+	  version="true"
+	  use="true"
 	  access="private"
 	  failonwarning="true"
-          windowtitle="Jexer - Java Text User Interface - API docs">
+	  windowtitle="Jexer - Java Text User Interface - API docs">
 
 	<fileset dir="${src.dir}" defaultexcludes="yes">
 	  <include name="jexer/**"/>
-	  <exclude name="demos/**"/>
 	</fileset>
 
 	<doctitle>
@@ -106,5 +94,5 @@
 	-->
       </javadoc>
     </target>
-    
+
 </project>

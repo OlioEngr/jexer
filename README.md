@@ -59,6 +59,7 @@ Many tasks remain before calling this version 1.0:
 0.0.1:
 
 - TMessageBox
+- TInputBox
 - AWTBackend
 
 0.0.2:
@@ -75,6 +76,7 @@ Many tasks remain before calling this version 1.0:
 0.0.4:
 
 - Bugs
+  - Bare ESC isn't being returned immediately
   - TTimer is jittery with I/O
   - TSubMenu keyboard mnemonic not working
   - kbDel assertion failure in TMenu (MID_CLEAR)

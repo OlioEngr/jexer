@@ -1,16 +1,11 @@
-/**
- * Jexer - Java Text User Interface - demonstration program
- *
- * Version: $Id$
- *
- * Author: Kevin Lamonte, <a href="mailto:kevin.lamonte@gmail.com">kevin.lamonte@gmail.com</a>
+/*
+ * Jexer - Java Text User Interface
  *
  * License: LGPLv3 or later
  *
- * Copyright: This module is licensed under the GNU Lesser General
- * Public License Version 3.  Please see the file "COPYING" in this
- * directory for more information about the GNU Lesser General Public
- * License Version 3.
+ * This module is licensed under the GNU Lesser General Public License
+ * Version 3.  Please see the file "COPYING" in this directory for more
+ * information about the GNU Lesser General Public License Version 3.
  *
  *     Copyright (C) 2015  Kevin Lamonte
  *
@@ -29,12 +24,19 @@
  * http://www.gnu.org/licenses/, or write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
+ *
+ * @author Kevin Lamonte [kevin.lamonte@gmail.com]
+ * @version 1
  */
+package jexer.demos;
 
 import jexer.*;
 import jexer.event.*;
 import jexer.menu.*;
 
+/**
+ * This window demonstates the TText, THScroller, and TVScroller widgets.
+ */
 class DemoTextWindow extends TWindow {
 
     /**
@@ -44,8 +46,10 @@ class DemoTextWindow extends TWindow {
 
     /**
      * Public constructor.
+     *
+     * @param parent the main application
      */
-    public DemoTextWindow(TApplication parent) {
+    public DemoTextWindow(final TApplication parent) {
         super(parent, "Text Areas", 0, 0, 44, 20, RESIZABLE);
 
         textField = addText(
@@ -92,21 +96,30 @@ class DemoTextWindow extends TWindow {
     }
 }
 
+/**
+ * This window demonstates the TRadioGroup, TRadioButton, and TCheckbox
+ * widgets.
+ */
 class DemoCheckboxWindow extends TWindow {
 
     /**
      * Constructor.
+     *
+     * @param parent the main application
      */
-    DemoCheckboxWindow(TApplication parent) {
+    DemoCheckboxWindow(final TApplication parent) {
         this(parent, CENTERED | RESIZABLE);
     }
 
     /**
      * Constructor.
+     *
+     * @param parent the main application
+     * @param flags bitmask of MODAL, CENTERED, or RESIZABLE
      */
-    DemoCheckboxWindow(TApplication parent, int flags) {
-        // Construct a demo window.  X and Y don't matter because it
-        // will be centered on screen.
+    DemoCheckboxWindow(final TApplication parent, final int flags) {
+        // Construct a demo window.  X and Y don't matter because it will be
+        // centered on screen.
         super(parent, "Radiobuttons and Checkboxes", 0, 0, 60, 15, flags);
 
         int row = 1;
@@ -126,7 +139,8 @@ class DemoCheckboxWindow extends TWindow {
         addButton("&Close Window", (getWidth() - 14) / 2, getHeight() - 4,
             new TAction() {
                 public void DO() {
-                    DemoCheckboxWindow.this.getApplication().closeWindow(DemoCheckboxWindow.this);
+                    DemoCheckboxWindow.this.getApplication()
+                        .closeWindow(DemoCheckboxWindow.this);
                 }
             }
         );
@@ -135,6 +149,9 @@ class DemoCheckboxWindow extends TWindow {
 }
 
 
+/**
+ * This window demonstates the TMessageBox and TInputBox widgets.
+ */
 class DemoMsgBoxWindow extends TWindow {
     /*
     private void openYNCMessageBox() {
@@ -198,6 +215,8 @@ EOS",
 
     /**
      * Constructor.
+     *
+     * @param parent the main application
      */
     DemoMsgBoxWindow(final TApplication parent) {
         this(parent, TWindow.CENTERED | TWindow.RESIZABLE);
@@ -205,6 +224,9 @@ EOS",
 
     /**
      * Constructor.
+     *
+     * @param parent the main application
+     * @param flags bitmask of MODAL, CENTERED, or RESIZABLE
      */
     DemoMsgBoxWindow(final TApplication parent, final int flags) {
         // Construct a demo window.  X and Y don't matter because it
@@ -253,7 +275,10 @@ EOS",
     }
 }
 
-
+/**
+ * This is the main "demo" application window.  It makes use of the TTimer,
+ * TProgressBox, TLabel, TButton, and TField widgets.
+ */
 class DemoMainWindow extends TWindow {
 
     // Timer that increments a number.
@@ -292,18 +317,25 @@ class DemoMainWindow extends TWindow {
 
     /**
      * Construct demo window.  It will be centered on screen.
+     *
+     * @param parent the main application
      */
-    public DemoMainWindow(TApplication parent) {
+    public DemoMainWindow(final TApplication parent) {
         this(parent, CENTERED | RESIZABLE);
     }
 
+    // These are used by the timer loop.  They have to be at class scope so
+    // that they can be accessed by the anonymous TAction class.
     int timerI = 0;
     TProgressBar progressBar;
 
     /**
      * Constructor.
+     *
+     * @param parent the main application
+     * @param flags bitmask of MODAL, CENTERED, or RESIZABLE
      */
-    private DemoMainWindow(TApplication parent, int flags) {
+    private DemoMainWindow(final TApplication parent, final int flags) {
         // Construct a demo window.  X and Y don't matter because it will be
         // centered on screen.
         super(parent, "Demo Window", 0, 0, 60, 23, flags);
@@ -425,7 +457,9 @@ class DemoMainWindow extends TWindow {
 class DemoApplication extends TApplication {
 
     /**
-     * Public constructor
+     * Public constructor.
+     *
+     * @throws Exception if TApplication can't instantiate the Backend.
      */
     public DemoApplication() throws Exception {
         super(null, null);

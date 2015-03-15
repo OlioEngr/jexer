@@ -71,7 +71,8 @@ JEXER_SRC = $(SRC_DIR)/jexer/TApplication.java \
 	$(SRC_DIR)/jexer/io/ECMA48Screen.java \
 	$(SRC_DIR)/jexer/io/ECMA48Terminal.java \
 	$(SRC_DIR)/jexer/backend/Backend.java \
-	$(SRC_DIR)/jexer/backend/ECMA48Backend.java
+	$(SRC_DIR)/jexer/backend/ECMA48Backend.java \
+	$(SRC_DIR)/jexer/demos/Demo1.java
 
 JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/TAction.class \
@@ -106,30 +107,25 @@ JEXER_BIN = $(TARGET_DIR)/jexer/TApplication.class \
 	$(TARGET_DIR)/jexer/io/ECMA48Screen.class \
 	$(TARGET_DIR)/jexer/io/ECMA48Terminal.class \
 	$(TARGET_DIR)/jexer/backend/Backend.class \
-	$(TARGET_DIR)/jexer/backend/ECMA48Backend.class
+	$(TARGET_DIR)/jexer/backend/ECMA48Backend.class \
+	$(TARGET_DIR)/jexer/demos/Demo1.class
 
 JAVAC = javac
 JAVAFLAGS = -g -deprecation
 
-all:	jexer demos
+all:	jexer
 
 run:	jexer run-demo1
 
-all-demos:	jexer demos/Demo1.class
+all-demos:	jexer
 
-demos/Demo1.class:	demos/Demo1.java
-	$(JAVAC) $(JAVAFLAGS) -cp $(TARGET_DIR) -d demos demos/Demo1.java
+run-demo1:	all-demos
+	java -cp $(TARGET_DIR) jexer.demos.Demo1
 
-run-demo1:	demos/Demo1.class
-	java -cp $(TARGET_DIR):demos Demo1
-
-clean:	clean-demos
+clean:
 	-rm -r $(ANT_TARGET_DIR)
 	-rm -r $(TARGET_DIR)
 	-mkdir $(TARGET_DIR)
-
-clean-demos:
-	-rm demos/Demo1.class
 
 jexer:	$(JEXER_SRC)
 	$(JAVAC) $(JAVAFLAGS) -sourcepath $(SRC_DIR) -d $(TARGET_DIR) $(JEXER_SRC)

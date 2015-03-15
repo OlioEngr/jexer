@@ -1109,7 +1109,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param colorKey ColorTheme key color to use for foreground text
      * @return the new text box
      */
-    public TText addText(final String text, final int x,
+    public final TText addText(final String text, final int x,
         final int y, final int width, final int height, final String colorKey) {
 
         return new TText(this, text, x, y, width, height, colorKey);
@@ -1126,11 +1126,68 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param height height of text area
      * @return the new text box
      */
-    public TText addText(final String text, final int x, final int y,
+    public final TText addText(final String text, final int x, final int y,
         final int width, final int height) {
 
         return new TText(this, text, x, y, width, height, "ttext");
     }
 
+    /**
+     * Convenience function to spawn a message box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @return the new message box
+     */
+    public final TMessageBox messageBox(final String title,
+        final String caption) {
+
+        return getApplication().messageBox(title, caption, TMessageBox.Type.OK);
+    }
+
+    /**
+     * Convenience function to spawn a message box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @param type one of the TMessageBox.Type constants.  Default is
+     * Type.OK.
+     * @return the new message box
+     */
+    public final TMessageBox messageBox(final String title,
+        final String caption, final TMessageBox.Type type) {
+
+        return getApplication().messageBox(title, caption, type);
+    }
+
+    /**
+     * Convenience function to spawn an input box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @return the new input box
+     */
+    public final TInputBox inputBox(final String title, final String caption) {
+
+        return getApplication().inputBox(title, caption);
+    }
+
+    /**
+     * Convenience function to spawn an input box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @param text initial text to seed the field with
+     * @return the new input box
+     */
+    public final TInputBox inputBox(final String title, final String caption,
+        final String text) {
+
+        return getApplication().inputBox(title, caption, text);
+    }
 
 }

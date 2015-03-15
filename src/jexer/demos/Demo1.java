@@ -153,65 +153,6 @@ class DemoCheckboxWindow extends TWindow {
  * This window demonstates the TMessageBox and TInputBox widgets.
  */
 class DemoMsgBoxWindow extends TWindow {
-    /*
-    private void openYNCMessageBox() {
-        application.messageBox("Yes/No/Cancel MessageBox",
-            q"EOS
-This is an example of a Yes/No/Cancel MessageBox.
-
-Note that the MessageBox text can span multiple
-lines.
-
-The default result (if someone hits the top-left
-close button) is CANCEL.
-EOS",
-        TMessageBox.Type.YESNOCANCEL);
-    }
-
-    private void openYNMessageBox() {
-        application.messageBox("Yes/No MessageBox",
-            q"EOS
-This is an example of a Yes/No MessageBox.
-
-Note that the MessageBox text can span multiple
-lines.
-
-The default result (if someone hits the top-left
-close button) is NO.
-EOS",
-        TMessageBox.Type.YESNO);
-    }
-
-    private void openOKCMessageBox() {
-        application.messageBox("OK/Cancel MessageBox",
-            q"EOS
-This is an example of a OK/Cancel MessageBox.
-
-Note that the MessageBox text can span multiple
-lines.
-
-The default result (if someone hits the top-left
-close button) is CANCEL.
-EOS",
-        TMessageBox.Type.OKCANCEL);
-    }
-
-    private void openOKMessageBox() {
-        application.messageBox("OK MessageBox",
-            q"EOS
-This is an example of a OK MessageBox.  This is the
-default MessageBox.
-
-Note that the MessageBox text can span multiple
-lines.
-
-The default result (if someone hits the top-left
-close button) is OK.
-EOS",
-        TMessageBox.Type.OK);
-    }
-
-     */
 
     /**
      * Constructor.
@@ -232,46 +173,106 @@ EOS",
         // Construct a demo window.  X and Y don't matter because it
         // will be centered on screen.
         super(parent, "Message Boxes", 0, 0, 60, 15, flags);
-        /*
-        uint row = 1;
+
+        int row = 1;
 
         // Add some widgets
         addLabel("Default OK message box", 1, row);
-        addButton("Open O&K MB", 35, row, &openOKMessageBox);
+        addButton("Open O&K MB", 35, row,
+            new TAction() {
+                public void DO() {
+                    getApplication().messageBox("OK MessageBox",
+"This is an example of a OK MessageBox.  This is the\n" +
+"default MessageBox.\n" +
+"\n" +
+"Note that the MessageBox text can span multiple\n" +
+"lines.\n" +
+"\n" +
+"The default result (if someone hits the top-left\n" +
+"close button) is OK.\n",
+                        TMessageBox.Type.OK);
+                }
+            }
+        );
         row += 2;
 
         addLabel("OK/Cancel message box", 1, row);
-        addButton("O&pen OKC MB", 35, row, &openOKCMessageBox);
+        addButton("O&pen OKC MB", 35, row,
+            new TAction() {
+                public void DO() {
+                    getApplication().messageBox("OK/Cancel MessageBox",
+"This is an example of a OK/Cancel MessageBox.\n" +
+"\n" +
+"Note that the MessageBox text can span multiple\n" +
+"lines.\n" +
+"\n" +
+"The default result (if someone hits the top-left\n" +
+"close button) is CANCEL.\n",
+                        TMessageBox.Type.OKCANCEL);
+                }
+            }
+        );
         row += 2;
 
         addLabel("Yes/No message box", 1, row);
-        addButton("Open &YN MB", 35, row, &openYNMessageBox);
+        addButton("Open &YN MB", 35, row,
+            new TAction() {
+                public void DO() {
+                    getApplication().messageBox("Yes/No MessageBox",
+"This is an example of a Yes/No MessageBox.\n" +
+"\n" +
+"Note that the MessageBox text can span multiple\n" +
+"lines.\n" +
+"\n" +
+"The default result (if someone hits the top-left\n" +
+"close button) is NO.\n",
+                        TMessageBox.Type.YESNO);
+                }
+            }
+        );
         row += 2;
 
         addLabel("Yes/No/Cancel message box", 1, row);
-        addButton("Ope&n YNC MB", 35, row, &openYNCMessageBox);
+        addButton("Ope&n YNC MB", 35, row,
+            new TAction() {
+                public void DO() {
+                    getApplication().messageBox("Yes/No/Cancel MessageBox",
+"This is an example of a Yes/No/Cancel MessageBox.\n" +
+"\n" +
+"Note that the MessageBox text can span multiple\n" +
+"lines.\n" +
+"\n" +
+"The default result (if someone hits the top-left\n" +
+"close button) is CANCEL.\n",
+                        TMessageBox.Type.YESNOCANCEL);
+                }
+            }
+        );
         row += 2;
 
         addLabel("Input box", 1, row);
         addButton("Open &input box", 35, row,
-            {
-                application.inputBox("Input Box",
-            q"EOS
-This is an example of an InputBox.
-
-Note that the InputBox text can span multiple
-lines.
-EOS",
-                    "some input text");
+            new TAction() {
+                public void DO() {
+                    TInputBox in = getApplication().inputBox("Input Box",
+"This is an example of an InputBox.\n" +
+"\n" +
+"Note that the InputBox text can span multiple\n" +
+"lines.\n",
+                        "some input text");
+                    getApplication().messageBox("Your InputBox Answer",
+                        "You entered: " + in.getText());
+                }
             }
         );
 
-        addButton("&Close Window", (width - 14) / 2, height - 4,
-            {
-                application.closeWindow(this);
+        addButton("&Close Window", (getWidth() - 14) / 2, getHeight() - 4,
+            new TAction() {
+                public void DO() {
+                    getApplication().closeWindow(DemoMsgBoxWindow.this);
+                }
             }
         );
-         */
     }
 }
 
@@ -293,7 +294,7 @@ class DemoMainWindow extends TWindow {
     // do this kind of logic on their own.
     private TWindow modalWindow;
     private void openModalWindow() {
-        modalWindow = application.addWindow("Demo Modal Window", 0, 0,
+        modalWindow = getApplication().addWindow("Demo Modal Window", 0, 0,
             58, 15, TWindow.Flag.MODAL);
         modalWindow.addLabel("This is an example of a very braindead modal window.", 1, 1);
         modalWindow.addLabel("Modal windows are centered by default.", 1, 2);
@@ -301,7 +302,7 @@ class DemoMainWindow extends TWindow {
             modalWindow.height - 4, &modalWindowClose);
     }
     private void modalWindowClose() {
-        application.closeWindow(modalWindow);
+        getApplication().closeWindow(modalWindow);
     }
      */
 
@@ -424,7 +425,7 @@ class DemoMainWindow extends TWindow {
             addLabel("Terminal", 1, row);
             addButton("Termi&nal", 35, row,
                 {
-                    application.openTerminal(0, 0);
+                    getApplication().openTerminal(0, 0);
                 }
             );
         }

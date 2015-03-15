@@ -36,6 +36,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,107 @@ import static jexer.TKeypress.*;
  * TApplication sets up a full Text User Interface application.
  */
 public class TApplication {
+
+    /**
+     * WidgetEventHandler is the main event consumer loop.  There are at most
+     * two such threads in existence: the primary for normal case and a
+     * secondary that is used for TMessageBox, TInputBox, and similar.
+     */
+    private class WidgetEventHandler implements Runnable {
+        /**
+         * The main application.
+         */
+        private TApplication application;
+
+        /**
+         * Whether or not this WidgetEventHandler is the primary or secondary
+         * thread.
+         */
+        private boolean primary = true;
+
+        /**
+         * Public constructor.
+         *
+         * @param application the main application
+         * @param primary if true, this is the primary event handler thread
+         */
+        public WidgetEventHandler(final TApplication application,
+            final boolean primary) {
+
+            this.application = application;
+            this.primary = primary;
+        }
+
+        /**
+         * The consumer loop.
+         */
+        public void run() {
+
+            // Loop forever
+            while (!application.quit) {
+
+                // Wait until application notifies me
+                while (!application.quit) {
+                    try {
+                        synchronized (application.drainEventQueue) {
+                            if (application.drainEventQueue.size() > 0) {
+                                break;
+                            }
+                        }
+                        synchronized (application) {
+                            application.wait();
+                            if ((!primary)
+                                && (application.secondaryEventReceiver == null)
+                            ) {
+                                // Secondary thread, time to exit
+                                return;
+                            }
+                            break;
+                        }
+                    } catch (InterruptedException e) {
+                        // SQUASH
+                    }
+                }
+
+                // Pull all events off the queue
+                for (;;) {
+                    TInputEvent event = null;
+                    synchronized (application.drainEventQueue) {
+                        if (application.drainEventQueue.size() == 0) {
+                            break;
+                        }
+                        event = application.drainEventQueue.remove(0);
+                    }
+                    if (primary) {
+                        primaryHandleEvent(event);
+                    } else {
+                        secondaryHandleEvent(event);
+                    }
+                    if ((!primary)
+                        && (application.secondaryEventReceiver == null)
+                    ) {
+                        // Secondary thread, time to exit
+                        return;
+                    }
+                }
+            } // while (true) (main runnable loop)
+        }
+    }
+
+    /**
+     * The primary event handler thread.
+     */
+    private WidgetEventHandler primaryEventHandler;
+
+    /**
+     * The secondary event handler thread.
+     */
+    private WidgetEventHandler secondaryEventHandler;
+
+    /**
+     * The widget receiving events from the secondary event handler thread.
+     */
+    private TWidget secondaryEventReceiver;
 
     /**
      * Access to the physical screen, keyboard, and mouse.
@@ -212,13 +314,17 @@ public class TApplication {
         backend         = new ECMA48Backend(input, output);
         theme           = new ColorTheme();
         desktopBottom   = getScreen().getHeight() - 1;
-        fillEventQueue  = new LinkedList<TInputEvent>();
-        drainEventQueue = new LinkedList<TInputEvent>();
+        fillEventQueue  = new ArrayList<TInputEvent>();
+        drainEventQueue = new ArrayList<TInputEvent>();
         windows         = new LinkedList<TWindow>();
         menus           = new LinkedList<TMenu>();
         subMenus        = new LinkedList<TMenu>();
         timers          = new LinkedList<TTimer>();
         accelerators    = new HashMap<TKeypress, TMenuItem>();
+
+        // Setup the main consumer thread
+        primaryEventHandler = new WidgetEventHandler(this, true);
+        (new Thread(primaryEventHandler)).start();
     }
 
     /**
@@ -378,24 +484,10 @@ public class TApplication {
             drawAll();
         }
 
-        /*
-
-        // Shutdown the fibers
-        eventQueue.length = 0;
-        if (secondaryEventFiber !is null) {
-            assert(secondaryEventReceiver !is null);
-            secondaryEventReceiver = null;
-            if (secondaryEventFiber.state == Fiber.State.HOLD) {
-                // Wake up the secondary handler so that it can exit.
-                secondaryEventFiber.call();
-            }
+        // Shutdown the consumer threads
+        synchronized (this) {
+            this.notifyAll();
         }
-
-        if (primaryEventFiber.state == Fiber.State.HOLD) {
-            // Wake up the primary handler so that it can exit.
-            primaryEventFiber.call();
-        }
-         */
 
         backend.shutdown();
     }
@@ -452,29 +544,17 @@ public class TApplication {
             }
         }
 
-        // TODO: change to two separate threads
-        primaryHandleEvent(event);
-
-        /*
-
          // Put into the main queue
-         addEvent(event);
+        synchronized (drainEventQueue) {
+            drainEventQueue.add(event);
+        }
 
-         // Have one of the two consumer Fibers peel the events off
-         // the queue.
-         if (secondaryEventFiber !is null) {
-         assert(secondaryEventFiber.state == Fiber.State.HOLD);
-
-         // Wake up the secondary handler for these events
-         secondaryEventFiber.call();
-         } else {
-         assert(primaryEventFiber.state == Fiber.State.HOLD);
-
-         // Wake up the primary handler for these events
-         primaryEventFiber.call();
-         }
-         */
-
+        // Wake all threads: primary thread will either be consuming events
+        // again or waiting in yield(), and secondary thread will either not
+        // exist or consuming events.
+        synchronized (this) {
+            this.notifyAll();
+        }
     }
 
     /**
@@ -595,7 +675,40 @@ public class TApplication {
      * @see #primaryHandleEvent(TInputEvent event)
      */
     private void secondaryHandleEvent(final TInputEvent event) {
-        // TODO
+        secondaryEventReceiver.handleEvent(event);
+    }
+
+    /**
+     * Enable a widget to override the primary event thread.
+     *
+     * @param widget widget that will receive events
+     */
+    public final void enableSecondaryEventReceiver(final TWidget widget) {
+        assert (secondaryEventReceiver == null);
+        assert (secondaryEventHandler == null);
+        assert (widget instanceof TMessageBox);
+        secondaryEventReceiver = widget;
+        secondaryEventHandler = new WidgetEventHandler(this, false);
+        (new Thread(secondaryEventHandler)).start();
+
+        // Refresh
+        repaint = true;
+    }
+
+    /**
+     * Yield to the secondary thread.
+     */
+    public final void yield() {
+        assert (secondaryEventReceiver != null);
+        while (secondaryEventReceiver != null) {
+            synchronized (this) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    // SQUASH
+                }
+            }
+        }
     }
 
     /**
@@ -608,7 +721,7 @@ public class TApplication {
         for (TTimer timer: timers) {
             if (timer.getNextTick().getTime() < now.getTime()) {
                 timer.tick();
-                if (timer.recurring == true) {
+                if (timer.recurring) {
                     keepTimers.add(timer);
                 }
             } else {
@@ -677,32 +790,20 @@ public class TApplication {
         // Refresh screen
         repaint = true;
 
-        /*
-         TODO
-
-
         // Check if we are closing a TMessageBox or similar
-        if (secondaryEventReceiver !is null) {
-            assert(secondaryEventFiber !is null);
+        if (secondaryEventReceiver != null) {
+            assert (secondaryEventHandler != null);
 
             // Do not send events to the secondaryEventReceiver anymore, the
             // window is closed.
             secondaryEventReceiver = null;
 
-            // Special case: if this is called while executing on a
-            // secondaryEventFiber, call it so that widgetEventHandler() can
-            // terminate.
-            if (secondaryEventFiber.state == Fiber.State.HOLD) {
-                secondaryEventFiber.call();
-            }
-            secondaryEventFiber = null;
-
-            // Unfreeze the logic in handleEvent()
-            if (primaryEventFiber.state == Fiber.State.HOLD) {
-                primaryEventFiber.call();
+            // Wake all threads: primary thread will be consuming events
+            // again, and secondary thread will exit.
+            synchronized (this) {
+                this.notifyAll();
             }
         }
-         */
     }
 
     /**
@@ -993,23 +1094,24 @@ public class TApplication {
      * @return if true, this event was consumed
      */
     protected boolean onCommand(final TCommandEvent command) {
-        /*
-         TODO
         // Default: handle cmExit
         if (command.equals(cmExit)) {
             if (messageBox("Confirmation", "Exit application?",
-                    TMessageBox.Type.YESNO).result == TMessageBox.Result.YES) {
+                    TMessageBox.Type.YESNO).getResult() == TMessageBox.Result.YES) {
                 quit = true;
             }
             repaint = true;
             return true;
         }
 
+        /*
+         TODO
         if (command.equals(cmShell)) {
             openTerminal(0, 0, TWindow.Flag.RESIZABLE);
             repaint = true;
             return true;
         }
+         */
 
         if (command.equals(cmTile)) {
             tileWindows();
@@ -1026,7 +1128,7 @@ public class TApplication {
             repaint = true;
             return true;
         }
-         */
+
         return false;
     }
 
@@ -1041,17 +1143,11 @@ public class TApplication {
 
         // Default: handle MID_EXIT
         if (menu.getId() == TMenu.MID_EXIT) {
-            /*
-             TODO
             if (messageBox("Confirmation", "Exit application?",
-                    TMessageBox.Type.YESNO).result == TMessageBox.Result.YES) {
+                    TMessageBox.Type.YESNO).getResult() == TMessageBox.Result.YES) {
                 quit = true;
             }
             // System.err.printf("onMenu MID_EXIT result: quit = %s\n", quit);
-            repaint = true;
-            return true;
-             */
-            quit = true;
             repaint = true;
             return true;
         }
@@ -1213,7 +1309,7 @@ public class TApplication {
      *
      * @return the new menu
      */
-    final public TMenu addWindowMenu() {
+    public final TMenu addWindowMenu() {
         TMenu windowMenu = addMenu("&Window");
         windowMenu.addDefaultItem(TMenu.MID_TILE);
         windowMenu.addDefaultItem(TMenu.MID_CASCADE);
@@ -1330,6 +1426,7 @@ public class TApplication {
      * @param duration number of milliseconds to wait between ticks
      * @param recurring if true, re-schedule this timer after every tick
      * @param action function to call when button is pressed
+     * @return the timer
      */
     public final TTimer addTimer(final long duration, final boolean recurring,
         final TAction action) {
@@ -1352,4 +1449,62 @@ public class TApplication {
         }
     }
 
+    /**
+     * Convenience function to spawn a message box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @return the new message box
+     */
+    public final TMessageBox messageBox(final String title,
+        final String caption) {
+
+        return new TMessageBox(this, title, caption, TMessageBox.Type.OK);
+    }
+
+    /**
+     * Convenience function to spawn a message box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @param type one of the TMessageBox.Type constants.  Default is
+     * Type.OK.
+     * @return the new message box
+     */
+    public final TMessageBox messageBox(final String title,
+        final String caption, final TMessageBox.Type type) {
+
+        return new TMessageBox(this, title, caption, type);
+    }
+
+    /**
+     * Convenience function to spawn an input box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @return the new input box
+     */
+    public final TInputBox inputBox(final String title, final String caption) {
+
+        return new TInputBox(this, title, caption);
+    }
+
+    /**
+     * Convenience function to spawn an input box.
+     *
+     * @param title window title, will be centered along the top border
+     * @param caption message to display.  Use embedded newlines to get a
+     * multi-line box.
+     * @param text initial text to seed the field with
+     * @return the new input box
+     */
+    public final TInputBox inputBox(final String title, final String caption,
+        final String text) {
+
+        return new TInputBox(this, title, caption, text);
+    }
+    
 }

@@ -30,6 +30,10 @@
  */
 package jexer.io;
 
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowListener;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -46,7 +50,12 @@ import static jexer.TKeypress.*;
 /**
  * This class reads keystrokes and mouse events from an AWT Frame.
  */
-public final class AWTTerminal {
+public final class AWTTerminal implements KeyListener {
+
+    /**
+     * The backend Screen.
+     */
+    private AWTScreen screen;
 
     /**
      * The session information.
@@ -106,15 +115,18 @@ public final class AWTTerminal {
     /**
      * Constructor sets up state for getEvent().
      *
-     * @param screen the top-level AWT frame 
+     * @param screen the top-level AWT frame
      */
     public AWTTerminal(final AWTScreen screen) {
+        this.screen      = screen;
         mouse1           = false;
         mouse2           = false;
         mouse3           = false;
         stopReaderThread = false;
         sessionInfo      = new TSessionInfo();
         eventQueue       = new LinkedList<TInputEvent>();
+
+        screen.frame.addKeyListener(this);
     }
 
     /**
@@ -122,6 +134,7 @@ public final class AWTTerminal {
      */
     public void shutdown() {
         // System.err.println("=== shutdown() ==="); System.err.flush();
+        screen.frame.dispose();
     }
 
     /**
@@ -160,4 +173,213 @@ public final class AWTTerminal {
         }
     }
 
+    /**
+     * Pass AWT keystrokes into the event queue.
+     *
+     * @param key keystroke received
+     */
+    @Override
+    public void keyReleased(final KeyEvent key) {
+        // Ignore release events
+    }
+
+    /**
+     * Pass AWT keystrokes into the event queue.
+     *
+     * @param key keystroke received
+     */
+    @Override
+    public void keyTyped(final KeyEvent key) {
+        // Ignore typed events
+    }
+
+    /**
+     * Pass AWT keystrokes into the event queue.
+     *
+     * @param key keystroke received
+     */
+    @Override
+    public void keyPressed(final KeyEvent key) {
+        boolean alt = false;
+        boolean shift = false;
+        boolean ctrl = false;
+        char ch = ' ';
+        boolean isKey = false;
+        int fnKey = 0;
+        if (key.isActionKey()) {
+            isKey = true;
+        } else {
+            ch = key.getKeyChar();
+        }
+        alt = key.isAltDown();
+        ctrl = key.isControlDown();
+        shift = key.isShiftDown();
+
+        /*
+        System.err.printf("AWT Key: %s\n", key);
+        System.err.printf("   isKey: %s\n", isKey);
+        System.err.printf("   alt: %s\n", alt);
+        System.err.printf("   ctrl: %s\n", ctrl);
+        System.err.printf("   shift: %s\n", shift);
+        System.err.printf("   ch: %s\n", ch);
+         */
+
+        // Special case: not return the bare modifier presses
+        switch (key.getKeyCode()) {
+        case KeyEvent.VK_ALT:
+            return;
+        case KeyEvent.VK_ALT_GRAPH:
+            return;
+        case KeyEvent.VK_CONTROL:
+            return;
+        case KeyEvent.VK_SHIFT:
+            return;
+        case KeyEvent.VK_META:
+            return;
+        default:
+            break;
+        }
+
+        TKeypress keypress = null;
+        if (isKey) {
+            switch (key.getKeyCode()) {
+            case KeyEvent.VK_F1:
+                keypress = new TKeypress(true, TKeypress.F1, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F2:
+                keypress = new TKeypress(true, TKeypress.F2, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F3:
+                keypress = new TKeypress(true, TKeypress.F3, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F4:
+                keypress = new TKeypress(true, TKeypress.F4, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F5:
+                keypress = new TKeypress(true, TKeypress.F5, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F6:
+                keypress = new TKeypress(true, TKeypress.F6, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F7:
+                keypress = new TKeypress(true, TKeypress.F7, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F8:
+                keypress = new TKeypress(true, TKeypress.F8, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F9:
+                keypress = new TKeypress(true, TKeypress.F9, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F10:
+                keypress = new TKeypress(true, TKeypress.F10, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F11:
+                keypress = new TKeypress(true, TKeypress.F11, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_F12:
+                keypress = new TKeypress(true, TKeypress.F12, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_HOME:
+                keypress = new TKeypress(true, TKeypress.HOME, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_END:
+                keypress = new TKeypress(true, TKeypress.END, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_PAGE_UP:
+                keypress = new TKeypress(true, TKeypress.PGUP, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_PAGE_DOWN:
+                keypress = new TKeypress(true, TKeypress.PGDN, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_INSERT:
+                keypress = new TKeypress(true, TKeypress.INS, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_DELETE:
+                keypress = new TKeypress(true, TKeypress.F1, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_RIGHT:
+                keypress = new TKeypress(true, TKeypress.RIGHT, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_LEFT:
+                keypress = new TKeypress(true, TKeypress.LEFT, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_UP:
+                keypress = new TKeypress(true, TKeypress.UP, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_DOWN:
+                keypress = new TKeypress(true, TKeypress.DOWN, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_TAB:
+                // Special case: distinguish TAB vs BTAB
+                if (shift) {
+                    keypress = kbShiftTab;
+                } else {
+                    keypress = kbTab;
+                }
+                break;
+            case KeyEvent.VK_ENTER:
+                keypress = new TKeypress(true, TKeypress.ENTER, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_ESCAPE:
+                keypress = new TKeypress(true, TKeypress.ESC, ' ',
+                    alt, ctrl, shift);
+                break;
+            case KeyEvent.VK_BACK_SPACE:
+                // Special case: return it as kbBackspace (Ctrl-H)
+                keypress = new TKeypress(false, 0, 'H', false, true, false);
+                break;
+            default:
+                // Unsupported, ignore
+                return;
+            }
+        }
+
+        if (keypress == null) {
+            switch (ch) {
+            case 0x08:
+                keypress = kbBackspace;
+                break;
+            case 0x0A:
+                keypress = kbEnter;
+                break;
+            case 0x0D:
+                keypress = kbEnter;
+                break;
+            default:
+                if (!alt && ctrl && !shift) {
+                    ch = key.getKeyText(key.getKeyCode()).charAt(0);
+                }
+                // Not a special key, put it together
+                keypress = new TKeypress(false, 0, ch, alt, ctrl, shift);
+            }
+        }
+
+        // Save it and we are done.
+        synchronized (eventQueue) {
+            eventQueue.add(new TKeypressEvent(keypress));
+        }
+    }
 }

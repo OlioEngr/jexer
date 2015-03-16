@@ -120,7 +120,7 @@ run:	jexer run-demo1
 all-demos:	jexer
 
 run-demo1:	all-demos
-	java -cp $(TARGET_DIR) jexer.demos.Demo1
+	java -Djexer.AWT=true -cp $(TARGET_DIR) jexer.demos.Demo1
 
 clean:
 	-rm -r $(ANT_TARGET_DIR)

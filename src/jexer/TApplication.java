@@ -51,6 +51,7 @@ import jexer.event.TMenuEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.backend.Backend;
+import jexer.backend.AWTBackend;
 import jexer.backend.ECMA48Backend;
 import jexer.io.Screen;
 import jexer.menu.TMenu;
@@ -311,7 +312,12 @@ public class TApplication {
     public TApplication(final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
-        backend         = new ECMA48Backend(input, output);
+        if (System.getProperty("jexer.AWT", "false").equals("true")) {
+            backend     = new AWTBackend();
+        } else {
+            backend     = new ECMA48Backend(input, output);
+        }
+
         theme           = new ColorTheme();
         desktopBottom   = getScreen().getHeight() - 1;
         fillEventQueue  = new ArrayList<TInputEvent>();
@@ -1506,5 +1512,5 @@ public class TApplication {
 
         return new TInputBox(this, title, caption, text);
     }
-    
+
 }

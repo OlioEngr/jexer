@@ -238,7 +238,7 @@ public final class ECMA48Screen extends Screen {
      * @return escape sequences string that provides the updates to the
      * physical screen
      */
-    public String flushString() {
+    private String flushString() {
         if (!dirty) {
             assert (!reallyCleared);
             return "";

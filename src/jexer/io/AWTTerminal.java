@@ -30,27 +30,38 @@
  */
 package jexer.io;
 
-import java.awt.event.KeyListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.List;
 import java.util.LinkedList;
 
 import jexer.TKeypress;
 import jexer.bits.Color;
+import jexer.event.TCommandEvent;
 import jexer.event.TInputEvent;
 import jexer.event.TKeypressEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.session.SessionInfo;
-import jexer.session.TSessionInfo;
+import jexer.session.AWTSessionInfo;
+import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 
 /**
  * This class reads keystrokes and mouse events from an AWT Frame.
  */
-public final class AWTTerminal implements KeyListener {
+public final class AWTTerminal implements ComponentListener, KeyListener,
+                               MouseListener, MouseMotionListener,
+                               MouseWheelListener, WindowListener {
 
     /**
      * The backend Screen.
@@ -60,7 +71,7 @@ public final class AWTTerminal implements KeyListener {
     /**
      * The session information.
      */
-    private SessionInfo sessionInfo;
+    private AWTSessionInfo sessionInfo;
 
     /**
      * Getter for sessionInfo.
@@ -77,11 +88,6 @@ public final class AWTTerminal implements KeyListener {
     private List<TInputEvent> eventQueue;
 
     /**
-     * If true, we want the reader thread to exit gracefully.
-     */
-    private boolean stopReaderThread;
-
-    /**
      * The reader thread.
      */
     private Thread readerThread;
@@ -89,17 +95,17 @@ public final class AWTTerminal implements KeyListener {
     /**
      * true if mouse1 was down.  Used to report mouse1 on the release event.
      */
-    private boolean mouse1;
+    private boolean mouse1 = false;
 
     /**
      * true if mouse2 was down.  Used to report mouse2 on the release event.
      */
-    private boolean mouse2;
+    private boolean mouse2 = false;
 
     /**
      * true if mouse3 was down.  Used to report mouse3 on the release event.
      */
-    private boolean mouse3;
+    private boolean mouse3 = false;
 
     /**
      * Check if there are events in the queue.
@@ -122,11 +128,15 @@ public final class AWTTerminal implements KeyListener {
         mouse1           = false;
         mouse2           = false;
         mouse3           = false;
-        stopReaderThread = false;
-        sessionInfo      = new TSessionInfo();
+        sessionInfo      = screen.getSessionInfo();
         eventQueue       = new LinkedList<TInputEvent>();
 
         screen.frame.addKeyListener(this);
+        screen.frame.addWindowListener(this);
+        screen.frame.addComponentListener(this);
+        screen.frame.addMouseListener(this);
+        screen.frame.addMouseMotionListener(this);
+        screen.frame.addMouseWheelListener(this);
     }
 
     /**
@@ -312,7 +322,7 @@ public final class AWTTerminal implements KeyListener {
                     alt, ctrl, shift);
                 break;
             case KeyEvent.VK_DELETE:
-                keypress = new TKeypress(true, TKeypress.F1, ' ',
+                keypress = new TKeypress(true, TKeypress.DEL, ' ',
                     alt, ctrl, shift);
                 break;
             case KeyEvent.VK_RIGHT:
@@ -368,6 +378,9 @@ public final class AWTTerminal implements KeyListener {
             case 0x0D:
                 keypress = kbEnter;
                 break;
+            case 0x7F:
+                keypress = kbDel;
+                break;
             default:
                 if (!alt && ctrl && !shift) {
                     ch = key.getKeyText(key.getKeyCode()).charAt(0);
@@ -381,5 +394,357 @@ public final class AWTTerminal implements KeyListener {
         synchronized (eventQueue) {
             eventQueue.add(new TKeypressEvent(keypress));
         }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
     }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowActivated(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowClosed(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowClosing(final WindowEvent event) {
+        // Drop a cmAbort and walk away
+        synchronized (eventQueue) {
+            eventQueue.add(new TCommandEvent(cmAbort));
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowDeactivated(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowDeiconified(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowIconified(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass window events into the event queue.
+     *
+     * @param event window event received
+     */
+    @Override
+    public void windowOpened(final WindowEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass component events into the event queue.
+     *
+     * @param event component event received
+     */
+    @Override
+    public void componentHidden(final ComponentEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass component events into the event queue.
+     *
+     * @param event component event received
+     */
+    @Override
+    public void componentShown(final ComponentEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass component events into the event queue.
+     *
+     * @param event component event received
+     */
+    @Override
+    public void componentMoved(final ComponentEvent event) {
+        // Ignore
+    }
+
+    /**
+     * Pass component events into the event queue.
+     *
+     * @param event component event received
+     */
+    @Override
+    public void componentResized(final ComponentEvent event) {
+        // Drop a new TResizeEvent into the queue
+        sessionInfo.queryWindowSize();
+        synchronized (eventQueue) {
+            TResizeEvent windowResize = new TResizeEvent(TResizeEvent.Type.SCREEN,
+                sessionInfo.getWindowWidth(), sessionInfo.getWindowHeight());
+            eventQueue.add(windowResize);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseDragged(final MouseEvent mouse) {
+        int modifiers = mouse.getModifiersEx();
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        if ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
+            eventMouse1 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0) {
+            eventMouse2 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0) {
+            eventMouse3 = true;
+        }
+        mouse1 = eventMouse1;
+        mouse2 = eventMouse2;
+        mouse3 = eventMouse3;
+        int x = sessionInfo.textColumn(mouse.getX());
+        int y = sessionInfo.textRow(mouse.getY());
+
+        TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_MOTION,
+            x, y, x, y, mouse1, mouse2, mouse3, false, false);
+
+        synchronized (eventQueue) {
+            eventQueue.add(mouseEvent);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseMoved(final MouseEvent mouse) {
+        int x = sessionInfo.textColumn(mouse.getX());
+        int y = sessionInfo.textRow(mouse.getY());
+        TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_MOTION,
+            x, y, x, y, mouse1, mouse2, mouse3, false, false);
+
+        synchronized (eventQueue) {
+            eventQueue.add(mouseEvent);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseClicked(final MouseEvent mouse) {
+        // Ignore
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseEntered(final MouseEvent mouse) {
+        // Ignore
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseExited(final MouseEvent mouse) {
+        // Ignore
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mousePressed(final MouseEvent mouse) {
+        int modifiers = mouse.getModifiersEx();
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        if ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
+            eventMouse1 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0) {
+            eventMouse2 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0) {
+            eventMouse3 = true;
+        }
+        mouse1 = eventMouse1;
+        mouse2 = eventMouse2;
+        mouse3 = eventMouse3;
+        int x = sessionInfo.textColumn(mouse.getX());
+        int y = sessionInfo.textRow(mouse.getY());
+
+        TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_DOWN,
+            x, y, x, y, mouse1, mouse2, mouse3, false, false);
+
+        synchronized (eventQueue) {
+            eventQueue.add(mouseEvent);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseReleased(final MouseEvent mouse) {
+        int modifiers = mouse.getModifiersEx();
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        if ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
+            eventMouse1 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0) {
+            eventMouse2 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0) {
+            eventMouse3 = true;
+        }
+        if (mouse1) {
+            mouse1 = false;
+            eventMouse1 = true;
+        }
+        if (mouse2) {
+            mouse2 = false;
+            eventMouse2 = true;
+        }
+        if (mouse3) {
+            mouse3 = false;
+            eventMouse3 = true;
+        }
+        int x = sessionInfo.textColumn(mouse.getX());
+        int y = sessionInfo.textRow(mouse.getY());
+
+        TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_UP,
+            x, y, x, y, eventMouse1, eventMouse2, eventMouse3, false, false);
+
+        synchronized (eventQueue) {
+            eventQueue.add(mouseEvent);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Pass mouse events into the event queue.
+     *
+     * @param mouse mouse event received
+     */
+    @Override
+    public void mouseWheelMoved(final MouseWheelEvent mouse) {
+        int modifiers = mouse.getModifiersEx();
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        boolean mouseWheelUp = false;
+        boolean mouseWheelDown = false;
+        if ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
+            eventMouse1 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON2_DOWN_MASK) != 0) {
+            eventMouse2 = true;
+        }
+        if ((modifiers & MouseEvent.BUTTON3_DOWN_MASK) != 0) {
+            eventMouse3 = true;
+        }
+        mouse1 = eventMouse1;
+        mouse2 = eventMouse2;
+        mouse3 = eventMouse3;
+        int x = sessionInfo.textColumn(mouse.getX());
+        int y = sessionInfo.textRow(mouse.getY());
+        if (mouse.getWheelRotation() > 0) {
+            mouseWheelDown = true;
+        }
+        if (mouse.getWheelRotation() < 0) {
+            mouseWheelUp = true;
+        }
+
+        TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_DOWN,
+            x, y, x, y, mouse1, mouse2, mouse3, mouseWheelUp, mouseWheelDown);
+
+        synchronized (eventQueue) {
+            eventQueue.add(mouseEvent);
+        }
+        // Wake up the backend
+        synchronized (this) {
+            this.notifyAll();
+        }
+    }
+
 }

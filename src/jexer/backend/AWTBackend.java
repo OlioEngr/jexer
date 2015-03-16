@@ -56,6 +56,8 @@ public final class AWTBackend extends Backend {
         this.screen = screen;
         // Create the listeners
         terminal = new AWTTerminal(screen);
+        // Hang onto the session info
+        this.sessionInfo = terminal.getSessionInfo();
     }
 
     /**

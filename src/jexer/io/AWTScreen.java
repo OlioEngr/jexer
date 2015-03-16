@@ -32,6 +32,7 @@ package jexer.io;
 
 import jexer.bits.Cell;
 import jexer.bits.CellAttributes;
+import jexer.session.AWTSessionInfo;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -40,7 +41,11 @@ import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.InputStream;
 
 /**
@@ -232,11 +237,12 @@ public final class AWTScreen extends Screen {
 
             setTitle("Jexer Application");
             setBackground(java.awt.Color.black);
-            setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+            // setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
             // setFont(new Font("Liberation Mono", Font.BOLD, 16));
             // setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
             try {
+                // Always try to use Terminus, the one decent font.
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();
                 InputStream in = loader.getResourceAsStream(FONTFILE);
                 Font terminusRoot = Font.createFont(Font.TRUETYPE_FONT, in);
@@ -249,6 +255,16 @@ public final class AWTScreen extends Screen {
             }
             setVisible(true);
             resizeToScreen();
+
+            // Kill the X11 cursor
+            // Transparent 16 x 16 pixel cursor image.
+            BufferedImage cursorImg = new BufferedImage(16, 16,
+                BufferedImage.TYPE_INT_ARGB);
+
+            // Create a new blank cursor.
+            Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                cursorImg, new Point(0, 0), "blank cursor");
+            setCursor(blankCursor);
         }
 
         /**
@@ -282,23 +298,49 @@ public final class AWTScreen extends Screen {
         }
 
         /**
+         * Update redraws the whole screen.
+         *
+         * @param gr the AWT Graphics context
+         */
+        @Override
+        public void update(final Graphics gr) {
+            // The default update clears the area.  Don't do that, instead
+            // just paint it directly.
+            paint(gr);
+        }
+
+        /**
          * Paint redraws the whole screen.
          *
          * @param gr the AWT Graphics context
          */
         @Override
         public void paint(final Graphics gr) {
+            Rectangle bounds = gr.getClipBounds();
 
             for (int y = 0; y < screen.height; y++) {
                 for (int x = 0; x < screen.width; x++) {
-                    Cell lCell = screen.logical[x][y];
-                    Cell pCell = screen.physical[x][y];
-
                     int xPixel = x * textWidth + left;
                     int yPixel = y * textHeight + top;
 
-                    if (!lCell.equals(pCell)) {
+                    Cell lCell = screen.logical[x][y];
+                    Cell pCell = screen.physical[x][y];
 
+                    boolean inBounds = true;
+                    if (bounds != null) {
+                        if (bounds.contains(xPixel, yPixel)
+                            || bounds.contains(xPixel + textWidth, yPixel)
+                            || bounds.contains(xPixel, yPixel + textHeight)
+                            || bounds.contains(xPixel + textWidth,
+                                yPixel + textHeight)
+                        ) {
+                            // This area is damaged and will definitely be
+                            // redrawn.
+                            inBounds = true;
+                        }
+                    }
+
+                    if (!lCell.equals(pCell) || inBounds) {
                         // Draw the background rectangle, then the foreground
                         // character.
                         gr.setColor(attrToBackgroundColor(lCell));
@@ -313,6 +355,18 @@ public final class AWTScreen extends Screen {
                         physical[x][y].setTo(lCell);
                     }
                 }
+            }
+
+            // Draw the cursor if it is visible
+            if ((cursorVisible)
+                && (cursorY <= screen.height - 1)
+                && (cursorX <= screen.width - 1)
+            ) {
+                int xPixel = cursorX * textWidth + left;
+                int yPixel = cursorY * textHeight + top;
+                Cell lCell = screen.logical[cursorX][cursorY];
+                gr.setColor(attrToForegroundColor(lCell));
+                gr.fillRect(xPixel, yPixel + textHeight - 2, textWidth, 2);
             }
         }
     }
@@ -330,11 +384,81 @@ public final class AWTScreen extends Screen {
     }
 
     /**
+     * Create the AWTSessionInfo.  Note package private access.
+     *
+     * @return the sessionInfo
+     */
+    AWTSessionInfo getSessionInfo() {
+        AWTSessionInfo sessionInfo = new AWTSessionInfo(frame, frame.textWidth,
+            frame.textHeight);
+        return sessionInfo;
+    }
+
+    /**
      * Push the logical screen to the physical device.
      */
     @Override
     public void flushPhysical() {
-        Graphics gr = frame.getGraphics();
-        frame.paint(gr);
+        // Request a repaint, let the frame's repaint/update methods do the
+        // right thing.
+        // Find the minimum-size damaged region.
+        int xMin = frame.getWidth();
+        int xMax = 0;
+        int yMin = frame.getHeight();
+        int yMax = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Cell lCell = logical[x][y];
+                Cell pCell = physical[x][y];
+
+                int xPixel = x * frame.textWidth + frame.left;
+                int yPixel = y * frame.textHeight + frame.top;
+
+                if (!lCell.equals(pCell)
+                    || ((x == cursorX) && (y == cursorY))
+                ) {
+                    if (xPixel < xMin) {
+                        xMin = xPixel;
+                    }
+                    if (xPixel + frame.textWidth > xMax) {
+                        xMax = xPixel + frame.textWidth;
+                    }
+                    if (yPixel < yMin) {
+                        yMin = yPixel;
+                    }
+                    if (yPixel + frame.textHeight > yMax) {
+                        yMax = yPixel + frame.textHeight;
+                    }
+                }
+            }
+        }
+
+        // Ask for a repaint sometime in the next 10 millis.
+        frame.repaint(10, xMin, yMin, xMax - xMin, yMax - yMin);
     }
+
+    /**
+     * Put the cursor at (x,y).
+     *
+     * @param visible if true, the cursor should be visible
+     * @param x column coordinate to put the cursor on
+     * @param y row coordinate to put the cursor on
+     */
+    @Override
+    public void putCursor(final boolean visible, final int x, final int y) {
+        if ((cursorVisible)
+            && (cursorY <= height - 1)
+            && (cursorX <= width - 1)
+        ) {
+            // Make the current cursor position dirty
+            if (physical[cursorX][cursorY].getChar() == ' ') {
+                physical[cursorX][cursorY].setChar('X');
+            } else {
+                physical[cursorX][cursorY].setChar(' ');
+            }
+        }
+
+        super.putCursor(visible, x, y);
+    }
+
 }

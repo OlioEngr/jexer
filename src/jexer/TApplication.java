@@ -312,12 +312,26 @@ public class TApplication {
     public TApplication(final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
-        if (System.getProperty("jexer.AWT", "false").equals("true")) {
+        // AWT is the default backend on Windows unless explicitly overridden
+        // by jexer.AWT.
+        boolean useAWT = false;
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            useAWT = true;
+        }
+        if (System.getProperty("jexer.AWT") != null) {
+            if (System.getProperty("jexer.AWT", "false").equals("true")) {
+                useAWT = true;
+            } else {
+                useAWT = false;
+            }
+        }
+
+
+        if (useAWT) {
             backend     = new AWTBackend();
         } else {
             backend     = new ECMA48Backend(input, output);
         }
-
         theme           = new ColorTheme();
         desktopBottom   = getScreen().getHeight() - 1;
         fillEventQueue  = new ArrayList<TInputEvent>();

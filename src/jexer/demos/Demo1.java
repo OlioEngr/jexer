@@ -288,24 +288,6 @@ class DemoMainWindow extends TWindow {
     // Timer label is updated with timer ticks.
     TLabel timerLabel;
 
-    /*
-    // The modal window is a more low-level example of controlling a window
-    // "from the outside".  Most windows will probably subclass TWindow and
-    // do this kind of logic on their own.
-    private TWindow modalWindow;
-    private void openModalWindow() {
-        modalWindow = getApplication().addWindow("Demo Modal Window", 0, 0,
-            58, 15, TWindow.Flag.MODAL);
-        modalWindow.addLabel("This is an example of a very braindead modal window.", 1, 1);
-        modalWindow.addLabel("Modal windows are centered by default.", 1, 2);
-        modalWindow.addButton("&Close", (modalWindow.width - 8)/2,
-            modalWindow.height - 4, &modalWindowClose);
-    }
-    private void modalWindowClose() {
-        getApplication().closeWindow(modalWindow);
-    }
-     */
-
     /**
      * We need to override onClose so that the timer will no longer be called
      * after we close the window.  TTimers currently are completely unaware

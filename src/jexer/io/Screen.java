@@ -216,7 +216,9 @@ public abstract class Screen {
      */
     public final CellAttributes getAttrXY(final int x, final int y) {
         CellAttributes attr = new CellAttributes();
-        attr.setTo(logical[x][y]);
+        if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
+            attr.setTo(logical[x][y]);
+        }
         return attr;
     }
 
@@ -727,7 +729,7 @@ public abstract class Screen {
      * Subclasses must provide an implementation to push the logical screen
      * to the physical device.
      */
-    abstract public void flushPhysical();
+    public abstract void flushPhysical();
 
     /**
      * Put the cursor at (x,y).
@@ -736,8 +738,7 @@ public abstract class Screen {
      * @param x column coordinate to put the cursor on
      * @param y row coordinate to put the cursor on
      */
-    public final void putCursor(final boolean visible,
-        final int x, final int y) {
+    public void putCursor(final boolean visible, final int x, final int y) {
 
         cursorVisible = visible;
         cursorX = x;

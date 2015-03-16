@@ -439,7 +439,8 @@ public final class TMenu extends TWindow {
             break;
         case MID_CLEAR:
             label = "C&lear";
-            key = kbDel;
+            hasKey = false;
+            // key = kbDel;
             break;
 
         case MID_TILE:

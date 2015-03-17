@@ -65,6 +65,11 @@ import static jexer.TKeypress.*;
 public class TApplication {
 
     /**
+     * If true, emit thread stuff to System.err.
+     */
+    private static final boolean debugThreads = false;
+
+    /**
      * WidgetEventHandler is the main event consumer loop.  There are at most
      * two such threads in existence: the primary for normal case and a
      * secondary that is used for TMessageBox, TInputBox, and similar.
@@ -134,6 +139,10 @@ public class TApplication {
                         }
                         event = application.drainEventQueue.remove(0);
                     }
+                    // Wait for drawAll() or doIdle() to be done, then handle
+                    // the event.
+                    boolean oldLock = lockHandleEvent();
+                    assert (oldLock == false);
                     if (primary) {
                         primaryHandleEvent(event);
                     } else {
@@ -142,8 +151,17 @@ public class TApplication {
                     if ((!primary)
                         && (application.secondaryEventReceiver == null)
                     ) {
-                        // Secondary thread, time to exit
+                        // Secondary thread, time to exit.
+
+                        // DO NOT UNLOCK.  Primary thread just came back from
+                        // primaryHandleEvent() and will unlock in the else
+                        // block below.
                         return;
+                    } else {
+                        // Unlock.  Either I am primary thread, or I am
+                        // secondary thread and still running.
+                        oldLock = unlockHandleEvent();
+                        assert (oldLock == true);
                     }
                 }
             } // while (true) (main runnable loop)
@@ -164,6 +182,96 @@ public class TApplication {
      * The widget receiving events from the secondary event handler thread.
      */
     private TWidget secondaryEventReceiver;
+
+    /**
+     * Spinlock for the primary and secondary event handlers.
+     * WidgetEventHandler.run() is responsible for setting this value.
+     */
+    private volatile boolean insideHandleEvent = false;
+
+    /**
+     * Set the insideHandleEvent flag to true.  lockoutEventHandlers() will
+     * spin indefinitely until unlockHandleEvent() is called.
+     *
+     * @return the old value of insideHandleEvent
+     */
+    private boolean lockHandleEvent() {
+        if (debugThreads) {
+            System.err.printf("  >> lockHandleEvent(): oldValue %s",
+                insideHandleEvent);
+        }
+        boolean oldValue = true;
+
+        synchronized (this) {
+            // Wait for TApplication.run() to finish using the global state
+            // before allowing further event processing.
+            while (lockoutHandleEvent == true);
+
+            oldValue = insideHandleEvent;
+            insideHandleEvent = true;
+        }
+
+        if (debugThreads) {
+            System.err.printf(" ***\n");
+        }
+        return oldValue;
+    }
+
+    /**
+     * Set the insideHandleEvent flag to false.  lockoutEventHandlers() will
+     * spin indefinitely until unlockHandleEvent() is called.
+     *
+     * @return the old value of insideHandleEvent
+     */
+    private boolean unlockHandleEvent() {
+        if (debugThreads) {
+            System.err.printf("  << unlockHandleEvent(): oldValue %s\n",
+                insideHandleEvent);
+        }
+        synchronized (this) {
+            boolean oldValue = insideHandleEvent;
+            insideHandleEvent = false;
+            return oldValue;
+        }
+    }
+
+    /**
+     * Spinlock for the primary and secondary event handlers.  When true, the
+     * event handlers will spinlock wait before calling handleEvent().
+     */
+    private volatile boolean lockoutHandleEvent = false;
+
+    /**
+     * TApplication.run() needs to be able rely on the global data structures
+     * being intact when calling doIdle() and drawAll().  Tell the event
+     * handlers to wait for an unlock before handling their events.
+     */
+    private void stopEventHandlers() {
+        if (debugThreads) {
+            System.err.printf(">> stopEventHandlers()");
+        }
+
+        lockoutHandleEvent = true;
+        // Wait for the last event to finish processing before returning
+        // control to TApplication.run().
+        while (insideHandleEvent == true);
+
+        if (debugThreads) {
+            System.err.printf(" XXX\n");
+        }
+    }
+
+    /**
+     * TApplication.run() needs to be able rely on the global data structures
+     * being intact when calling doIdle() and drawAll().  Tell the event
+     * handlers that it is now OK to handle their events.
+     */
+    private void startEventHandlers() {
+        if (debugThreads) {
+            System.err.printf("<< startEventHandlers()\n");
+        }
+        lockoutHandleEvent = false;
+    }
 
     /**
      * Access to the physical screen, keyboard, and mouse.
@@ -366,6 +474,10 @@ public class TApplication {
      * Draw everything.
      */
     public final void drawAll() {
+        if (debugThreads) {
+            System.err.printf("drawAll() enter\n");
+        }
+
         if ((flush) && (!repaint)) {
             backend.flushScreen();
             flush = false;
@@ -374,6 +486,10 @@ public class TApplication {
 
         if (!repaint) {
             return;
+        }
+
+        if (debugThreads) {
+            System.err.printf("drawAll() REDRAW\n");
         }
 
         // If true, the cursor is not visible
@@ -497,6 +613,9 @@ public class TApplication {
                 metaHandleEvent(event);
             }
 
+            // Prevent stepping on the primary or secondary event handler.
+            stopEventHandlers();
+
             // Process timers and call doIdle()'s
             doIdle();
 
@@ -504,6 +623,9 @@ public class TApplication {
             synchronized (getScreen()) {
                 drawAll();
             }
+
+            // Let the event handlers run again.
+            startEventHandlers();
         }
 
         // Shutdown the consumer threads
@@ -722,6 +844,13 @@ public class TApplication {
      */
     public final void yield() {
         assert (secondaryEventReceiver != null);
+        // This is where we handoff the event handler lock from the primary
+        // to secondary thread.  We unlock here, and in a future loop the
+        // secondary thread locks again.  When it gives up, we have the
+        // single lock back.
+        boolean oldLock = unlockHandleEvent();
+        assert (oldLock == true);
+
         while (secondaryEventReceiver != null) {
             synchronized (this) {
                 try {
@@ -737,6 +866,10 @@ public class TApplication {
      * Do stuff when there is no user input.
      */
     private void doIdle() {
+        if (debugThreads) {
+            System.err.printf("doIdle()\n");
+        }
+
         // Now run any timers that have timed out
         Date now = new Date();
         List<TTimer> keepTimers = new LinkedList<TTimer>();

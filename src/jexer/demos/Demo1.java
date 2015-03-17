@@ -351,9 +351,12 @@ class DemoMainWindow extends TWindow {
 
         addLabel("Variable-width text field:", 1, row);
         addField(35, row++, 15, false, "Field text");
-
         addLabel("Fixed-width text field:", 1, row);
-        addField(35, row, 15, true);
+        addField(35, row++, 15, true);
+        addLabel("Variable-width password:", 1, row);
+        addPasswordField(35, row++, 15, false);
+        addLabel("Fixed-width password:", 1, row);
+        addPasswordField(35, row++, 15, true, "hunter2");
         row += 2;
 
         if (!isModal()) {

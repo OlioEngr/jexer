@@ -162,26 +162,4 @@ public final class AWTSessionInfo implements SessionInfo {
 
     }
 
-    /**
-     * Convert pixel column position to text cell column position.
-     *
-     * @param x pixel column position
-     * @return text cell column position
-     */
-    public int textColumn(final int x) {
-        Insets insets = frame.getInsets();
-        return ((x - insets.left) / textWidth);
-    }
-
-    /**
-     * Convert pixel row position to text cell row position.
-     *
-     * @param y pixel row position
-     * @return text cell row position
-     */
-    public int textRow(final int y) {
-        Insets insets = frame.getInsets();
-        return ((y - insets.top) / textHeight);
-    }
-
 }

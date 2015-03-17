@@ -71,7 +71,7 @@ public class MyApplication extends TApplication {
 }
 ```
 
-See the file demos/Demo1.java for example usage.
+See the file demos/Demo1.java for detailed examples.
 
 
 
@@ -84,8 +84,6 @@ Many tasks remain before calling this version 1.0:
 
 - AWT:
   - Blinking cursor
-  - More optimal refresh
-  - Jittery refresh with mouse movement
 - Clean up TWidget constuctors (everyone is doing setX() / setY() / set...)
 - ECMA48Backend running on socket
 - TTreeView
@@ -93,7 +91,6 @@ Many tasks remain before calling this version 1.0:
 - TFileOpen
 - Decide on naming convention: getText, getValue, getLabel: one or all
   of them?
-- TPasswordField (displays stars when not active)
 
 0.0.3:
 

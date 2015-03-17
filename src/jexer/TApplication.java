@@ -501,7 +501,9 @@ public class TApplication {
             doIdle();
 
             // Update the screen
-            drawAll();
+            synchronized (getScreen()) {
+                drawAll();
+            }
         }
 
         // Shutdown the consumer threads
@@ -1287,7 +1289,7 @@ public class TApplication {
      * @param title menu title
      * @return the new menu
      */
-    public final TMenu addMenu(String title) {
+    public final TMenu addMenu(final String title) {
         int x = 0;
         int y = 0;
         TMenu menu = new TMenu(this, x, y, title);

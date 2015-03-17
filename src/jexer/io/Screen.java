@@ -215,6 +215,7 @@ public abstract class Screen {
      * @return attributes at (x, y)
      */
     public final CellAttributes getAttrXY(final int x, final int y) {
+
         CellAttributes attr = new CellAttributes();
         if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
             attr.setTo(logical[x][y]);
@@ -243,8 +244,8 @@ public abstract class Screen {
      * @param attr attributes to use (bold, foreColor, backColor)
      * @param clip if true, honor clipping/offset
      */
-    public final void putAttrXY(final int x, final int y,
-        final CellAttributes attr, final boolean clip) {
+    public final void putAttrXY(final int x, final int y
+        , final CellAttributes attr, final boolean clip) {
 
         int X = x;
         int Y = y;
@@ -280,6 +281,7 @@ public abstract class Screen {
      * @param attr attributes to use (bold, foreColor, backColor)
      */
     public final void putAll(final char ch, final CellAttributes attr) {
+
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 putCharXY(x, y, ch, attr);
@@ -348,6 +350,7 @@ public abstract class Screen {
      * @param ch character to draw
      */
     public final void putCharXY(final int x, final int y, final char ch) {
+
         if ((x < clipLeft)
             || (x >= clipRight)
             || (y < clipTop)
@@ -398,6 +401,7 @@ public abstract class Screen {
      * @param str string to draw
      */
     public final void putStrXY(final int x, final int y, final String str) {
+
         int i = x;
         for (int j = 0; j < str.length(); j++) {
             char ch = str.charAt(j);
@@ -449,7 +453,7 @@ public abstract class Screen {
      * @param width new width
      * @param height new height
      */
-    private void reallocate(final int width, final int height) {
+    private synchronized void reallocate(final int width, final int height) {
         if (logical != null) {
             for (int row = 0; row < this.height; row++) {
                 for (int col = 0; col < this.width; col++) {
@@ -494,7 +498,7 @@ public abstract class Screen {
      *
      * @param width new screen width
      */
-    public final void setWidth(final int width) {
+    public final synchronized void setWidth(final int width) {
         reallocate(width, this.height);
     }
 
@@ -504,7 +508,7 @@ public abstract class Screen {
      *
      * @param height new screen height
      */
-    public final void setHeight(final int height) {
+    public final synchronized void setHeight(final int height) {
         reallocate(this.width, height);
     }
 
@@ -524,7 +528,7 @@ public abstract class Screen {
      *
      * @return current screen height
      */
-    public final int getHeight() {
+    public final synchronized int getHeight() {
         return this.height;
     }
 
@@ -533,7 +537,7 @@ public abstract class Screen {
      *
      * @return current screen width
      */
-    public final int getWidth() {
+    public final synchronized int getWidth() {
         return this.width;
     }
 
@@ -554,7 +558,7 @@ public abstract class Screen {
      * Reset screen to not-bold, white-on-black.  Also flushes the offset and
      * clip variables.
      */
-    public final void reset() {
+    public final synchronized void reset() {
         dirty = true;
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {

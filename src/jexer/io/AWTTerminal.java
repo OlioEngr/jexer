@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.LinkedList;
 
 import jexer.TKeypress;
-import jexer.bits.Color;
 import jexer.event.TCommandEvent;
 import jexer.event.TInputEvent;
 import jexer.event.TKeypressEvent;
@@ -375,6 +374,9 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
             case 0x0A:
                 keypress = kbEnter;
                 break;
+            case 0x1B:
+                keypress = kbEsc;
+                break;
             case 0x0D:
                 keypress = kbEnter;
                 break;
@@ -550,8 +552,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         mouse1 = eventMouse1;
         mouse2 = eventMouse2;
         mouse3 = eventMouse3;
-        int x = sessionInfo.textColumn(mouse.getX());
-        int y = sessionInfo.textRow(mouse.getY());
+        int x = screen.textColumn(mouse.getX());
+        int y = screen.textRow(mouse.getY());
 
         TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_MOTION,
             x, y, x, y, mouse1, mouse2, mouse3, false, false);
@@ -572,8 +574,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
      */
     @Override
     public void mouseMoved(final MouseEvent mouse) {
-        int x = sessionInfo.textColumn(mouse.getX());
-        int y = sessionInfo.textRow(mouse.getY());
+        int x = screen.textColumn(mouse.getX());
+        int y = screen.textRow(mouse.getY());
         TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_MOTION,
             x, y, x, y, mouse1, mouse2, mouse3, false, false);
 
@@ -639,8 +641,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         mouse1 = eventMouse1;
         mouse2 = eventMouse2;
         mouse3 = eventMouse3;
-        int x = sessionInfo.textColumn(mouse.getX());
-        int y = sessionInfo.textRow(mouse.getY());
+        int x = screen.textColumn(mouse.getX());
+        int y = screen.textRow(mouse.getY());
 
         TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_DOWN,
             x, y, x, y, mouse1, mouse2, mouse3, false, false);
@@ -686,8 +688,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
             mouse3 = false;
             eventMouse3 = true;
         }
-        int x = sessionInfo.textColumn(mouse.getX());
-        int y = sessionInfo.textRow(mouse.getY());
+        int x = screen.textColumn(mouse.getX());
+        int y = screen.textRow(mouse.getY());
 
         TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_UP,
             x, y, x, y, eventMouse1, eventMouse2, eventMouse3, false, false);
@@ -726,8 +728,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         mouse1 = eventMouse1;
         mouse2 = eventMouse2;
         mouse3 = eventMouse3;
-        int x = sessionInfo.textColumn(mouse.getX());
-        int y = sessionInfo.textRow(mouse.getY());
+        int x = screen.textColumn(mouse.getX());
+        int y = screen.textRow(mouse.getY());
         if (mouse.getWheelRotation() > 0) {
             mouseWheelDown = true;
         }

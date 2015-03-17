@@ -1190,4 +1190,58 @@ public abstract class TWidget implements Comparable<TWidget> {
         return getApplication().inputBox(title, caption, text);
     }
 
+    /**
+     * Convenience function to add a password text field to this
+     * container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width visible text width
+     * @param fixed if true, the text cannot exceed the display width
+     * @return the new text field
+     */
+    public final TPasswordField addPasswordField(final int x, final int y,
+        final int width, final boolean fixed) {
+
+        return new TPasswordField(this, x, y, width, fixed);
+    }
+
+    /**
+     * Convenience function to add a password text field to this
+     * container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width visible text width
+     * @param fixed if true, the text cannot exceed the display width
+     * @param text initial text, default is empty string
+     * @return the new text field
+     */
+    public final TPasswordField addPasswordField(final int x, final int y,
+        final int width, final boolean fixed, final String text) {
+
+        return new TPasswordField(this, x, y, width, fixed, text);
+    }
+
+    /**
+     * Convenience function to add a password text field to this
+     * container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width visible text width
+     * @param fixed if true, the text cannot exceed the display width
+     * @param text initial text, default is empty string
+     * @param enterAction function to call when enter key is pressed
+     * @param updateAction function to call when the text is updated
+     * @return the new text field
+     */
+    public final TPasswordField addPasswordField(final int x, final int y,
+        final int width, final boolean fixed, final String text,
+        final TAction enterAction, final TAction updateAction) {
+
+        return new TPasswordField(this, x, y, width, fixed, text, enterAction,
+            updateAction);
+    }
+
 }

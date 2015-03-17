@@ -37,21 +37,21 @@ import jexer.event.TMouseEvent;
 import static jexer.TKeypress.*;
 
 /**
- *
+ * TField implements an editable text field.
  */
-public final class TField extends TWidget {
+public class TField extends TWidget {
 
     /**
      * Field text.
      */
-    private String text = "";
+    protected String text = "";
 
     /**
      * Get field text.
      *
      * @return field text
      */
-    public String getText() {
+    public final String getText() {
         return text;
     }
 
@@ -59,37 +59,37 @@ public final class TField extends TWidget {
      * If true, only allow enough characters that will fit in the width.  If
      * false, allow the field to scroll to the right.
      */
-    private boolean fixed = false;
+    protected boolean fixed = false;
 
     /**
      * Current editing position within text.
      */
-    private int position = 0;
+    protected int position = 0;
 
     /**
      * Beginning of visible portion.
      */
-    private int windowStart = 0;
+    protected int windowStart = 0;
 
     /**
      * If true, new characters are inserted at position.
      */
-    private boolean insertMode = true;
+    protected boolean insertMode = true;
 
     /**
      * Remember mouse state.
      */
-    private TMouseEvent mouse;
+    protected TMouseEvent mouse;
 
     /**
      * The action to perform when the user presses enter.
      */
-    private TAction enterAction;
+    protected TAction enterAction;
 
     /**
      * The action to perform when the text is updated.
      */
-    private TAction updateAction;
+    protected TAction updateAction;
 
     /**
      * Public constructor.
@@ -157,7 +157,7 @@ public final class TField extends TWidget {
      *
      * @return if true the mouse is currently on the field
      */
-    private boolean mouseOnField() {
+    protected boolean mouseOnField() {
         int rightEdge = getWidth() - 1;
         if ((mouse != null)
             && (mouse.getY() == 0)
@@ -175,7 +175,7 @@ public final class TField extends TWidget {
      * @param enter if true, the user pressed Enter, else this was an update
      * to the text.
      */
-    private void dispatch(final boolean enter) {
+    protected void dispatch(final boolean enter) {
         if (enter) {
             if (enterAction != null) {
                 enterAction.DO();
@@ -215,7 +215,7 @@ public final class TField extends TWidget {
     /**
      * Update the cursor position.
      */
-    private void updateCursor() {
+    protected void updateCursor() {
         if ((position > getWidth()) && fixed) {
             setCursorX(getWidth());
         } else if ((position - windowStart == getWidth()) && !fixed) {
@@ -409,7 +409,7 @@ public final class TField extends TWidget {
      *
      * @param ch = char to append
      */
-    private void appendChar(final char ch) {
+    protected void appendChar(final char ch) {
         // Append the LAST character
         text += ch;
         position++;
@@ -432,7 +432,7 @@ public final class TField extends TWidget {
      *
      * @param ch char to append
      */
-    private void insertChar(final char ch) {
+    protected void insertChar(final char ch) {
         text = text.substring(0, position) + ch + text.substring(position);
         position++;
         if ((position - windowStart) == getWidth()) {

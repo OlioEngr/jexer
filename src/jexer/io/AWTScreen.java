@@ -316,58 +316,95 @@ public final class AWTScreen extends Screen {
          */
         @Override
         public void paint(final Graphics gr) {
+            // Do nothing until the screen reference has been set.
+            if (screen == null) {
+                return;
+            }
+            if (screen.frame == null) {
+                return;
+            }
+
+            int xCellMin = 0;
+            int xCellMax = screen.width;
+            int yCellMin = 0;
+            int yCellMax = screen.height;
+
             Rectangle bounds = gr.getClipBounds();
-
-            for (int y = 0; y < screen.height; y++) {
-                for (int x = 0; x < screen.width; x++) {
-                    int xPixel = x * textWidth + left;
-                    int yPixel = y * textHeight + top;
-
-                    Cell lCell = screen.logical[x][y];
-                    Cell pCell = screen.physical[x][y];
-
-                    boolean inBounds = true;
-                    if (bounds != null) {
-                        if (bounds.contains(xPixel, yPixel)
-                            || bounds.contains(xPixel + textWidth, yPixel)
-                            || bounds.contains(xPixel, yPixel + textHeight)
-                            || bounds.contains(xPixel + textWidth,
-                                yPixel + textHeight)
-                        ) {
-                            // This area is damaged and will definitely be
-                            // redrawn.
-                            inBounds = true;
-                        }
-                    }
-
-                    if (!lCell.equals(pCell) || inBounds) {
-                        // Draw the background rectangle, then the foreground
-                        // character.
-                        gr.setColor(attrToBackgroundColor(lCell));
-                        gr.fillRect(xPixel, yPixel, textWidth, textHeight);
-                        gr.setColor(attrToForegroundColor(lCell));
-                        char [] chars = new char[1];
-                        chars[0] = lCell.getChar();
-                        gr.drawChars(chars, 0, 1, xPixel,
-                            yPixel + textHeight - maxDescent);
-
-                        // Physical is always updated
-                        physical[x][y].setTo(lCell);
-                    }
+            if (bounds != null) {
+                // Only update what is in the bounds
+                xCellMin = screen.textColumn(bounds.x);
+                xCellMax = screen.textColumn(bounds.x + bounds.width) + 1;
+                if (xCellMax > screen.width) {
+                    xCellMax = screen.width;
+                }
+                if (xCellMin >= xCellMax) {
+                    xCellMin = xCellMax - 2;
+                }
+                if (xCellMin < 0) {
+                    xCellMin = 0;
+                }
+                yCellMin = screen.textRow(bounds.y);
+                yCellMax = screen.textRow(bounds.y + bounds.height) + 1;
+                if (yCellMax > screen.height) {
+                    yCellMax = screen.height;
+                }
+                if (yCellMin >= yCellMax) {
+                    yCellMin = yCellMax - 2;
+                }
+                if (yCellMin < 0) {
+                    yCellMin = 0;
                 }
             }
 
-            // Draw the cursor if it is visible
-            if ((cursorVisible)
-                && (cursorY <= screen.height - 1)
-                && (cursorX <= screen.width - 1)
-            ) {
-                int xPixel = cursorX * textWidth + left;
-                int yPixel = cursorY * textHeight + top;
-                Cell lCell = screen.logical[cursorX][cursorY];
-                gr.setColor(attrToForegroundColor(lCell));
-                gr.fillRect(xPixel, yPixel + textHeight - 2, textWidth, 2);
-            }
+            // Prevent updates to the screen's data from the TApplication
+            // threads.
+            synchronized (screen) {
+                /*
+                System.err.printf("bounds %s X %d %d Y %d %d\n",
+                    bounds, xCellMin, xCellMax, yCellMin, yCellMax);
+                 */
+
+                for (int y = yCellMin; y < yCellMax; y++) {
+                    for (int x = xCellMin; x < xCellMax; x++) {
+
+                        int xPixel = x * textWidth + left;
+                        int yPixel = y * textHeight + top;
+
+                        Cell lCell = screen.logical[x][y];
+                        Cell pCell = screen.physical[x][y];
+
+                        if (!lCell.equals(pCell) || reallyCleared) {
+                            // Draw the background rectangle, then the
+                            // foreground character.
+                            gr.setColor(attrToBackgroundColor(lCell));
+                            gr.fillRect(xPixel, yPixel, textWidth, textHeight);
+                            gr.setColor(attrToForegroundColor(lCell));
+                            char [] chars = new char[1];
+                            chars[0] = lCell.getChar();
+                            gr.drawChars(chars, 0, 1, xPixel,
+                                yPixel + textHeight - maxDescent);
+
+                            // Physical is always updated
+                            physical[x][y].setTo(lCell);
+                        }
+                    }
+                }
+
+                // Draw the cursor if it is visible
+                if ((cursorVisible)
+                    && (cursorY <= screen.height - 1)
+                    && (cursorX <= screen.width - 1)
+                ) {
+                    int xPixel = cursorX * textWidth + left;
+                    int yPixel = cursorY * textHeight + top;
+                    Cell lCell = screen.logical[cursorX][cursorY];
+                    gr.setColor(attrToForegroundColor(lCell));
+                    gr.fillRect(xPixel, yPixel + textHeight - 2, textWidth, 2);
+                }
+
+                dirty = false;
+                reallyCleared = false;
+            } // synchronized (screen)
         }
     }
 
@@ -399,42 +436,67 @@ public final class AWTScreen extends Screen {
      */
     @Override
     public void flushPhysical() {
+
+        if (reallyCleared) {
+            // Really refreshed, do it all
+            frame.repaint();
+            return;
+        }
+
+        // Do nothing if nothing happened.
+        if (!dirty) {
+            return;
+        }
+
         // Request a repaint, let the frame's repaint/update methods do the
         // right thing.
+
         // Find the minimum-size damaged region.
         int xMin = frame.getWidth();
         int xMax = 0;
         int yMin = frame.getHeight();
         int yMax = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Cell lCell = logical[x][y];
-                Cell pCell = physical[x][y];
 
-                int xPixel = x * frame.textWidth + frame.left;
-                int yPixel = y * frame.textHeight + frame.top;
+        synchronized (this) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    Cell lCell = logical[x][y];
+                    Cell pCell = physical[x][y];
 
-                if (!lCell.equals(pCell)
-                    || ((x == cursorX) && (y == cursorY))
-                ) {
-                    if (xPixel < xMin) {
-                        xMin = xPixel;
-                    }
-                    if (xPixel + frame.textWidth > xMax) {
-                        xMax = xPixel + frame.textWidth;
-                    }
-                    if (yPixel < yMin) {
-                        yMin = yPixel;
-                    }
-                    if (yPixel + frame.textHeight > yMax) {
-                        yMax = yPixel + frame.textHeight;
+                    int xPixel = x * frame.textWidth + frame.left;
+                    int yPixel = y * frame.textHeight + frame.top;
+
+                    if (!lCell.equals(pCell)
+                        || ((x == cursorX)
+                            && (y == cursorY)
+                            && cursorVisible)
+                    ) {
+                        if (xPixel < xMin) {
+                            xMin = xPixel;
+                        }
+                        if (xPixel + frame.textWidth > xMax) {
+                            xMax = xPixel + frame.textWidth;
+                        }
+                        if (yPixel < yMin) {
+                            yMin = yPixel;
+                        }
+                        if (yPixel + frame.textHeight > yMax) {
+                            yMax = yPixel + frame.textHeight;
+                        }
                     }
                 }
             }
         }
+        if (xMin + frame.textWidth >= xMax) {
+            xMax += frame.textWidth;
+        }
+        if (yMin + frame.textHeight >= yMax) {
+            yMax += frame.textHeight;
+        }
 
-        // Ask for a repaint sometime in the next 10 millis.
-        frame.repaint(10, xMin, yMin, xMax - xMin, yMax - yMin);
+        // Repaint the desired area
+        frame.repaint(xMin, yMin, xMax - xMin, yMax - yMin);
+        // System.err.printf("REPAINT X %d %d Y %d %d\n", xMin, xMax, yMin, yMax);
     }
 
     /**
@@ -451,14 +513,34 @@ public final class AWTScreen extends Screen {
             && (cursorX <= width - 1)
         ) {
             // Make the current cursor position dirty
-            if (physical[cursorX][cursorY].getChar() == ' ') {
+            if (physical[cursorX][cursorY].getChar() == 'Q') {
                 physical[cursorX][cursorY].setChar('X');
             } else {
-                physical[cursorX][cursorY].setChar(' ');
+                physical[cursorX][cursorY].setChar('Q');
             }
         }
 
         super.putCursor(visible, x, y);
+    }
+
+    /**
+     * Convert pixel column position to text cell column position.
+     *
+     * @param x pixel column position
+     * @return text cell column position
+     */
+    public int textColumn(final int x) {
+        return ((x - frame.left) / frame.textWidth);
+    }
+
+    /**
+     * Convert pixel row position to text cell row position.
+     *
+     * @param y pixel row position
+     * @return text cell row position
+     */
+    public int textRow(final int y) {
+        return ((y - frame.top) / frame.textHeight);
     }
 
 }

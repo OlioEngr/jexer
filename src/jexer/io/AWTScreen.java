@@ -47,6 +47,8 @@ import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 /**
  * This Screen implementation draws to a Java AWT Frame.
@@ -103,7 +105,7 @@ public final class AWTScreen extends Screen {
     /**
      * AWTFrame is our top-level hook into the AWT system.
      */
-    class AWTFrame extends Frame {
+    class AWTFrame extends JFrame {
 
         /**
          * The terminus font resource filename.
@@ -236,7 +238,7 @@ public final class AWTScreen extends Screen {
             setDOSColors();
 
             setTitle("Jexer Application");
-            setBackground(java.awt.Color.black);
+            setBackground(Color.black);
             // setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
             // setFont(new Font("Liberation Mono", Font.BOLD, 16));
             // setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
@@ -253,6 +255,7 @@ public final class AWTScreen extends Screen {
                 // setFont(new Font("Liberation Mono", Font.PLAIN, 24));
                 setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
             }
+            pack();
             setVisible(true);
             resizeToScreen();
 
@@ -417,7 +420,15 @@ public final class AWTScreen extends Screen {
      * Public constructor.
      */
     public AWTScreen() {
-        frame = new AWTFrame(this);
+        try {
+            SwingUtilities.invokeAndWait(new Runnable() {
+                public void run() {
+                    AWTScreen.this.frame = new AWTFrame(AWTScreen.this);
+                }
+            } );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

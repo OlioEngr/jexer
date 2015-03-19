@@ -188,6 +188,15 @@ public class TWindow extends TWidget {
     private int restoreWindowY;
 
     /**
+     * Set the maximum width for this window.
+     *
+     * @param maximumWindowWidth new maximum width
+     */
+    public final void setMaximumWindowWidth(final int maximumWindowWidth) {
+        this.maximumWindowWidth = maximumWindowWidth;
+    }
+
+    /**
      * Public constructor.  Window will be located at (0, 0).
      *
      * @param application TApplication that manages this window

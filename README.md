@@ -95,7 +95,6 @@ Many tasks remain before calling this version 1.0:
 0.0.3:
 
 - TEditor
-- TTerminal
 
 0.0.4:
 

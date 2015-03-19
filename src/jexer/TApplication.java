@@ -1259,14 +1259,11 @@ public class TApplication {
             return true;
         }
 
-        /*
-         TODO
         if (command.equals(cmShell)) {
-            openTerminal(0, 0, TWindow.Flag.RESIZABLE);
+            openTerminal(0, 0, TWindow.RESIZABLE);
             repaint = true;
             return true;
         }
-         */
 
         if (command.equals(cmTile)) {
             tileWindows();
@@ -1307,14 +1304,11 @@ public class TApplication {
             return true;
         }
 
-        /*
-         TODO
-        if (menu.id == TMenu.MID_SHELL) {
-            openTerminal(0, 0, TWindow.Flag.RESIZABLE);
+        if (menu.getId() == TMenu.MID_SHELL) {
+            openTerminal(0, 0, TWindow.RESIZABLE);
             repaint = true;
             return true;
         }
-         */
 
         if (menu.getId() == TMenu.MID_TILE) {
             tileWindows();
@@ -1521,8 +1515,6 @@ public class TApplication {
         int newWidth = (getScreen().getWidth() / a);
         int newHeight1 = ((getScreen().getHeight() - 1) / b);
         int newHeight2 = ((getScreen().getHeight() - 1) / (b + c));
-        // System.err.printf("Z %s a %s b %s c %s newWidth %s newHeight1 %s newHeight2 %s",
-        //     z, a, b, c, newWidth, newHeight1, newHeight2);
 
         List<TWindow> sorted = new LinkedList<TWindow>(windows);
         Collections.sort(sorted);
@@ -1660,6 +1652,31 @@ public class TApplication {
         final String text) {
 
         return new TInputBox(this, title, caption, text);
+    }
+
+    /**
+     * Convenience function to open a terminal window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @return the terminal new window
+     */
+    public final TTerminalWindow openTerminal(final int x, final int y) {
+        return openTerminal(x, y, TWindow.RESIZABLE);
+    }
+
+    /**
+     * Convenience function to open a terminal window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param flags mask of CENTERED, MODAL, or RESIZABLE
+     * @return the terminal new window
+     */
+    public final TTerminalWindow openTerminal(final int x, final int y,
+        final int flags) {
+
+        return new TTerminalWindow(this, x, y, flags);
     }
 
 }

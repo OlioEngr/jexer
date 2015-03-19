@@ -405,17 +405,19 @@ class DemoMainWindow extends TWindow {
             );
         }
         row += 2;
+         */
 
         if (!isModal()) {
             addLabel("Terminal", 1, row);
             addButton("Termi&nal", 35, row,
-                {
-                    getApplication().openTerminal(0, 0);
+                new TAction() {
+                    public void DO() {
+                        getApplication().openTerminal(0, 0);
+                    }
                 }
             );
         }
         row += 2;
-         */
 
         progressBar = addProgressBar(1, row, 22, 0);
         row++;

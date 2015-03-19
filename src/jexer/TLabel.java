@@ -92,13 +92,9 @@ public final class TLabel extends TWidget {
         final int y, final String colorKey) {
 
         // Set parent and window
-        super(parent, false);
+        super(parent, false, x, y, text.length(), 1);
 
         this.text = text;
-        setX(x);
-        setY(y);
-        setHeight(1);
-        setWidth(text.length());
         this.colorKey = colorKey;
     }
 

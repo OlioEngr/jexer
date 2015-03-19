@@ -101,13 +101,9 @@ public final class TRadioButton extends TWidget {
         final String label, final int id) {
 
         // Set parent and window
-        super(parent);
+        super(parent, x, y, label.length() + 4, 1);
 
-        setX(x);
-        setY(y);
-        setHeight(1);
         this.label = label;
-        setWidth(label.length() + 4);
         this.id = id;
 
         setHasCursor(true);

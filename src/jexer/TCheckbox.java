@@ -64,13 +64,9 @@ public final class TCheckbox extends TWidget {
         final String label, final boolean checked) {
 
         // Set parent and window
-        super(parent);
+        super(parent, x, y, label.length() + 4, 1);
 
-        setX(x);
-        setY(y);
-        setHeight(1);
         this.label = label;
-        setWidth(label.length() + 4);
         this.checked = checked;
 
         setHasCursor(true);

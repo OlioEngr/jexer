@@ -82,9 +82,9 @@ Many tasks remain before calling this version 1.0:
 
 0.0.2:
 
+- Fix clipping errors
 - AWT:
   - Blinking cursor
-- Clean up TWidget constuctors (everyone is doing setX() / setY() / set...)
 - ECMA48Backend running on socket
 - TTreeView
 - TDirectoryList
@@ -99,10 +99,9 @@ Many tasks remain before calling this version 1.0:
 0.0.4:
 
 - Bugs
-  - Bare ESC isn't being returned immediately
   - TTimer is jittery with I/O
   - TSubMenu keyboard mnemonic not working
-  - kbDel and use by TMenu (MID_CLEAR)
+  - Making TMenu keyboard accelerators active/inactive
   - TDirectoryList cannot be navigated only with keyboard
   - TTreeView cannot be navigated only with keyboard
   - RangeViolation after dragging scrollbar up/down

@@ -243,12 +243,8 @@ public final class TText extends TWidget {
         final int y, final int width, final int height, final String colorKey) {
 
         // Set parent and window
-        super(parent);
+        super(parent, x, y, width, height);
 
-        setX(x);
-        setY(y);
-        setWidth(width);
-        setHeight(height);
         this.text = text;
         this.colorKey = colorKey;
 

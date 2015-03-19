@@ -751,22 +751,30 @@ public class TWindow extends TWidget {
                 }
             }
             if (keypress.equals(kbShiftLeft)) {
-                if (getWidth() > minimumWindowWidth) {
+                if ((getWidth() > minimumWindowWidth)
+                    || (minimumWindowWidth <= 0)
+                ) {
                     setWidth(getWidth() - 1);
                 }
             }
             if (keypress.equals(kbShiftRight)) {
-                if (getWidth() < maximumWindowWidth) {
+                if ((getWidth() < maximumWindowWidth)
+                    || (maximumWindowWidth <= 0)
+                ) {
                     setWidth(getWidth() + 1);
                 }
             }
             if (keypress.equals(kbShiftUp)) {
-                if (getHeight() > minimumWindowHeight) {
+                if ((getHeight() > minimumWindowHeight)
+                    || (minimumWindowHeight <= 0)
+                ) {
                     setHeight(getHeight() - 1);
                 }
             }
             if (keypress.equals(kbShiftDown)) {
-                if (getHeight() < maximumWindowHeight) {
+                if ((getHeight() < maximumWindowHeight)
+                    || (maximumWindowHeight <= 0)
+                ) {
                     setHeight(getHeight() + 1);
                 }
             }

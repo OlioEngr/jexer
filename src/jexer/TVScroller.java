@@ -158,12 +158,7 @@ public final class TVScroller extends TWidget {
         final int height) {
 
         // Set parent and window
-        super(parent);
-
-        setX(x);
-        setY(y);
-        setHeight(height);
-        setWidth(1);
+        super(parent, x, y, 1, height);
     }
 
     /**

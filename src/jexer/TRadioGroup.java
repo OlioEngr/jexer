@@ -84,13 +84,9 @@ public final class TRadioGroup extends TWidget {
         final String label) {
 
         // Set parent and window
-        super(parent);
+        super(parent, x, y, label.length() + 4, 2);
 
-        setX(x);
-        setY(y);
-        setHeight(2);
         this.label = label;
-        setWidth(label.length() + 4);
     }
 
     /**

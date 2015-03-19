@@ -120,12 +120,8 @@ public final class TProgressBar extends TWidget {
         final int width, final int value) {
 
         // Set parent and window
-        super(parent, false);
+        super(parent, false, x, y, width, 1);
 
-        setX(x);
-        setY(y);
-        setHeight(1);
-        setWidth(width);
         this.value = value;
     }
 

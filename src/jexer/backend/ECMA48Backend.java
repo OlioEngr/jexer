@@ -103,20 +103,13 @@ public final class ECMA48Backend extends Backend {
             synchronized (terminal) {
                 try {
                     terminal.wait(timeout);
-                    if (terminal.hasEvents()) {
-                        // System.err.println("getEvents()");
-                        terminal.getEvents(queue);
-                    } else {
-                        // If I got here, then I timed out.  Call
-                        // terminal.getIdleEvents() to pick up stragglers
-                        // like bare resize.
-                        // System.err.println("getIdleEvents()");
-                        terminal.getIdleEvents(queue);
-                    }
                 } catch (InterruptedException e) {
                     // Spurious interrupt, pretend it was like a timeout.
                     // System.err.println("[interrupt] getEvents()");
-                    terminal.getIdleEvents(queue);
+                }
+                if (terminal.hasEvents()) {
+                    // System.err.println("getEvents()");
+                    terminal.getEvents(queue);
                 }
             }
         } else {

@@ -70,6 +70,11 @@ public class TApplication {
     private static final boolean debugThreads = false;
 
     /**
+     * If true, emit events being processed to System.err.
+     */
+    private static final boolean debugEvents = false;
+
+    /**
      * WidgetEventHandler is the main event consumer loop.  There are at most
      * two such threads in existence: the primary for normal case and a
      * secondary that is used for TMessageBox, TInputBox, and similar.
@@ -644,10 +649,10 @@ public class TApplication {
      */
     private void metaHandleEvent(final TInputEvent event) {
 
-        /*
-        System.err.printf(String.format("metaHandleEvents event: %s\n",
-                event)); System.err.flush();
-         */
+        if (debugEvents) {
+            System.err.printf(String.format("metaHandleEvents event: %s\n",
+                    event)); System.err.flush();
+        }
 
         if (quit) {
             // Do no more processing if the application is already trying
@@ -711,7 +716,9 @@ public class TApplication {
      */
     private void primaryHandleEvent(final TInputEvent event) {
 
-        // System.err.printf("Handle event: %s\n", event);
+        if (debugEvents) {
+            System.err.printf("Handle event: %s\n", event);
+        }
 
         // Special application-wide events -----------------------------------
 
@@ -804,7 +811,10 @@ public class TApplication {
                     mouse.setX(mouse.getX() - window.getX());
                     mouse.setY(mouse.getY() - window.getY());
                 }
-                // System.err("TApplication dispatch event: %s\n", event);
+                if (debugEvents) {
+                    System.err.printf("TApplication dispatch event: %s\n",
+                        event);
+                }
                 window.handleEvent(event);
                 break;
             }

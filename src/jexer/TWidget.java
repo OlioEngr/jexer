@@ -548,6 +548,21 @@ public abstract class TWidget implements Comparable<TWidget> {
     }
 
     /**
+     * Protected constructor.
+     *
+     * @param parent parent widget
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of widget
+     * @param height height of widget
+     */
+    protected TWidget(final TWidget parent, final int x, final int y,
+        final int width, final int height) {
+
+        this(parent, true, x, y, width, height);
+    }
+
+    /**
      * Protected constructor used by subclasses that are disabled by default.
      *
      * @param parent parent widget
@@ -559,6 +574,31 @@ public abstract class TWidget implements Comparable<TWidget> {
         this.window = parent.window;
         children = new LinkedList<TWidget>();
         parent.addChild(this);
+    }
+
+    /**
+     * Protected constructor used by subclasses that are disabled by default.
+     *
+     * @param parent parent widget
+     * @param enabled if true assume enabled
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of widget
+     * @param height height of widget
+     */
+    protected TWidget(final TWidget parent, final boolean enabled,
+        final int x, final int y, final int width, final int height) {
+
+        this.enabled = enabled;
+        this.parent = parent;
+        this.window = parent.window;
+        children = new LinkedList<TWidget>();
+        parent.addChild(this);
+
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
 
     /**
@@ -723,7 +763,7 @@ public abstract class TWidget implements Comparable<TWidget> {
         if ((children.size() == 0)
             // TODO
             // || (cast(TTreeView)this)
-            // || (cast(TText)this)
+            || (this instanceof TText)
         ) {
 
             // Defaults:

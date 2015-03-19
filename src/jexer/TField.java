@@ -139,13 +139,9 @@ public class TField extends TWidget {
         final TAction enterAction, final TAction updateAction) {
 
         // Set parent and window
-        super(parent);
-        setX(x);
-        setY(y);
-        setHeight(1);
-        setWidth(width);
-        setHasCursor(true);
+        super(parent, x, y, width, 1);
 
+        setHasCursor(true);
         this.fixed = fixed;
         this.text = text;
         this.enterAction = enterAction;

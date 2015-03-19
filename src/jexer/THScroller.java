@@ -158,12 +158,7 @@ public final class THScroller extends TWidget {
         final int width) {
 
         // Set parent and window
-        super(parent);
-
-        setX(x);
-        setY(y);
-        setHeight(1);
-        setWidth(width);
+        super(parent, x, y, width, 1);
     }
 
     /**

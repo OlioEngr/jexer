@@ -128,6 +128,12 @@ public final class ECMA48Terminal implements Runnable {
     private long escapeTime;
 
     /**
+     * The time we last checked the window size.  We try not to spawn stty
+     * more than once per second.
+     */
+    private long windowSizeTime;
+
+    /**
      * true if mouse1 was down.  Used to report mouse1 on the release event.
      */
     private boolean mouse1;
@@ -647,30 +653,34 @@ public final class ECMA48Terminal implements Runnable {
      *
      * @param queue list to append new events to
      */
-    public void getIdleEvents(final List<TInputEvent> queue) {
+    private void getIdleEvents(final List<TInputEvent> queue) {
+        Date now = new Date();
 
         // Check for new window size
-        sessionInfo.queryWindowSize();
-        int newWidth = sessionInfo.getWindowWidth();
-        int newHeight = sessionInfo.getWindowHeight();
-        if ((newWidth != windowResize.getWidth())
-            || (newHeight != windowResize.getHeight())
-        ) {
-            TResizeEvent event = new TResizeEvent(TResizeEvent.Type.SCREEN,
-                newWidth, newHeight);
-            windowResize = new TResizeEvent(TResizeEvent.Type.SCREEN,
-                newWidth, newHeight);
-            synchronized (eventQueue) {
-                eventQueue.add(event);
+        long windowSizeDelay = now.getTime() - windowSizeTime;
+        if (windowSizeDelay > 1000) {
+            sessionInfo.queryWindowSize();
+            int newWidth = sessionInfo.getWindowWidth();
+            int newHeight = sessionInfo.getWindowHeight();
+            if ((newWidth != windowResize.getWidth())
+                || (newHeight != windowResize.getHeight())
+            ) {
+                TResizeEvent event = new TResizeEvent(TResizeEvent.Type.SCREEN,
+                    newWidth, newHeight);
+                windowResize = new TResizeEvent(TResizeEvent.Type.SCREEN,
+                    newWidth, newHeight);
+                queue.add(event);
             }
+            windowSizeTime = now.getTime();
         }
 
-        synchronized (eventQueue) {
-            if (eventQueue.size() > 0) {
-                synchronized (queue) {
-                    queue.addAll(eventQueue);
-                }
-                eventQueue.clear();
+        // ESCDELAY type timeout
+        if (state == ParseState.ESCAPE) {
+            long escDelay = now.getTime() - escapeTime;
+            if (escDelay > 100) {
+                // After 0.1 seconds, assume a true escape character
+                queue.add(controlChar((char)0x1B, false));
+                reset();
             }
         }
     }
@@ -796,7 +806,7 @@ public final class ECMA48Terminal implements Runnable {
             // Parameter separator
             if (ch == ';') {
                 paramI++;
-                params.set(paramI, "");
+                params.add("");
                 return;
             }
 
@@ -904,7 +914,7 @@ public final class ECMA48Terminal implements Runnable {
             // Parameter separator
             if (ch == ';') {
                 paramI++;
-                params.set(paramI, "");
+                params.add(paramI, "");
                 return;
             }
 
@@ -1449,6 +1459,14 @@ public final class ECMA48Terminal implements Runnable {
                         }
                     }
                 } else {
+                    getIdleEvents(events);
+                    if (events.size() > 0) {
+                        synchronized (eventQueue) {
+                            eventQueue.addAll(events);
+                        }
+                        events.clear();
+                    }
+
                     // Wait 10 millis for more data
                     Thread.sleep(10);
                 }

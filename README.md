@@ -82,6 +82,13 @@ Some arbitrary design decisions had to be made when either the
 obviously expected behavior did not happen or when a specification was
 ambiguous.  This section describes such issues.
 
+  TTerminalWindow
+  ---------------
+
+  - TTerminalWindow will hang on input from the remote if the
+    TApplication is exited before closing the TTerminalWindow.  This
+    is due to a Java limitation/interaction between blocking reads
+    (necessary to get UTF8 translation correct) and file streams.
 
 
 Roadmap
@@ -107,7 +114,6 @@ Many tasks remain before calling this version 1.0:
 0.0.4:
 
 - Bugs
-  - TTimer is jittery with I/O
   - TSubMenu keyboard mnemonic not working
   - Making TMenu keyboard accelerators active/inactive
   - TDirectoryList cannot be navigated only with keyboard
@@ -143,4 +149,6 @@ Wishlist features (2.0):
 
 Screenshots
 -----------
+
+![Several Windows Open Including A Terminal](/screenshots/screenshot1.png?raw=true "Several Windows Open Including A Terminal")
 

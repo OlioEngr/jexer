@@ -1019,20 +1019,22 @@ public class TApplication {
      * @param window the window to remove
      */
     public final void closeWindow(final TWindow window) {
-        int z = window.getZ();
-        window.setZ(-1);
-        Collections.sort(windows);
-        windows.remove(0);
-        TWindow activeWindow = null;
-        for (TWindow w: windows) {
-            if (w.getZ() > z) {
-                w.setZ(w.getZ() - 1);
-                if (w.getZ() == 0) {
-                    w.setActive(true);
-                    assert (activeWindow == null);
-                    activeWindow = w;
-                } else {
-                    w.setActive(false);
+        synchronized (windows) {
+            int z = window.getZ();
+            window.setZ(-1);
+            Collections.sort(windows);
+            windows.remove(0);
+            TWindow activeWindow = null;
+            for (TWindow w: windows) {
+                if (w.getZ() > z) {
+                    w.setZ(w.getZ() - 1);
+                    if (w.getZ() == 0) {
+                        w.setActive(true);
+                        assert (activeWindow == null);
+                        activeWindow = w;
+                    } else {
+                        w.setActive(false);
+                    }
                 }
             }
         }
@@ -1071,35 +1073,39 @@ public class TApplication {
             return;
         }
 
-        // Swap z/active between active window and the next in the list
-        int activeWindowI = -1;
-        for (int i = 0; i < windows.size(); i++) {
-            if (windows.get(i).getActive()) {
-                activeWindowI = i;
-                break;
+        synchronized (windows) {
+
+            // Swap z/active between active window and the next in the list
+            int activeWindowI = -1;
+            for (int i = 0; i < windows.size(); i++) {
+                if (windows.get(i).getActive()) {
+                    activeWindowI = i;
+                    break;
+                }
             }
-        }
-        assert (activeWindowI >= 0);
+            assert (activeWindowI >= 0);
 
-        // Do not switch if a window is modal
-        if (windows.get(activeWindowI).isModal()) {
-            return;
-        }
+            // Do not switch if a window is modal
+            if (windows.get(activeWindowI).isModal()) {
+                return;
+            }
 
-        int nextWindowI;
-        if (forward) {
-            nextWindowI = (activeWindowI + 1) % windows.size();
-        } else {
-            if (activeWindowI == 0) {
-                nextWindowI = windows.size() - 1;
+            int nextWindowI;
+            if (forward) {
+                nextWindowI = (activeWindowI + 1) % windows.size();
             } else {
-                nextWindowI = activeWindowI - 1;
+                if (activeWindowI == 0) {
+                    nextWindowI = windows.size() - 1;
+                } else {
+                    nextWindowI = activeWindowI - 1;
+                }
             }
-        }
-        windows.get(activeWindowI).setActive(false);
-        windows.get(activeWindowI).setZ(windows.get(nextWindowI).getZ());
-        windows.get(nextWindowI).setZ(0);
-        windows.get(nextWindowI).setActive(true);
+            windows.get(activeWindowI).setActive(false);
+            windows.get(activeWindowI).setZ(windows.get(nextWindowI).getZ());
+            windows.get(nextWindowI).setZ(0);
+            windows.get(nextWindowI).setActive(true);
+
+        } // synchronized (windows)
 
         // Refresh
         repaint = true;
@@ -1111,17 +1117,19 @@ public class TApplication {
      * @param window new window to add
      */
     public final void addWindow(final TWindow window) {
-        // Do not allow a modal window to spawn a non-modal window
-        if ((windows.size() > 0) && (windows.get(0).isModal())) {
-            assert (window.isModal());
+        synchronized (windows) {
+            // Do not allow a modal window to spawn a non-modal window
+            if ((windows.size() > 0) && (windows.get(0).isModal())) {
+                assert (window.isModal());
+            }
+            for (TWindow w: windows) {
+                w.setActive(false);
+                w.setZ(w.getZ() + 1);
+            }
+            windows.add(window);
+            window.setActive(true);
+            window.setZ(0);
         }
-        for (TWindow w: windows) {
-            w.setActive(false);
-            w.setZ(w.getZ() + 1);
-        }
-        windows.add(window);
-        window.setActive(true);
-        window.setZ(0);
     }
 
     /**
@@ -1248,29 +1256,31 @@ public class TApplication {
             return;
         }
 
-        Collections.sort(windows);
-        if (windows.get(0).isModal()) {
-            // Modal windows don't switch
-            return;
-        }
+        synchronized (windows) {
+            Collections.sort(windows);
+            if (windows.get(0).isModal()) {
+                // Modal windows don't switch
+                return;
+            }
 
-        for (TWindow window: windows) {
-            assert (!window.isModal());
-            if (window.mouseWouldHit(mouse)) {
-                if (window == windows.get(0)) {
-                    // Clicked on the same window, nothing to do
+            for (TWindow window: windows) {
+                assert (!window.isModal());
+                if (window.mouseWouldHit(mouse)) {
+                    if (window == windows.get(0)) {
+                        // Clicked on the same window, nothing to do
+                        return;
+                    }
+
+                    // We will be switching to another window
+                    assert (windows.get(0).getActive());
+                    assert (!window.getActive());
+                    windows.get(0).setActive(false);
+                    windows.get(0).setZ(window.getZ());
+                    window.setZ(0);
+                    window.setActive(true);
+                    repaint = true;
                     return;
                 }
-
-                // We will be switching to another window
-                assert (windows.get(0).getActive());
-                assert (!window.getActive());
-                windows.get(0).setActive(false);
-                windows.get(0).setZ(window.getZ());
-                window.setZ(0);
-                window.setActive(true);
-                repaint = true;
-                return;
             }
         }
 
@@ -1578,8 +1588,11 @@ public class TApplication {
         if (activeMenu != null) {
             return;
         }
-        for (TWindow window: windows) {
-            closeWindow(window);
+
+        synchronized (windows) {
+            for (TWindow window: windows) {
+                closeWindow(window);
+            }
         }
     }
 
@@ -1588,52 +1601,54 @@ public class TApplication {
      * almost the same results as Turbo Pascal 7.0's IDE.
      */
     private void tileWindows() {
-        // Don't do anything if we are in the menu
-        if (activeMenu != null) {
-            return;
-        }
-        int z = windows.size();
-        if (z == 0) {
-            return;
-        }
-        int a = 0;
-        int b = 0;
-        a = (int)(Math.sqrt(z));
-        int c = 0;
-        while (c < a) {
-            b = (z - c) / a;
-            if (((a * b) + c) == z) {
-                break;
+        synchronized (windows) {
+            // Don't do anything if we are in the menu
+            if (activeMenu != null) {
+                return;
             }
-            c++;
-        }
-        assert (a > 0);
-        assert (b > 0);
-        assert (c < a);
-        int newWidth = (getScreen().getWidth() / a);
-        int newHeight1 = ((getScreen().getHeight() - 1) / b);
-        int newHeight2 = ((getScreen().getHeight() - 1) / (b + c));
-
-        List<TWindow> sorted = new LinkedList<TWindow>(windows);
-        Collections.sort(sorted);
-        Collections.reverse(sorted);
-        for (int i = 0; i < sorted.size(); i++) {
-            int logicalX = i / b;
-            int logicalY = i % b;
-            if (i >= ((a - 1) * b)) {
-                logicalX = a - 1;
-                logicalY = i - ((a - 1) * b);
+            int z = windows.size();
+            if (z == 0) {
+                return;
             }
+            int a = 0;
+            int b = 0;
+            a = (int)(Math.sqrt(z));
+            int c = 0;
+            while (c < a) {
+                b = (z - c) / a;
+                if (((a * b) + c) == z) {
+                    break;
+                }
+                c++;
+            }
+            assert (a > 0);
+            assert (b > 0);
+            assert (c < a);
+            int newWidth = (getScreen().getWidth() / a);
+            int newHeight1 = ((getScreen().getHeight() - 1) / b);
+            int newHeight2 = ((getScreen().getHeight() - 1) / (b + c));
 
-            TWindow w = sorted.get(i);
-            w.setX(logicalX * newWidth);
-            w.setWidth(newWidth);
-            if (i >= ((a - 1) * b)) {
-                w.setY((logicalY * newHeight2) + 1);
-                w.setHeight(newHeight2);
-            } else {
-                w.setY((logicalY * newHeight1) + 1);
-                w.setHeight(newHeight1);
+            List<TWindow> sorted = new LinkedList<TWindow>(windows);
+            Collections.sort(sorted);
+            Collections.reverse(sorted);
+            for (int i = 0; i < sorted.size(); i++) {
+                int logicalX = i / b;
+                int logicalY = i % b;
+                if (i >= ((a - 1) * b)) {
+                    logicalX = a - 1;
+                    logicalY = i - ((a - 1) * b);
+                }
+
+                TWindow w = sorted.get(i);
+                w.setX(logicalX * newWidth);
+                w.setWidth(newWidth);
+                if (i >= ((a - 1) * b)) {
+                    w.setY((logicalY * newHeight2) + 1);
+                    w.setHeight(newHeight2);
+                } else {
+                    w.setY((logicalY * newHeight1) + 1);
+                    w.setHeight(newHeight1);
+                }
             }
         }
     }
@@ -1642,25 +1657,27 @@ public class TApplication {
      * Re-layout the open windows as overlapping cascaded windows.
      */
     private void cascadeWindows() {
-        // Don't do anything if we are in the menu
-        if (activeMenu != null) {
-            return;
-        }
-        int x = 0;
-        int y = 1;
-        List<TWindow> sorted = new LinkedList<TWindow>(windows);
-        Collections.sort(sorted);
-        Collections.reverse(sorted);
-        for (TWindow window: sorted) {
-            window.setX(x);
-            window.setY(y);
-            x++;
-            y++;
-            if (x > getScreen().getWidth()) {
-                x = 0;
+        synchronized (windows) {
+            // Don't do anything if we are in the menu
+            if (activeMenu != null) {
+                return;
             }
-            if (y >= getScreen().getHeight()) {
-                y = 1;
+            int x = 0;
+            int y = 1;
+            List<TWindow> sorted = new LinkedList<TWindow>(windows);
+            Collections.sort(sorted);
+            Collections.reverse(sorted);
+            for (TWindow window: sorted) {
+                window.setX(x);
+                window.setY(y);
+                x++;
+                y++;
+                if (x > getScreen().getWidth()) {
+                    x = 0;
+                }
+                if (y >= getScreen().getHeight()) {
+                    y = 1;
+                }
             }
         }
     }

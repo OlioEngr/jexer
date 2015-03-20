@@ -1437,7 +1437,7 @@ public final class ECMA48Terminal implements Runnable {
                         readBuffer = new char[readBuffer.length * 2];
                     }
 
-                    int rc = input.read(readBuffer, 0, n);
+                    int rc = input.read(readBuffer, 0, readBuffer.length);
                     // System.err.printf("read() %d", rc); System.err.flush();
                     if (rc == -1) {
                         // This is EOF

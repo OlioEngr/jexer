@@ -249,8 +249,34 @@ public class ECMA48 implements Runnable {
         // Synchronize so we don't stomp on the reader thread.
         synchronized (this) {
 
-            // Tell the reader thread to stop looking at input.  It will
-            // close the input stream as it exits.
+            // Close the input stream
+            switch (type) {
+            case VT100:
+            case VT102:
+            case VT220:
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        // SQUASH
+                    }
+                    inputStream = null;
+                }
+                break;
+            case XTERM:
+                if (input != null) {
+                    try {
+                        input.close();
+                    } catch (IOException e) {
+                        // SQUASH
+                    }
+                    input = null;
+                    inputStream = null;
+                }
+                break;
+            }
+
+            // Tell the reader thread to stop looking at input.
             if (stopReaderThread == false) {
                 stopReaderThread = true;
                 try {
@@ -294,7 +320,7 @@ public class ECMA48 implements Runnable {
     /**
      * When true, the reader thread is expected to exit.
      */
-    private boolean stopReaderThread = false;
+    private volatile boolean stopReaderThread = false;
 
     /**
      * The reader thread.
@@ -329,7 +355,7 @@ public class ECMA48 implements Runnable {
     /**
      * The scrollback buffer characters + attributes.
      */
-    private List<DisplayLine> scrollback;
+    private volatile List<DisplayLine> scrollback;
 
     /**
      * Get the scrollback buffer.
@@ -343,7 +369,7 @@ public class ECMA48 implements Runnable {
     /**
      * The raw display buffer characters + attributes.
      */
-    private List<DisplayLine> display;
+    private volatile List<DisplayLine> display;
 
     /**
      * Get the display buffer.
@@ -5441,76 +5467,55 @@ public class ECMA48 implements Runnable {
 
         while (!done && !stopReaderThread) {
             try {
-                // We assume that if inputStream has bytes available, then
-                // input won't block on read().
                 int n = inputStream.available();
-                if (n > 0) {
-                    // System.err.printf("available() %d\n", n); System.err.flush();
-                    if (utf8) {
-                        if (readBufferUTF8.length < n) {
-                            // The buffer wasn't big enough, make it huger
-                            int newSize = Math.max(readBufferUTF8.length * 2, n);
+                // System.err.printf("available() %d\n", n); System.err.flush();
+                if (utf8) {
+                    if (readBufferUTF8.length < n) {
+                        // The buffer wasn't big enough, make it huger
+                        int newSizeHalf = Math.max(readBufferUTF8.length, n);
 
-                            readBufferUTF8 = new char[newSize];
-                        }
-                    } else {
-                        if (readBuffer.length < n) {
-                            // The buffer wasn't big enough, make it huger
-                            int newSize = Math.max(readBuffer.length * 2, n);
-                            readBuffer = new byte[newSize];
-                        }
-                    }
-
-                    int rc = -1;
-                    if (utf8) {
-                        rc = input.read(readBufferUTF8, 0, n);
-                    } else {
-                        rc = inputStream.read(readBuffer, 0, n);
-                    }
-                    // System.err.printf("read() %d\n", rc); System.err.flush();
-                    if (rc == -1) {
-                        // This is EOF
-                        done = true;
-                    } else {
-                        for (int i = 0; i < rc; i++) {
-                            int ch = 0;
-                            if (utf8) {
-                                ch = readBufferUTF8[i];
-                            } else {
-                                ch = readBuffer[i];
-                            }
-                            // Don't step on UI events
-                            synchronized (this) {
-                                consume((char)ch);
-                            }
-                        }
+                        readBufferUTF8 = new char[newSizeHalf * 2];
                     }
                 } else {
-                    // Wait 10 millis for more data
-                    Thread.sleep(10);
+                    if (readBuffer.length < n) {
+                        // The buffer wasn't big enough, make it huger
+                        int newSizeHalf = Math.max(readBuffer.length, n);
+                        readBuffer = new byte[newSizeHalf * 2];
+                    }
+                }
+
+                int rc = -1;
+                if (utf8) {
+                    rc = input.read(readBufferUTF8, 0,
+                        readBufferUTF8.length);
+                } else {
+                    rc = inputStream.read(readBuffer, 0,
+                        readBuffer.length);
+                }
+                // System.err.printf("read() %d\n", rc); System.err.flush();
+                if (rc == -1) {
+                    // This is EOF
+                    done = true;
+                } else {
+                    for (int i = 0; i < rc; i++) {
+                        int ch = 0;
+                        if (utf8) {
+                            ch = readBufferUTF8[i];
+                        } else {
+                            ch = readBuffer[i];
+                        }
+                        // Don't step on UI events
+                        synchronized (this) {
+                            consume((char)ch);
+                        }
+                    }
                 }
                 // System.err.println("end while loop"); System.err.flush();
-            } catch (InterruptedException e) {
-                // SQUASH
             } catch (IOException e) {
                 e.printStackTrace();
                 done = true;
             }
         } // while ((done == false) && (stopReaderThread == false))
-
-        // Close the input stream
-        try {
-            if (utf8) {
-                input.close();
-                input = null;
-                inputStream = null;
-            } else {
-                inputStream.close();
-                inputStream = null;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         // Let the rest of the world know that I am done.
         stopReaderThread = true;

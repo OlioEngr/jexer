@@ -87,13 +87,6 @@ public abstract class TWidget implements Comparable<TWidget> {
     }
 
     /**
-     * Request full repaint on next screen refresh.
-     */
-    protected final void setRepaint() {
-        window.getApplication().setRepaint();
-    }
-
-    /**
      * Get this TWidget's parent TApplication.
      *
      * @return the parent TApplication
@@ -487,14 +480,14 @@ public abstract class TWidget implements Comparable<TWidget> {
     public final void drawChildren() {
         // Set my clipping rectangle
         assert (window != null);
-        assert (window.getScreen() != null);
-        Screen screen = window.getScreen();
+        assert (getScreen() != null);
+        Screen screen = getScreen();
 
         screen.setClipRight(width);
         screen.setClipBottom(height);
 
-        int absoluteRightEdge = window.getAbsoluteX() + screen.getWidth();
-        int absoluteBottomEdge = window.getAbsoluteY() + screen.getHeight();
+        int absoluteRightEdge = window.getAbsoluteX() + window.getWidth();
+        int absoluteBottomEdge = window.getAbsoluteY() + window.getHeight();
         if (!(this instanceof TWindow) && !(this instanceof TVScroller)) {
             absoluteRightEdge -= 1;
         }
@@ -508,14 +501,14 @@ public abstract class TWidget implements Comparable<TWidget> {
             screen.setClipRight(0);
         } else if (myRightEdge > absoluteRightEdge) {
             screen.setClipRight(screen.getClipRight()
-                - myRightEdge - absoluteRightEdge);
+                - (myRightEdge - absoluteRightEdge));
         }
         if (getAbsoluteY() > absoluteBottomEdge) {
             // I am offscreen
             screen.setClipBottom(0);
         } else if (myBottomEdge > absoluteBottomEdge) {
             screen.setClipBottom(screen.getClipBottom()
-                - myBottomEdge - absoluteBottomEdge);
+                - (myBottomEdge - absoluteBottomEdge));
         }
 
         // Set my offset
@@ -727,9 +720,6 @@ public abstract class TWidget implements Comparable<TWidget> {
         activeChild.active = false;
         children.get(tabOrder).active = true;
         activeChild = children.get(tabOrder);
-
-        // Refresh
-        window.getApplication().setRepaint();
     }
 
     /**
@@ -789,27 +779,25 @@ public abstract class TWidget implements Comparable<TWidget> {
         // If I have any buttons on me AND this is an Alt-key that matches
         // its mnemonic, send it an Enter keystroke
         for (TWidget widget: children) {
-            /*
-            TODO
+            if (widget instanceof TButton) {
+                TButton button = (TButton) widget;
+                if (button.getEnabled()
+                    && !keypress.getKey().getIsKey()
+                    && keypress.getKey().getAlt()
+                    && !keypress.getKey().getCtrl()
+                    && (Character.toLowerCase(button.getMnemonic().getShortcut())
+                        == Character.toLowerCase(keypress.getKey().getCh()))
+                ) {
 
-            if (TButton button = cast(TButton)w) {
-                if (button.enabled &&
-                    !keypress.key.isKey &&
-                    keypress.key.alt &&
-                    !keypress.key.ctrl &&
-                    (toLowercase(button.mnemonic.shortcut) == toLowercase(keypress.key.ch))) {
-
-                    w.handleEvent(new TKeypressEvent(kbEnter));
+                    widget.handleEvent(new TKeypressEvent(kbEnter));
                     return;
                 }
             }
-             */
         }
 
         // Dispatch the keypress to an active widget
         for (TWidget widget: children) {
             if (widget.active) {
-                window.getApplication().setRepaint();
                 widget.handleEvent(keypress);
                 return;
             }

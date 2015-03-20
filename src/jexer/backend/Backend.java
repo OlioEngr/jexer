@@ -82,10 +82,8 @@ public abstract class Backend {
      * screen resize events.
      *
      * @param queue list to append new events to
-     * @param timeout maximum amount of time (in millis) to wait for an
-     * event.  0 means to return immediately, i.e. perform a poll.
      */
-    public abstract void getEvents(List<TInputEvent> queue, int timeout);
+    public abstract void getEvents(List<TInputEvent> queue);
 
     /**
      * Subclasses must provide an implementation that closes sockets,

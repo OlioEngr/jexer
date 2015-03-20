@@ -82,15 +82,6 @@ public final class TTimer {
     }
 
     /**
-     * Get the number of milliseconds between now and the next tick time.
-     *
-     * @return number of millis
-     */
-    public long getMillis() {
-        return nextTick.getTime() - (new Date()).getTime();
-    }
-
-    /**
      * Package private constructor.
      *
      * @param duration number of milliseconds to wait between ticks
@@ -103,7 +94,8 @@ public final class TTimer {
         this.duration  = duration;
         this.action    = action;
 
-        nextTick = new Date((new Date()).getTime() + duration);
+        Date now = new Date();
+        nextTick = new Date(now.getTime() + duration);
     }
 
 }

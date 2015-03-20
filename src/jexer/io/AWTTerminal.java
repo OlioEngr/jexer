@@ -82,6 +82,11 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     }
 
     /**
+     * The listening object that run() wakes up on new input.
+     */
+    private Object listener;
+
+    /**
      * The event queue, filled up by a thread reading on input.
      */
     private List<TInputEvent> eventQueue;
@@ -120,9 +125,12 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     /**
      * Constructor sets up state for getEvent().
      *
+     * @param listener the object this backend needs to wake up when new
+     * input comes in
      * @param screen the top-level AWT frame
      */
-    public AWTTerminal(final AWTScreen screen) {
+    public AWTTerminal(final Object listener, final AWTScreen screen) {
+        this.listener    = listener;
         this.screen      = screen;
         mouse1           = false;
         mouse2           = false;
@@ -152,26 +160,6 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
      * @param queue list to append new events to
      */
     public void getEvents(final List<TInputEvent> queue) {
-        synchronized (eventQueue) {
-            if (eventQueue.size() > 0) {
-                synchronized (queue) {
-                    queue.addAll(eventQueue);
-                }
-                eventQueue.clear();
-            }
-        }
-    }
-
-    /**
-     * Return any events in the IO queue due to timeout.
-     *
-     * @param queue list to append new events to
-     */
-    public void getIdleEvents(final List<TInputEvent> queue) {
-
-        // Insert any polling action here...
-
-        // Return any events that showed up
         synchronized (eventQueue) {
             if (eventQueue.size() > 0) {
                 synchronized (queue) {
@@ -396,9 +384,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(new TKeypressEvent(keypress));
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -433,9 +420,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(new TCommandEvent(cmAbort));
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -523,9 +509,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
                 sessionInfo.getWindowWidth(), sessionInfo.getWindowHeight());
             eventQueue.add(windowResize);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -561,9 +546,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -582,9 +566,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -650,9 +633,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -697,9 +679,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 
@@ -743,9 +724,8 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         synchronized (eventQueue) {
             eventQueue.add(mouseEvent);
         }
-        // Wake up the backend
-        synchronized (this) {
-            this.notifyAll();
+        synchronized (listener) {
+            listener.notifyAll();
         }
     }
 

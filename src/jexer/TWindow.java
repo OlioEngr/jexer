@@ -532,7 +532,6 @@ public class TWindow extends TWidget {
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
         this.mouse = mouse;
-        application.setRepaint();
 
         inKeyboardResize = false;
 
@@ -605,7 +604,6 @@ public class TWindow extends TWidget {
     @Override
     public void onMouseUp(final TMouseEvent mouse) {
         this.mouse = mouse;
-        application.setRepaint();
 
         if ((inWindowMove) && (mouse.getMouse1())) {
             // Stop moving window
@@ -653,7 +651,6 @@ public class TWindow extends TWidget {
     @Override
     public void onMouseMotion(final TMouseEvent mouse) {
         this.mouse = mouse;
-        application.setRepaint();
 
         if (inWindowMove) {
             // Move window over

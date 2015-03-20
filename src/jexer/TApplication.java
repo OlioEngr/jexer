@@ -120,12 +120,33 @@ public class TApplication {
                                 break;
                             }
                         }
-                        synchronized (application) {
-                            application.wait();
+
+                        synchronized (this) {
+                            /*
+                            System.err.printf("%s %s sleep\n", this, primary ?
+                                "primary" : "secondary");
+                             */
+
+                            this.wait();
+
+                            /*
+                            System.err.printf("%s %s AWAKE\n", this, primary ?
+                                "primary" : "secondary");
+                             */
+
                             if ((!primary)
                                 && (application.secondaryEventReceiver == null)
                             ) {
-                                // Secondary thread, time to exit
+                                // Secondary thread, emergency exit.  If we
+                                // got here then something went wrong with
+                                // the handoff between yield() and
+                                // closeWindow().
+
+                                System.err.printf("secondary exiting at wrong time, why?\n");
+                                synchronized (application.primaryEventHandler) {
+                                    application.primaryEventHandler.notify();
+                                }
+                                application.secondaryEventHandler = null;
                                 return;
                             }
                             break;
@@ -153,6 +174,7 @@ public class TApplication {
                     } else {
                         secondaryHandleEvent(event);
                     }
+                    application.repaint = true;
                     if ((!primary)
                         && (application.secondaryEventReceiver == null)
                     ) {
@@ -160,7 +182,15 @@ public class TApplication {
 
                         // DO NOT UNLOCK.  Primary thread just came back from
                         // primaryHandleEvent() and will unlock in the else
-                        // block below.
+                        // block below.  Just wake it up.
+                        synchronized (application.primaryEventHandler) {
+                            application.primaryEventHandler.notify();
+                        }
+                        // Now eliminate my reference so that
+                        // wakeEventHandler() resumes working on the primary.
+                        application.secondaryEventHandler = null;
+
+                        // All done!
                         return;
                     } else {
                         // Unlock.  Either I am primary thread, or I am
@@ -168,7 +198,14 @@ public class TApplication {
                         oldLock = unlockHandleEvent();
                         assert (oldLock == true);
                     }
+                } // for (;;)
+
+                // I have done some work of some kind.  Tell the main run()
+                // loop to wake up now.
+                synchronized (application) {
+                    application.notify();
                 }
+
             } // while (true) (main runnable loop)
         }
     }
@@ -176,23 +213,39 @@ public class TApplication {
     /**
      * The primary event handler thread.
      */
-    private WidgetEventHandler primaryEventHandler;
+    private volatile WidgetEventHandler primaryEventHandler;
 
     /**
      * The secondary event handler thread.
      */
-    private WidgetEventHandler secondaryEventHandler;
+    private volatile WidgetEventHandler secondaryEventHandler;
 
     /**
      * The widget receiving events from the secondary event handler thread.
      */
-    private TWidget secondaryEventReceiver;
+    private volatile TWidget secondaryEventReceiver;
 
     /**
      * Spinlock for the primary and secondary event handlers.
      * WidgetEventHandler.run() is responsible for setting this value.
      */
     private volatile boolean insideHandleEvent = false;
+
+    /**
+     * Wake the sleeping active event handler.
+     */
+    private void wakeEventHandler() {
+        if (secondaryEventHandler != null) {
+            synchronized (secondaryEventHandler) {
+                secondaryEventHandler.notify();
+            }
+        } else {
+            assert (primaryEventHandler != null);
+            synchronized (primaryEventHandler) {
+                primaryEventHandler.notify();
+            }
+        }
+    }
 
     /**
      * Set the insideHandleEvent flag to true.  lockoutEventHandlers() will
@@ -360,22 +413,16 @@ public class TApplication {
     /**
      * When true, exit the application.
      */
-    private boolean quit = false;
+    private volatile boolean quit = false;
 
     /**
      * When true, repaint the entire screen.
      */
-    private boolean repaint = true;
+    private volatile boolean repaint = true;
 
     /**
-     * Request full repaint on next screen refresh.
-     */
-    public final void setRepaint() {
-        repaint = true;
-    }
-
-    /**
-     * When true, just flush updates from the screen.
+     * When true, just flush updates from the screen.  This is only used to
+     * minimize physical writes for the mouse cursor.
      */
     private boolean flush = false;
 
@@ -441,9 +488,9 @@ public class TApplication {
 
 
         if (useAWT) {
-            backend     = new AWTBackend();
+            backend     = new AWTBackend(this);
         } else {
-            backend     = new ECMA48Backend(input, output);
+            backend     = new ECMA48Backend(this, input, output);
         }
         theme           = new ColorTheme();
         desktopBottom   = getScreen().getHeight() - 1;
@@ -486,10 +533,6 @@ public class TApplication {
         if ((flush) && (!repaint)) {
             backend.flushScreen();
             flush = false;
-            return;
-        }
-
-        if (!repaint) {
             return;
         }
 
@@ -587,24 +630,48 @@ public class TApplication {
         while (!quit) {
             // Timeout is in milliseconds, so default timeout after 1 second
             // of inactivity.
-            int timeout = getSleepTime(1000);
+            long timeout = 0;
 
-            // See if there are any definitely events waiting to be processed
-            // or a screen redraw to do.  If so, do not wait if there is no
-            // I/O coming in.
-            synchronized (drainEventQueue) {
-                if (drainEventQueue.size() > 0) {
-                    timeout = 0;
+            // If I've got no updates to render, wait for something from the
+            // backend or a timer.
+            if (!repaint && !flush) {
+                // Never sleep longer than 100 millis, to get windows with
+                // background tasks an opportunity to update the display.
+                timeout = getSleepTime(100);
+
+                // See if there are any definitely events waiting to be
+                // processed.  If so, do not wait -- either there is I/O
+                // coming in or the primary/secondary threads are still
+                // working.
+                synchronized (drainEventQueue) {
+                    if (drainEventQueue.size() > 0) {
+                        timeout = 0;
+                    }
+                }
+                synchronized (fillEventQueue) {
+                    if (fillEventQueue.size() > 0) {
+                        timeout = 0;
+                    }
                 }
             }
-            synchronized (fillEventQueue) {
-                if (fillEventQueue.size() > 0) {
-                    timeout = 0;
+
+            if (timeout > 0) {
+                // As of now, I've got nothing to do: no I/O, nothing from
+                // the consumer threads, no timers that need to run ASAP.  So
+                // wait until either the backend or the consumer threads have
+                // something to do.
+                try {
+                    synchronized (this) {
+                        this.wait(timeout);
+                    }
+                } catch (InterruptedException e) {
+                    // I'm awake and don't care why, let's see what's going
+                    // on out there.
                 }
             }
 
             // Pull any pending I/O events
-            backend.getEvents(fillEventQueue, timeout);
+            backend.getEvents(fillEventQueue);
 
             // Dispatch each event to the appropriate handler, one at a time.
             for (;;) {
@@ -616,6 +683,13 @@ public class TApplication {
                     event = fillEventQueue.remove(0);
                 }
                 metaHandleEvent(event);
+            }
+
+            // Wake a consumer thread if we have any pending events.
+            synchronized (drainEventQueue) {
+                if (drainEventQueue.size() > 0) {
+                    wakeEventHandler();
+                }
             }
 
             // Prevent stepping on the primary or secondary event handler.
@@ -631,14 +705,28 @@ public class TApplication {
 
             // Let the event handlers run again.
             startEventHandlers();
+
+        } // while (!quit)
+
+        // Shutdown the event consumer threads
+        if (secondaryEventHandler != null) {
+            synchronized (secondaryEventHandler) {
+                secondaryEventHandler.notify();
+            }
+        }
+        if (primaryEventHandler != null) {
+            synchronized (primaryEventHandler) {
+                primaryEventHandler.notify();
+            }
         }
 
-        // Shutdown the consumer threads
-        synchronized (this) {
-            this.notifyAll();
-        }
-
+        // Shutdown the user I/O thread(s)
         backend.shutdown();
+
+        // Close all the windows.  This gives them an opportunity to release
+        // resources.
+        closeAllWindows();
+
     }
 
     /**
@@ -696,13 +784,6 @@ public class TApplication {
          // Put into the main queue
         synchronized (drainEventQueue) {
             drainEventQueue.add(event);
-        }
-
-        // Wake all threads: primary thread will either be consuming events
-        // again or waiting in yield(), and secondary thread will either not
-        // exist or consuming events.
-        synchronized (this) {
-            this.notifyAll();
         }
     }
 
@@ -861,15 +942,19 @@ public class TApplication {
         boolean oldLock = unlockHandleEvent();
         assert (oldLock == true);
 
+        // System.err.printf("YIELD\n");
+
         while (secondaryEventReceiver != null) {
-            synchronized (this) {
+            synchronized (primaryEventHandler) {
                 try {
-                    this.wait();
+                    primaryEventHandler.wait();
                 } catch (InterruptedException e) {
                     // SQUASH
                 }
             }
         }
+
+        // System.err.printf("EXIT YIELD\n");
     }
 
     /**
@@ -884,7 +969,7 @@ public class TApplication {
         Date now = new Date();
         List<TTimer> keepTimers = new LinkedList<TTimer>();
         for (TTimer timer: timers) {
-            if (timer.getNextTick().getTime() < now.getTime()) {
+            if (timer.getNextTick().getTime() <= now.getTime()) {
                 timer.tick();
                 if (timer.recurring) {
                     keepTimers.add(timer);
@@ -904,24 +989,27 @@ public class TApplication {
     /**
      * Get the amount of time I can sleep before missing a Timer tick.
      *
-     * @param timeout = initial (maximum) timeout
+     * @param timeout = initial (maximum) timeout in millis
      * @return number of milliseconds between now and the next timer event
      */
-    protected int getSleepTime(final int timeout) {
+    protected long getSleepTime(final long timeout) {
         Date now = new Date();
+        long nowTime = now.getTime();
         long sleepTime = timeout;
         for (TTimer timer: timers) {
-            if (timer.getNextTick().getTime() < now.getTime()) {
+            long nextTickTime = timer.getNextTick().getTime();
+            if (nextTickTime < nowTime) {
                 return 0;
             }
-            if ((timer.getNextTick().getTime() > now.getTime())
-                && ((timer.getNextTick().getTime() - now.getTime()) < sleepTime)
-            ) {
-                sleepTime = timer.getNextTick().getTime() - now.getTime();
+
+            long timeDifference = nextTickTime - nowTime;
+            if (timeDifference < sleepTime) {
+                sleepTime = timeDifference;
             }
         }
         assert (sleepTime >= 0);
-        return (int)sleepTime;
+        assert (sleepTime <= timeout);
+        return sleepTime;
     }
 
     /**
@@ -963,10 +1051,10 @@ public class TApplication {
             // window is closed.
             secondaryEventReceiver = null;
 
-            // Wake all threads: primary thread will be consuming events
-            // again, and secondary thread will exit.
-            synchronized (this) {
-                this.notifyAll();
+            // Wake the secondary thread, it will wake the primary as it
+            // exits.
+            synchronized (secondaryEventHandler) {
+                secondaryEventHandler.notify();
             }
         }
     }

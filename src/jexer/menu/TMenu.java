@@ -177,7 +177,6 @@ public final class TMenu extends TWindow {
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
         this.mouse = mouse;
-        setRepaint();
 
         // Pass to children
         for (TWidget widget: getChildren()) {
@@ -202,7 +201,6 @@ public final class TMenu extends TWindow {
     @Override
     public void onMouseUp(final TMouseEvent mouse) {
         this.mouse = mouse;
-        setRepaint();
 
         // Pass to children
         for (TWidget widget: getChildren()) {
@@ -227,7 +225,6 @@ public final class TMenu extends TWindow {
     @Override
     public void onMouseMotion(final TMouseEvent mouse) {
         this.mouse = mouse;
-        setRepaint();
 
         // See if we should activate a different menu item
         for (TWidget widget: getChildren()) {
@@ -306,7 +303,6 @@ public final class TMenu extends TWindow {
         // Dispatch the keypress to an active widget
         for (TWidget widget: getChildren()) {
             if (widget.getActive()) {
-                setRepaint();
                 widget.handleEvent(keypress);
                 return;
             }

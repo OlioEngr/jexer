@@ -49,13 +49,18 @@ public final class AWTBackend extends Backend {
 
     /**
      * Public constructor.
+     *
+     * @param listener the object this backend needs to wake up when new
+     * input comes in
      */
-    public AWTBackend() {
+    public AWTBackend(final Object listener) {
         // Create a screen
         AWTScreen screen = new AWTScreen();
         this.screen = screen;
-        // Create the listeners
-        terminal = new AWTTerminal(screen);
+
+        // Create the AWT event listeners
+        terminal = new AWTTerminal(listener, screen);
+
         // Hang onto the session info
         this.sessionInfo = terminal.getSessionInfo();
     }
@@ -72,36 +77,10 @@ public final class AWTBackend extends Backend {
      * Get keyboard, mouse, and screen resize events.
      *
      * @param queue list to append new events to
-     * @param timeout maximum amount of time (in millis) to wait for an
-     * event.  0 means to return immediately, i.e. perform a poll.
      */
     @Override
-    public void getEvents(final List<TInputEvent> queue, final int timeout) {
-        if (timeout > 0) {
-            // Try to sleep, let the terminal's input thread wake me up if
-            // something came in.
-            synchronized (terminal) {
-                try {
-                    terminal.wait(timeout);
-                    if (terminal.hasEvents()) {
-                        // System.err.println("getEvents()");
-                        terminal.getEvents(queue);
-                    } else {
-                        // If I got here, then I timed out.  Call
-                        // terminal.getIdleEvents() to pick up stragglers
-                        // like bare resize.
-                        // System.err.println("getIdleEvents()");
-                        terminal.getIdleEvents(queue);
-                    }
-                } catch (InterruptedException e) {
-                    // Spurious interrupt, pretend it was like a timeout.
-                    // System.err.println("[interrupt] getEvents()");
-                    terminal.getIdleEvents(queue);
-                }
-            }
-        } else {
-            // Asking for a poll, go get it.
-            // System.err.println("[polled] getEvents()");
+    public void getEvents(final List<TInputEvent> queue) {
+        if (terminal.hasEvents()) {
             terminal.getEvents(queue);
         }
     }

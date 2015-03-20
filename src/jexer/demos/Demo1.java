@@ -422,7 +422,7 @@ class DemoMainWindow extends TWindow {
         progressBar = addProgressBar(1, row, 22, 0);
         row++;
         timerLabel = addLabel("Timer", 1, row);
-        timer = getApplication().addTimer(100, true,
+        timer = getApplication().addTimer(250, true,
             new TAction() {
 
                 public void DO() {
@@ -432,7 +432,6 @@ class DemoMainWindow extends TWindow {
                         timerI++;
                     }
                     progressBar.setValue(timerI);
-                    DemoMainWindow.this.setRepaint();
                 }
             }
         );

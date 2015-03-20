@@ -99,11 +99,6 @@ public final class ECMA48Terminal implements Runnable {
     private ArrayList<String> params;
 
     /**
-     * params[paramI] is being appended to.
-     */
-    private int paramI;
-
-    /**
      * States in the input parser.
      */
     private enum ParseState {
@@ -186,6 +181,11 @@ public final class ECMA48Terminal implements Runnable {
      * UTF-8 encoding.
      */
     private PrintWriter output;
+
+    /**
+     * The listening object that run() wakes up on new input.
+     */
+    private Object listener;
 
     /**
      * When true, the terminal is sending non-UTF8 bytes when reporting mouse
@@ -284,6 +284,8 @@ public final class ECMA48Terminal implements Runnable {
     /**
      * Constructor sets up state for getEvent().
      *
+     * @param listener the object this backend needs to wake up when new
+     * input comes in
      * @param input an InputStream connected to the remote user, or null for
      * System.in.  If System.in is used, then on non-Windows systems it will
      * be put in raw mode; shutdown() will (blindly!) put System.in in cooked
@@ -294,7 +296,7 @@ public final class ECMA48Terminal implements Runnable {
      * @throws UnsupportedEncodingException if an exception is thrown when
      * creating the InputStreamReader
      */
-    public ECMA48Terminal(final InputStream input,
+    public ECMA48Terminal(final Object listener, final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
         reset();
@@ -302,6 +304,7 @@ public final class ECMA48Terminal implements Runnable {
         mouse2           = false;
         mouse3           = false;
         stopReaderThread = false;
+        this.listener    = listener;
 
         if (input == null) {
             // inputStream = System.in;
@@ -402,7 +405,6 @@ public final class ECMA48Terminal implements Runnable {
     private void reset() {
         state = ParseState.GROUND;
         params = new ArrayList<String>();
-        paramI = 0;
         params.clear();
         params.add("");
     }
@@ -799,13 +801,13 @@ public final class ECMA48Terminal implements Runnable {
         case CSI_ENTRY:
             // Numbers - parameter values
             if ((ch >= '0') && (ch <= '9')) {
-                params.set(paramI, params.get(paramI) + ch);
+                params.set(params.size() - 1,
+                    params.get(params.size() - 1) + ch);
                 state = ParseState.CSI_PARAM;
                 return;
             }
             // Parameter separator
             if (ch == ';') {
-                paramI++;
                 params.add("");
                 return;
             }
@@ -907,14 +909,14 @@ public final class ECMA48Terminal implements Runnable {
         case CSI_PARAM:
             // Numbers - parameter values
             if ((ch >= '0') && (ch <= '9')) {
-                params.set(paramI, params.get(paramI) + ch);
+                params.set(params.size() - 1,
+                    params.get(params.size() - 1) + ch);
                 state = ParseState.CSI_PARAM;
                 return;
             }
             // Parameter separator
             if (ch == ';') {
-                paramI++;
-                params.add(paramI, "");
+                params.add("");
                 return;
             }
 
@@ -1000,7 +1002,7 @@ public final class ECMA48Terminal implements Runnable {
             return;
 
         case MOUSE:
-            params.set(0, params.get(paramI) + ch);
+            params.set(0, params.get(params.size() - 1) + ch);
             if (params.get(0).length() == 3) {
                 // We have enough to generate a mouse event
                 events.add(parseMouse());
@@ -1450,9 +1452,8 @@ public final class ECMA48Terminal implements Runnable {
                                 synchronized (eventQueue) {
                                     eventQueue.addAll(events);
                                 }
-                                // Now wake up the backend
-                                synchronized (this) {
-                                    this.notifyAll();
+                                synchronized (listener) {
+                                    listener.notifyAll();
                                 }
                                 events.clear();
                             }
@@ -1465,6 +1466,9 @@ public final class ECMA48Terminal implements Runnable {
                             eventQueue.addAll(events);
                         }
                         events.clear();
+                        synchronized (listener) {
+                            listener.notifyAll();
+                        }
                     }
 
                     // Wait 10 millis for more data

@@ -53,6 +53,8 @@ public final class ECMA48Backend extends Backend {
     /**
      * Public constructor.
      *
+     * @param listener the object this backend needs to wake up when new
+     * input comes in
      * @param input an InputStream connected to the remote user, or null for
      * System.in.  If System.in is used, then on non-Windows systems it will
      * be put in raw mode; shutdown() will (blindly!) put System.in in cooked
@@ -63,11 +65,11 @@ public final class ECMA48Backend extends Backend {
      * @throws UnsupportedEncodingException if an exception is thrown when
      * creating the InputStreamReader
      */
-    public ECMA48Backend(final InputStream input,
+    public ECMA48Backend(final Object listener, final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
         // Create a terminal and explicitly set stdin into raw mode
-        terminal = new ECMA48Terminal(input, output);
+        terminal = new ECMA48Terminal(listener, input, output);
 
         // Keep the terminal's sessionInfo so that TApplication can see it
         sessionInfo = terminal.getSessionInfo();
@@ -92,29 +94,10 @@ public final class ECMA48Backend extends Backend {
      * Get keyboard, mouse, and screen resize events.
      *
      * @param queue list to append new events to
-     * @param timeout maximum amount of time (in millis) to wait for an
-     * event.  0 means to return immediately, i.e. perform a poll.
      */
     @Override
-    public void getEvents(final List<TInputEvent> queue, final int timeout) {
-        if (timeout > 0) {
-            // Try to sleep, let the terminal's input thread wake me up if
-            // something came in.
-            synchronized (terminal) {
-                try {
-                    terminal.wait(timeout);
-                } catch (InterruptedException e) {
-                    // Spurious interrupt, pretend it was like a timeout.
-                    // System.err.println("[interrupt] getEvents()");
-                }
-                if (terminal.hasEvents()) {
-                    // System.err.println("getEvents()");
-                    terminal.getEvents(queue);
-                }
-            }
-        } else {
-            // Asking for a poll, go get it.
-            // System.err.println("[polled] getEvents()");
+    public void getEvents(final List<TInputEvent> queue) {
+        if (terminal.hasEvents()) {
             terminal.getEvents(queue);
         }
     }

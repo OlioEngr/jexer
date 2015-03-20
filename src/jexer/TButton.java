@@ -52,6 +52,15 @@ public final class TButton extends TWidget {
     private MnemonicString mnemonic;
 
     /**
+     * Get the mnemonic string for this button.
+     *
+     * @return mnemonic string
+     */
+    public final MnemonicString getMnemonic() {
+        return mnemonic;
+    }
+
+    /**
      * Remember mouse state.
      */
     private TMouseEvent mouse;

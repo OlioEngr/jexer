@@ -75,6 +75,15 @@ See the file demos/Demo1.java for detailed examples.
 
 
 
+Known Issues / Arbitrary Decisions
+----------------------------------
+
+Some arbitrary design decisions had to be made when either the
+obviously expected behavior did not happen or when a specification was
+ambiguous.  This section describes such issues.
+
+
+
 Roadmap
 -------
 
@@ -82,7 +91,6 @@ Many tasks remain before calling this version 1.0:
 
 0.0.2:
 
-- Fix clipping errors
 - AWT:
   - Blinking cursor
 - ECMA48Backend running on socket
@@ -131,3 +139,8 @@ Wishlist features (2.0):
   - TText
   - TTerminal
   - TComboBox
+
+
+Screenshots
+-----------
+

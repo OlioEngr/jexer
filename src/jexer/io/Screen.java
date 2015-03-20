@@ -186,6 +186,16 @@ public abstract class Screen {
     protected boolean dirty;
 
     /**
+     * Get dirty flag.
+     *
+     * @return if true, the logical screen is not in sync with the physical
+     * screen
+     */
+    public final boolean isDirty() {
+        return dirty;
+    }
+
+    /**
      * Set if the user explicitly wants to redraw everything starting with a
      * ECMATerminal.clearAll().
      */

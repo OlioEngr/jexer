@@ -297,7 +297,7 @@ public class TTerminalWindow extends TWindow {
                     // The shell is still running, do nothing.
                 }
             }
-            
+
         } // synchronized (emulator)
     }
 
@@ -386,6 +386,15 @@ public class TTerminalWindow extends TWindow {
                 // Get out of scrollback
                 vScroller.setValue(0);
                 emulator.keypress(keypress.getKey());
+
+                // UGLY HACK TIME!  cmd.exe needs CRLF, not just CR, so if
+                // this is kBEnter then also send kbCtrlJ.
+                if (System.getProperty("os.name").startsWith("Windows")) {
+                    if (keypress.equals(kbEnter)) {
+                        emulator.keypress(kbCtrlJ);
+                    }
+                }
+
                 readEmulatorState();
                 return;
             }

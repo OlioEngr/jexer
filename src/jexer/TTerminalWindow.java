@@ -244,7 +244,12 @@ public class TTerminalWindow extends TWindow {
      * Handle window close.
      */
     @Override public void onClose() {
-        emulator.close();
+        if (shell != null) {
+            shell.destroy();
+            shell = null;
+        } else {
+            emulator.close();
+        }
     }
 
     /**

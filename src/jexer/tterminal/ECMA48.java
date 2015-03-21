@@ -1096,25 +1096,18 @@ public class ECMA48 implements Runnable {
      * @param mouse mouse event received from the local user
      */
     public void mouse(final TMouseEvent mouse) {
+
         /*
-         * TODO:
-         *
-         * - Parse the mouse requests from the remote side regarding protocol
-         *   + encoding
-         *
-         * - Send mouse events to the other side.
-         *
-         *  - Handle the cursor (double invert).
+        System.err.printf("mouse(): protocol %s encoding %s mouse %s\n",
+            mouseProtocol, mouseEncoding, mouse);
          */
 
-        // System.err.printf("Mouse: %s\n", mouse);
-
-        /*
         if (mouseEncoding != MouseEncoding.UTF8) {
-            // We only support UTF8 encoding, bail out now.
-            return;
+            // We will support X10 but only for (160,94) and smaller.
+            if ((mouse.getX() >= 160) || (mouse.getY() >= 94)) {
+                return;
+            }
         }
-         */
 
         switch (mouseProtocol) {
 
@@ -1165,7 +1158,9 @@ public class ECMA48 implements Runnable {
         sb.append((char) 0x1B);
         sb.append('[');
         sb.append('M');
-        if (mouse.getMouse1()) {
+        if (mouse.getType() == TMouseEvent.Type.MOUSE_UP) {
+            sb.append((char) (0x03 + 32));
+        } else if (mouse.getMouse1()) {
             sb.append((char) (0x00 + 32));
         } else if (mouse.getMouse2()) {
             sb.append((char) (0x01 + 32));

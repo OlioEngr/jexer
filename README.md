@@ -136,14 +136,11 @@ Many tasks remain before calling this version 1.0:
 
 - TWindow
   - "Smart placement" for new windows
-- ECMATerminal
-  - Mouse 1006 mode parsing
 
 Wishlist features (2.0):
 
 - TTerminal
   - Handle resize events (pass to child process)
-  - xterm mouse handling
 - Screen
   - Allow complex characters in putCharXY() and detect them in putStrXY().
 - TComboBox

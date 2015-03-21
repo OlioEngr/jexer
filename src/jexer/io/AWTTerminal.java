@@ -97,6 +97,16 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     private Thread readerThread;
 
     /**
+     * The last reported mouse X position.
+     */
+    private int oldMouseX = -1;
+
+    /**
+     * The last reported mouse Y position.
+     */
+    private int oldMouseY = -1;
+
+    /**
      * true if mouse1 was down.  Used to report mouse1 on the release event.
      */
     private boolean mouse1 = false;
@@ -566,6 +576,13 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     public void mouseMoved(final MouseEvent mouse) {
         int x = screen.textColumn(mouse.getX());
         int y = screen.textRow(mouse.getY());
+        if ((x == oldMouseX) && (y == oldMouseY)) {
+            // Bail out, we've moved some pixels but not a whole text cell.
+            return;
+        }
+        oldMouseX = x;
+        oldMouseY = y;
+
         TMouseEvent mouseEvent = new TMouseEvent(TMouseEvent.Type.MOUSE_MOTION,
             x, y, x, y, mouse1, mouse2, mouse3, false, false);
 

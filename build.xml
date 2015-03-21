@@ -51,6 +51,9 @@
 	<jar destfile="${jar.dir}/${ant.project.name}.jar"
 	     basedir="${classes.dir}">
 	  <fileset dir="${resources.dir}"/>
+	  <!-- By including Jexer's source, the LGPL terms are
+	       automatically satisfied. -->
+	  <fileset dir="${src.dir}"/>
 	  <manifest>
 	    <attribute name="Main-Class" value="jexer.demos.Demo1"/>
 	  </manifest>

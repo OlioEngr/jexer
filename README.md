@@ -32,9 +32,14 @@ A demo application showing the existing UI controls is available via
 License
 -------
 
-This project is licensed LGPL ("GNU Lesser General Public License")
-version 3 or greater.  See the file LICENSE for the full license text,
-which includes both the GPL v3 and the LGPL supplemental terms.
+This project is licensed LGPL ("GNU Lesser General Public License",
+sometimes called the "Library GPL") version 3 or greater.  You may
+freely use Jexer in both closed source (proprietary) and open source
+applications, however any changes you make to the Jexer code must be
+made available to your users.
+
+See the file LICENSE for the full license text, which includes both
+the GPL v3 and the LGPL supplemental terms.
 
 
 

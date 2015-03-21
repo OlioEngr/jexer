@@ -36,7 +36,7 @@ import java.awt.Insets;
 /**
  * AWTSessionInfo provides a session implementation with a callback into an
  * AWT Frame to support queryWindowSize().  The username is blank, language
- * is "en_US", with a 80x24 text window.
+ * is "en_US", with a 132x40 text window.
  */
 public final class AWTSessionInfo implements SessionInfo {
 
@@ -68,12 +68,12 @@ public final class AWTSessionInfo implements SessionInfo {
     /**
      * Text window width.
      */
-    private int windowWidth = 80;
+    private int windowWidth = 132;
 
     /**
      * Text window height.
      */
-    private int windowHeight = 24;
+    private int windowHeight = 40;
 
     /**
      * Username getter.

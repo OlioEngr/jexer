@@ -50,7 +50,10 @@ public final class GraphicsChars {
         '\u2666', '\u2663', '\u2660', '\u2022',
         '\u25D8', '\u25CB', '\u25D9', '\u2642',
         '\u2640', '\u266A', '\u266B', '\u263C',
-        '\u25BA', '\u25C4', '\u2195', '\u203C',
+        // Terminus has 25B6 and 25C0 here, which I believe are better
+        // Unicode equivalents anyway.
+        // '\u25BA', '\u25C4', '\u2195', '\u203C',
+        '\u25B6', '\u25C0', '\u2195', '\u203C',
         '\u00B6', '\u00A7', '\u25AC', '\u21A8',
         '\u2191', '\u2193', '\u2192', '\u2190',
         '\u221F', '\u2194', '\u25B2', '\u25BC',

@@ -43,10 +43,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import jexer.TKeypress;
+import jexer.event.TMouseEvent;
 import jexer.bits.Color;
 import jexer.bits.Cell;
 import jexer.bits.CellAttributes;
-import jexer.TKeypress;
 import static jexer.TKeypress.*;
 
 /**
@@ -56,6 +57,11 @@ import static jexer.TKeypress.*;
  * <p>
  * It currently implements VT100, VT102, VT220, and XTERM with the following
  * caveats:
+ *
+ * <p>
+ * - The vttest scenario for VT220 8-bit controls (11.1.2.3) reports a
+ *   failure with XTERM.  This is due to vttest failing to decode the UTF-8
+ *   stream.
  *
  * <p>
  * - Smooth scrolling, printing, keyboard locking, keyboard leds, and tests
@@ -142,24 +148,26 @@ public class ECMA48 implements Runnable {
     /**
      * Return the proper TERM environment variable for this device type.
      *
-     * @return "TERM=vt100", "TERM=xterm", etc.
+     * @param deviceType DeviceType.VT100, DeviceType, XTERM, etc.
+     * @return "vt100", "xterm", etc.
      */
-    public String deviceTypeTerm() {
-        switch (type) {
+    public static String deviceTypeTerm(final DeviceType deviceType) {
+        switch (deviceType) {
         case VT100:
-            return "TERM=vt100";
+            return "vt100";
 
         case VT102:
-            return "TERM=vt102";
+            return "vt102";
 
         case VT220:
-            return "TERM=vt220";
+            return "vt220";
 
         case XTERM:
-            return "TERM=xterm";
+            return "xterm";
 
         default:
-            throw new IllegalArgumentException("Invalid device type: " + type);
+            throw new IllegalArgumentException("Invalid device type: "
+                + deviceType);
         }
     }
 
@@ -168,27 +176,27 @@ public class ECMA48 implements Runnable {
      * about UTF-8, the others are defined by their standard to be either
      * 7-bit or 8-bit characters only.
      *
+     * @param deviceType DeviceType.VT100, DeviceType, XTERM, etc.
      * @param baseLang a base language without UTF-8 flag such as "C" or
      * "en_US"
      * @return "LANG=en_US", "LANG=en_US.UTF-8", etc.
      */
-    public String deviceTypeLang(final String baseLang) {
-        switch (type) {
+    public static String deviceTypeLang(final DeviceType deviceType,
+        final String baseLang) {
+
+        switch (deviceType) {
 
         case VT100:
-            return "LANG=" + baseLang;
-
         case VT102:
-            return "LANG=" + baseLang;
-
         case VT220:
-            return "LANG=" + baseLang;
+            return baseLang;
 
         case XTERM:
-            return "LANG=" + baseLang + ".UTF-8";
+            return baseLang + ".UTF-8";
 
         default:
-            throw new IllegalArgumentException("Invalid device type: " + type);
+            throw new IllegalArgumentException("Invalid device type: "
+                + deviceType);
         }
     }
 
@@ -494,6 +502,35 @@ public class ECMA48 implements Runnable {
     }
 
     /**
+     * XTERM mouse reporting protocols.
+     */
+    private enum MouseProtocol {
+        OFF,
+        X10,
+        NORMAL,
+        BUTTONEVENT,
+        ANYEVENT
+    }
+
+    /**
+     * Which mouse protocol is active.
+     */
+    private MouseProtocol mouseProtocol = MouseProtocol.OFF;
+
+    /**
+     * XTERM mouse reporting encodings.
+     */
+    private enum MouseEncoding {
+        X10,
+        UTF8
+    }
+
+    /**
+     * Which mouse encoding is active.
+     */
+    private MouseEncoding mouseEncoding = MouseEncoding.X10;
+
+    /**
      * Physical display width.  We start at 80x24, but the user can resize us
      * bigger/smaller.
      */
@@ -599,12 +636,6 @@ public class ECMA48 implements Runnable {
     }
 
     /**
-     * Array of flags that have come in, e.g. '?' (DEC private mode), '=',
-     * '>' (&lt;), ...
-     */
-    private List<Character> csiFlags;
-
-    /**
      * Parameter characters being collected.
      */
     private List<Integer> csiParams;
@@ -612,7 +643,7 @@ public class ECMA48 implements Runnable {
     /**
      * Non-csi collect buffer.
      */
-    private List<Character> collectBuffer;
+    private StringBuilder collectBuffer;
 
     /**
      * When true, use the G1 character set.
@@ -796,8 +827,7 @@ public class ECMA48 implements Runnable {
      */
     private void toGround() {
         csiParams.clear();
-        csiFlags.clear();
-        collectBuffer.clear();
+        collectBuffer = new StringBuilder(8);
         scanState = ScanState.GROUND;
     }
 
@@ -844,6 +874,10 @@ public class ECMA48 implements Runnable {
         s8c1t                   = false;
         printerControllerMode   = false;
 
+        // XTERM
+        mouseProtocol           = MouseProtocol.OFF;
+        mouseEncoding           = MouseEncoding.X10;
+
         // Tab stops
         resetTabStops();
 
@@ -871,9 +905,7 @@ public class ECMA48 implements Runnable {
         assert (inputStream != null);
         assert (outputStream != null);
 
-        csiFlags          = new ArrayList<Character>();
         csiParams         = new ArrayList<Integer>();
-        collectBuffer     = new ArrayList<Character>();
         tabStops          = new ArrayList<Integer>();
         scrollback        = new LinkedList<DisplayLine>();
         display           = new LinkedList<DisplayLine>();
@@ -1055,6 +1087,103 @@ public class ECMA48 implements Runnable {
                 currentState.cursorX--;
             }
         }
+    }
+
+    /**
+     * Translate the mouse event to a VT100, VT220, or XTERM sequence and
+     * send to the remote side.
+     *
+     * @param mouse mouse event received from the local user
+     */
+    public void mouse(final TMouseEvent mouse) {
+        /*
+         * TODO:
+         *
+         * - Parse the mouse requests from the remote side regarding protocol
+         *   + encoding
+         *
+         * - Send mouse events to the other side.
+         *
+         *  - Handle the cursor (double invert).
+         */
+
+        // System.err.printf("Mouse: %s\n", mouse);
+
+        /*
+        if (mouseEncoding != MouseEncoding.UTF8) {
+            // We only support UTF8 encoding, bail out now.
+            return;
+        }
+         */
+
+        switch (mouseProtocol) {
+
+        case OFF:
+            // Do nothing
+            return;
+
+        case X10:
+            // Only report button presses
+            if (mouse.getType() != TMouseEvent.Type.MOUSE_DOWN) {
+                return;
+            }
+            break;
+
+        case NORMAL:
+            // Only report button presses and releases
+            if ((mouse.getType() != TMouseEvent.Type.MOUSE_DOWN)
+                && (mouse.getType() != TMouseEvent.Type.MOUSE_UP)
+            ) {
+                return;
+            }
+            break;
+
+        case BUTTONEVENT:
+            /*
+             * Only report button presses, button releases, and motions that
+             * have a button down (i.e. drag-and-drop).
+             */
+            if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                if (!mouse.getMouse1()
+                    && !mouse.getMouse2()
+                    && !mouse.getMouse3()
+                    && !mouse.getMouseWheelUp()
+                    && !mouse.getMouseWheelDown()
+                ) {
+                    return;
+                }
+            }
+            break;
+
+        case ANYEVENT:
+            // Report everything
+            break;
+        }
+
+        // Now encode the event
+        StringBuilder sb = new StringBuilder(6);
+        sb.append((char) 0x1B);
+        sb.append('[');
+        sb.append('M');
+        if (mouse.getMouse1()) {
+            sb.append((char) (0x00 + 32));
+        } else if (mouse.getMouse2()) {
+            sb.append((char) (0x01 + 32));
+        } else if (mouse.getMouse3()) {
+            sb.append((char) (0x02 + 32));
+        } else if (mouse.getMouseWheelUp()) {
+            sb.append((char) (0x04 + 64));
+        } else if (mouse.getMouseWheelDown()) {
+            sb.append((char) (0x05 + 64));
+        } else {
+            sb.append((char) (0x03 + 32));
+        }
+
+        sb.append((char) (mouse.getX() + 33));
+        sb.append((char) (mouse.getY() + 33));
+
+        // System.err.printf("Would write: \'%s\'\n", sb.toString());
+        writeRemote(sb.toString());
     }
 
     /**
@@ -1933,7 +2062,7 @@ public class ECMA48 implements Runnable {
      * @param ch character to save
      */
     private void collect(final char ch) {
-        collectBuffer.add(new Character(ch));
+        collectBuffer.append(ch);
     }
 
     /**
@@ -2000,9 +2129,10 @@ public class ECMA48 implements Runnable {
      */
     private void setToggle(final boolean value) {
         boolean decPrivateModeFlag = false;
-        for (Character ch: collectBuffer) {
-            if (ch == '?') {
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
                 decPrivateModeFlag = true;
+                break;
             }
         }
 
@@ -2254,6 +2384,58 @@ public class ECMA48 implements Runnable {
                     }
                 }
 
+                break;
+
+            case 1000:
+                if ((type == DeviceType.XTERM)
+                    && (decPrivateModeFlag == true)
+                ) {
+                    // Mouse: normal tracking mode
+                    if (value == true) {
+                        mouseProtocol = MouseProtocol.NORMAL;
+                    } else {
+                        mouseProtocol = MouseProtocol.OFF;
+                    }
+                }
+                break;
+
+            case 1002:
+                if ((type == DeviceType.XTERM)
+                    && (decPrivateModeFlag == true)
+                ) {
+                    // Mouse: normal tracking mode
+                    if (value == true) {
+                        mouseProtocol = MouseProtocol.BUTTONEVENT;
+                    } else {
+                        mouseProtocol = MouseProtocol.OFF;
+                    }
+                }
+                break;
+
+            case 1003:
+                if ((type == DeviceType.XTERM)
+                    && (decPrivateModeFlag == true)
+                ) {
+                    // Mouse: Any-event tracking mode
+                    if (value == true) {
+                        mouseProtocol = MouseProtocol.ANYEVENT;
+                    } else {
+                        mouseProtocol = MouseProtocol.OFF;
+                    }
+                }
+                break;
+
+            case 1005:
+                if ((type == DeviceType.XTERM)
+                    && (decPrivateModeFlag == true)
+                ) {
+                    // Mouse: UTF-8 coordinates
+                    if (value == true) {
+                        mouseEncoding = MouseEncoding.UTF8;
+                    } else {
+                        mouseEncoding = MouseEncoding.X10;
+                    }
+                }
                 break;
 
             default:
@@ -2677,9 +2859,10 @@ public class ECMA48 implements Runnable {
         boolean honorProtected = false;
         boolean decPrivateModeFlag = false;
 
-        for (Character ch: collectBuffer) {
-            if (ch == '?') {
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
                 decPrivateModeFlag = true;
+                break;
             }
         }
 
@@ -2716,9 +2899,10 @@ public class ECMA48 implements Runnable {
         boolean honorProtected = false;
         boolean decPrivateModeFlag = false;
 
-        for (Character ch: collectBuffer) {
-            if (ch == '?') {
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
                 decPrivateModeFlag = true;
+                break;
             }
         }
 
@@ -3058,21 +3242,16 @@ public class ECMA48 implements Runnable {
     private void da() {
         int extendedFlag = 0;
         int i = 0;
-        Character [] chars = collectBuffer.toArray(new Character[0]);
-        StringBuilder args = new StringBuilder();
-        for (int j = 1; j < chars.length; j++) {
-            args.append(chars[j]);
-        }
-
-        if (chars.length > 0) {
-            if (chars[0] == '>') {
+        if (collectBuffer.length() > 0) {
+            String args = collectBuffer.substring(1);
+            if (collectBuffer.charAt(0) == '>') {
                 extendedFlag = 1;
-                if (chars.length >= 2) {
+                if (collectBuffer.length() >= 2) {
                     i = Integer.parseInt(args.toString());
                 }
-            } else if (chars[0] == '=') {
+            } else if (collectBuffer.charAt(0) == '=') {
                 extendedFlag = 2;
-                if (chars.length >= 2) {
+                if (collectBuffer.length() >= 2) {
                     i = Integer.parseInt(args.toString());
                 }
             } else {
@@ -3211,9 +3390,10 @@ public class ECMA48 implements Runnable {
     private void dsr() {
         boolean decPrivateModeFlag = false;
 
-        for (Character ch: collectBuffer) {
-            if (ch == '?') {
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
                 decPrivateModeFlag = true;
+                break;
             }
         }
 
@@ -3420,9 +3600,10 @@ public class ECMA48 implements Runnable {
      */
     private void printerFunctions() {
         boolean decPrivateModeFlag = false;
-        for (Character ch: collectBuffer) {
-            if (ch == '?') {
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
                 decPrivateModeFlag = true;
+                break;
             }
         }
 
@@ -3480,15 +3661,12 @@ public class ECMA48 implements Runnable {
      */
     private void oscPut(final char xtermChar) {
         // Collect first
-        collectBuffer.add(new Character(xtermChar));
+        collectBuffer.append(xtermChar);
 
         // Xterm cases...
         if (xtermChar == 0x07) {
-            Character [] chars = collectBuffer.toArray(new Character[0]);
-            StringBuilder args = new StringBuilder();
-            for (int j = 0; j < chars.length - 1; j++) {
-                args.append(chars[j]);
-            }
+            String args = collectBuffer.substring(0,
+                collectBuffer.length() - 1);
             String [] p = args.toString().split(";");
             if (p.length > 0) {
                 if ((p[0].equals("0")) || (p[0].equals("2"))) {
@@ -3960,150 +4138,150 @@ public class ECMA48 implements Runnable {
             if ((ch >= 0x30) && (ch <= 0x7E)) {
                 switch (ch) {
                 case '0':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '(')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '(')) {
                         // G0 --> Special graphics
                         currentState.g0Charset = CharacterSet.DRAWING;
                     }
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == ')')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == ')')) {
                         // G1 --> Special graphics
                         currentState.g1Charset = CharacterSet.DRAWING;
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> Special graphics
                             currentState.g2Charset = CharacterSet.DRAWING;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> Special graphics
                             currentState.g3Charset = CharacterSet.DRAWING;
                         }
                     }
                     break;
                 case '1':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '(')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '(')) {
                         // G0 --> Alternate character ROM standard character set
                         currentState.g0Charset = CharacterSet.ROM;
                     }
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == ')')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == ')')) {
                         // G1 --> Alternate character ROM standard character set
                         currentState.g1Charset = CharacterSet.ROM;
                     }
                     break;
                 case '2':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '(')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '(')) {
                         // G0 --> Alternate character ROM special graphics
                         currentState.g0Charset = CharacterSet.ROM_SPECIAL;
                     }
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == ')')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == ')')) {
                         // G1 --> Alternate character ROM special graphics
                         currentState.g1Charset = CharacterSet.ROM_SPECIAL;
                     }
                     break;
                 case '3':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '#')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '#')) {
                         // DECDHL - Double-height line (top half)
                         dechdl(true);
                     }
                     break;
                 case '4':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '#')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '#')) {
                         // DECDHL - Double-height line (bottom half)
                         dechdl(false);
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> DUTCH
                             currentState.g0Charset = CharacterSet.NRC_DUTCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> DUTCH
                             currentState.g1Charset = CharacterSet.NRC_DUTCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> DUTCH
                             currentState.g2Charset = CharacterSet.NRC_DUTCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> DUTCH
                             currentState.g3Charset = CharacterSet.NRC_DUTCH;
                         }
                     }
                     break;
                 case '5':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '#')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '#')) {
                         // DECSWL - Single-width line
                         decswl();
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> FINNISH
                             currentState.g0Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> FINNISH
                             currentState.g1Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> FINNISH
                             currentState.g2Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> FINNISH
                             currentState.g3Charset = CharacterSet.NRC_FINNISH;
                         }
                     }
                     break;
                 case '6':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '#')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '#')) {
                         // DECDWL - Double-width line
                         decdwl();
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> NORWEGIAN
                             currentState.g0Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> NORWEGIAN
                             currentState.g1Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> NORWEGIAN
                             currentState.g2Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> NORWEGIAN
                             currentState.g3Charset = CharacterSet.NRC_NORWEGIAN;
                         }
@@ -4113,31 +4291,31 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> SWEDISH
                             currentState.g0Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> SWEDISH
                             currentState.g1Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> SWEDISH
                             currentState.g2Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> SWEDISH
                             currentState.g3Charset = CharacterSet.NRC_SWEDISH;
                         }
                     }
                     break;
                 case '8':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '#')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '#')) {
                         // DECALN - Screen alignment display
                         decaln();
                     }
@@ -4150,23 +4328,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> DEC_SUPPLEMENTAL
                             currentState.g0Charset = CharacterSet.DEC_SUPPLEMENTAL;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> DEC_SUPPLEMENTAL
                             currentState.g1Charset = CharacterSet.DEC_SUPPLEMENTAL;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> DEC_SUPPLEMENTAL
                             currentState.g2Charset = CharacterSet.DEC_SUPPLEMENTAL;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> DEC_SUPPLEMENTAL
                             currentState.g3Charset = CharacterSet.DEC_SUPPLEMENTAL;
                         }
@@ -4176,23 +4354,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> SWISS
                             currentState.g0Charset = CharacterSet.NRC_SWISS;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> SWISS
                             currentState.g1Charset = CharacterSet.NRC_SWISS;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> SWISS
                             currentState.g2Charset = CharacterSet.NRC_SWISS;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> SWISS
                             currentState.g3Charset = CharacterSet.NRC_SWISS;
                         }
@@ -4203,52 +4381,52 @@ public class ECMA48 implements Runnable {
                 case '@':
                     break;
                 case 'A':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '(')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '(')) {
                         // G0 --> United Kingdom set
                         currentState.g0Charset = CharacterSet.UK;
                     }
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == ')')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == ')')) {
                         // G1 --> United Kingdom set
                         currentState.g1Charset = CharacterSet.UK;
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> United Kingdom set
                             currentState.g2Charset = CharacterSet.UK;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> United Kingdom set
                             currentState.g3Charset = CharacterSet.UK;
                         }
                     }
                     break;
                 case 'B':
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == '(')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == '(')) {
                         // G0 --> ASCII set
                         currentState.g0Charset = CharacterSet.US;
                     }
-                    if ((collectBuffer.size() == 1)
-                        && (collectBuffer.get(0) == ')')) {
+                    if ((collectBuffer.length() == 1)
+                        && (collectBuffer.charAt(0) == ')')) {
                         // G1 --> ASCII set
                         currentState.g1Charset = CharacterSet.US;
                     }
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> ASCII
                             currentState.g2Charset = CharacterSet.US;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> ASCII
                             currentState.g3Charset = CharacterSet.US;
                         }
@@ -4258,23 +4436,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> FINNISH
                             currentState.g0Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> FINNISH
                             currentState.g1Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> FINNISH
                             currentState.g2Charset = CharacterSet.NRC_FINNISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> FINNISH
                             currentState.g3Charset = CharacterSet.NRC_FINNISH;
                         }
@@ -4286,23 +4464,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> NORWEGIAN
                             currentState.g0Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> NORWEGIAN
                             currentState.g1Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> NORWEGIAN
                             currentState.g2Charset = CharacterSet.NRC_NORWEGIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> NORWEGIAN
                             currentState.g3Charset = CharacterSet.NRC_NORWEGIAN;
                         }
@@ -4312,8 +4490,8 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ' ')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ' ')) {
                             // S7C1T
                             s8c1t = false;
                         }
@@ -4323,8 +4501,8 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ' ')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ' ')) {
                             // S8C1T
                             s8c1t = true;
                         }
@@ -4334,23 +4512,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> SWEDISH
                             currentState.g0Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> SWEDISH
                             currentState.g1Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> SWEDISH
                             currentState.g2Charset = CharacterSet.NRC_SWEDISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> SWEDISH
                             currentState.g3Charset = CharacterSet.NRC_SWEDISH;
                         }
@@ -4363,23 +4541,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> GERMAN
                             currentState.g0Charset = CharacterSet.NRC_GERMAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> GERMAN
                             currentState.g1Charset = CharacterSet.NRC_GERMAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> GERMAN
                             currentState.g2Charset = CharacterSet.NRC_GERMAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> GERMAN
                             currentState.g3Charset = CharacterSet.NRC_GERMAN;
                         }
@@ -4395,23 +4573,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> FRENCH_CA
                             currentState.g0Charset = CharacterSet.NRC_FRENCH_CA;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> FRENCH_CA
                             currentState.g1Charset = CharacterSet.NRC_FRENCH_CA;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> FRENCH_CA
                             currentState.g2Charset = CharacterSet.NRC_FRENCH_CA;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> FRENCH_CA
                             currentState.g3Charset = CharacterSet.NRC_FRENCH_CA;
                         }
@@ -4421,23 +4599,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> FRENCH
                             currentState.g0Charset = CharacterSet.NRC_FRENCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> FRENCH
                             currentState.g1Charset = CharacterSet.NRC_FRENCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> FRENCH
                             currentState.g2Charset = CharacterSet.NRC_FRENCH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> FRENCH
                             currentState.g3Charset = CharacterSet.NRC_FRENCH;
                         }
@@ -4454,23 +4632,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> ITALIAN
                             currentState.g0Charset = CharacterSet.NRC_ITALIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> ITALIAN
                             currentState.g1Charset = CharacterSet.NRC_ITALIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> ITALIAN
                             currentState.g2Charset = CharacterSet.NRC_ITALIAN;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> ITALIAN
                             currentState.g3Charset = CharacterSet.NRC_ITALIAN;
                         }
@@ -4480,23 +4658,23 @@ public class ECMA48 implements Runnable {
                     if ((type == DeviceType.VT220)
                         || (type == DeviceType.XTERM)) {
 
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '(')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '(')) {
                             // G0 --> SPANISH
                             currentState.g0Charset = CharacterSet.NRC_SPANISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == ')')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == ')')) {
                             // G1 --> SPANISH
                             currentState.g1Charset = CharacterSet.NRC_SPANISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '*')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '*')) {
                             // G2 --> SPANISH
                             currentState.g2Charset = CharacterSet.NRC_SPANISH;
                         }
-                        if ((collectBuffer.size() == 1)
-                            && (collectBuffer.get(0) == '+')) {
+                        if ((collectBuffer.length() == 1)
+                            && (collectBuffer.charAt(0) == '+')) {
                             // G3 --> SPANISH
                             currentState.g3Charset = CharacterSet.NRC_SPANISH;
                         }
@@ -5140,13 +5318,13 @@ public class ECMA48 implements Runnable {
                 case 'p':
                     if (((type == DeviceType.VT220)
                             || (type == DeviceType.XTERM))
-                        && (collectBuffer.get(collectBuffer.size() - 1) == '\"')
+                        && (collectBuffer.charAt(collectBuffer.length() - 1) == '\"')
                     ) {
                         // DECSCL - compatibility level
                         decscl();
                     }
                     if ((type == DeviceType.XTERM)
-                        && (collectBuffer.get(collectBuffer.size() - 1) == '!')
+                        && (collectBuffer.charAt(collectBuffer.length() - 1) == '!')
                     ) {
                         // DECSTR - Soft terminal reset
                         decstr();
@@ -5155,7 +5333,7 @@ public class ECMA48 implements Runnable {
                 case 'q':
                     if (((type == DeviceType.VT220)
                             || (type == DeviceType.XTERM))
-                        && (collectBuffer.get(collectBuffer.size() - 1) == '\"')
+                        && (collectBuffer.charAt(collectBuffer.length() - 1) == '\"')
                     ) {
                         // DECSCA
                         decsca();
@@ -5214,8 +5392,9 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.size() > 0)
-                    && (collectBuffer.get(collectBuffer.size() - 1) == 0x1B)) {
+                if ((collectBuffer.length() > 0)
+                    && (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
+                ) {
                     toGround();
                 }
             }
@@ -5267,8 +5446,9 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.size() > 0) &&
-                    (collectBuffer.get(collectBuffer.size() - 1) == 0x1B)) {
+                if ((collectBuffer.length() > 0) &&
+                    (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
+                ) {
                     toGround();
                 }
             }
@@ -5298,8 +5478,9 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.size() > 0) &&
-                    (collectBuffer.get(collectBuffer.size() - 1) == 0x1B)) {
+                if ((collectBuffer.length() > 0) &&
+                    (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
+                ) {
                     toGround();
                 }
             }
@@ -5345,8 +5526,8 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.size() > 0)
-                    && (collectBuffer.get(collectBuffer.size() - 1) == 0x1B)
+                if ((collectBuffer.length() > 0)
+                    && (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
                 ) {
                     toGround();
                 }
@@ -5413,12 +5594,12 @@ public class ECMA48 implements Runnable {
 
         case VT52_DIRECT_CURSOR_ADDRESS:
             // This is a special case for the VT52 sequence "ESC Y l c"
-            if (collectBuffer.size() == 0) {
+            if (collectBuffer.length() == 0) {
                 collect(ch);
-            } else if (collectBuffer.size() == 1) {
+            } else if (collectBuffer.length() == 1) {
                 // We've got the two characters, one in the buffer and the
                 // other in ch.
-                cursorPosition(collectBuffer.get(0) - '\040', ch - '\040');
+                cursorPosition(collectBuffer.charAt(0) - '\040', ch - '\040');
                 toGround();
             }
             return;
@@ -5432,6 +5613,9 @@ public class ECMA48 implements Runnable {
      * @return current cursor X
      */
     public final int getCursorX() {
+        if (display.get(currentState.cursorY).isDoubleWidth()) {
+            return currentState.cursorX * 2;
+        }
         return currentState.cursorX;
     }
 

@@ -143,13 +143,13 @@ public class TWindow extends TWidget {
      * If true, then the user clicked on the title bar and is moving the
      * window.
      */
-    private boolean inWindowMove = false;
+    protected boolean inWindowMove = false;
 
     /**
      * If true, then the user clicked on the bottom right corner and is
      * resizing the window.
      */
-    private boolean inWindowResize = false;
+    protected boolean inWindowResize = false;
 
     /**
      * If true, then the user selected "Size/Move" (or hit Ctrl-F5) and is

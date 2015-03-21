@@ -58,8 +58,7 @@ public final class TMouseEvent extends TInputEvent {
     }
 
     /**
-     * Type of event, one of MOUSE_MOTION, MOUSE_UP, or MOUSE_DOWN, or
-     * KEYPRESS.
+     * Type of event, one of MOUSE_MOTION, MOUSE_UP, or MOUSE_DOWN.
      */
     private Type type;
 

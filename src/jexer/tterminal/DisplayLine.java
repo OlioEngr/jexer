@@ -173,7 +173,7 @@ public final class DisplayLine {
      * @param newCell the new Cell
      */
     public void replace(final int idx, final Cell newCell) {
-        chars[idx] = newCell;
+        chars[idx].setTo(newCell);
     }
 
     /**
@@ -208,8 +208,8 @@ public final class DisplayLine {
     }
 
     /**
-     * Delete character at the specified position, filling in new characters
-     * on the right with newCell.
+     * Delete character at the specified position, filling in the new
+     * character on the right with newCell.
      *
      * @param idx the character index
      * @param newCell the new Cell

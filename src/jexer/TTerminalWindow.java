@@ -36,6 +36,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import jexer.bits.Cell;
 import jexer.bits.CellAttributes;
@@ -79,6 +80,9 @@ public class TTerminalWindow extends TWindow {
 
         super(application, "Terminal", x, y, 80 + 2, 24 + 2, flags);
 
+        // Assume XTERM
+        ECMA48.DeviceType deviceType = ECMA48.DeviceType.XTERM;
+
         try {
             String [] cmdShellWindows = {
                 "cmd.exe"
@@ -91,19 +95,21 @@ public class TTerminalWindow extends TWindow {
                 "script", "-fqe", "/dev/null"
             };
             // Spawn a shell and pass its I/O to the other constructor.
+
             ProcessBuilder pb;
             if (System.getProperty("os.name").startsWith("Windows")) {
                 pb = new ProcessBuilder(cmdShellWindows);
             } else {
                 pb = new ProcessBuilder(cmdShell);
             }
-            // shell = Runtime.getRuntime().exec(cmdShell);
-
-            // TODO: add LANG, TERM, LINES, and COLUMNS
+            Map<String, String> env = pb.environment();
+            env.put("TERM", ECMA48.deviceTypeTerm(deviceType));
+            env.put("LANG", ECMA48.deviceTypeLang(deviceType, "en"));
+            env.put("COLUMNS", "80");
+            env.put("LINES", "24");
             pb.redirectErrorStream(true);
             shell = pb.start();
-            emulator = new ECMA48(ECMA48.DeviceType.XTERM,
-                shell.getInputStream(),
+            emulator = new ECMA48(deviceType, shell.getInputStream(),
                 shell.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -161,18 +167,13 @@ public class TTerminalWindow extends TWindow {
             List<DisplayLine> display = emulator.getDisplayBuffer();
 
             // Put together the visible rows
-            // System.err.printf("----------------------------\n");
-            // System.err.printf("vScroller.value %d\n", vScroller.getValue());
             int visibleHeight = getHeight() - 2;
-            // System.err.printf("visibleHeight %d\n", visibleHeight);
             int visibleBottom = scrollback.size() + display.size()
                 + vScroller.getValue();
-            // System.err.printf("visibleBottom %d\n", visibleBottom);
             assert (visibleBottom >= 0);
 
             List<DisplayLine> preceedingBlankLines = new LinkedList<DisplayLine>();
             int visibleTop = visibleBottom - visibleHeight;
-            // System.err.printf("visibleTop %d\n", visibleTop);
             if (visibleTop < 0) {
                 for (int i = visibleTop; i < 0; i++) {
                     preceedingBlankLines.add(emulator.getBlankDisplayLine());
@@ -184,16 +185,13 @@ public class TTerminalWindow extends TWindow {
             List<DisplayLine> displayLines = new LinkedList<DisplayLine>();
             displayLines.addAll(scrollback);
             displayLines.addAll(display);
-            // System.err.printf("displayLines.size %d\n", displayLines.size());
 
             List<DisplayLine> visibleLines = new LinkedList<DisplayLine>();
             visibleLines.addAll(preceedingBlankLines);
             visibleLines.addAll(displayLines.subList(visibleTop,
                     visibleBottom));
-            // System.err.printf("visibleLines.size %d\n", visibleLines.size());
 
             visibleHeight -= visibleLines.size();
-            // System.err.printf("visibleHeight %d\n", visibleHeight);
             assert (visibleHeight >= 0);
 
             // Now draw the emulator screen
@@ -275,7 +273,6 @@ public class TTerminalWindow extends TWindow {
                     setTitle(emulator.getScreenTitle());
                 }
             }
-            setMaximumWindowWidth(emulator.getWidth() + 2);
 
             // Check to see if the shell has died.
             if (!emulator.isReading() && (shell != null)) {
@@ -356,6 +353,31 @@ public class TTerminalWindow extends TWindow {
     }
 
     /**
+     * Check if a mouse press/release/motion event coordinate is over the
+     * emulator.
+     *
+     * @param mouse a mouse-based event
+     * @return whether or not the mouse is on the emulator
+     */
+    private final boolean mouseOnEmulator(final TMouseEvent mouse) {
+
+        synchronized (emulator) {
+            if (!emulator.isReading()) {
+                return false;
+            }
+        }
+
+        if ((mouse.getAbsoluteX() >= getAbsoluteX() + 1)
+            && (mouse.getAbsoluteX() <  getAbsoluteX() + getWidth() - 1)
+            && (mouse.getAbsoluteY() >= getAbsoluteY() + 1)
+            && (mouse.getAbsoluteY() <  getAbsoluteY() + getHeight() - 1)
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Handle keystrokes.
      *
      * @param keypress keystroke event
@@ -411,6 +433,11 @@ public class TTerminalWindow extends TWindow {
      */
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
+        if (inWindowMove || inWindowResize) {
+            // TWindow needs to deal with this.
+            super.onMouseDown(mouse);
+            return;
+        }
 
         if (mouse.getMouseWheelUp()) {
             vScroller.decrement();
@@ -420,9 +447,72 @@ public class TTerminalWindow extends TWindow {
             vScroller.increment();
             return;
         }
+        if (mouseOnEmulator(mouse)) {
+            synchronized (emulator) {
+                mouse.setX(mouse.getX() - 1);
+                mouse.setY(mouse.getY() - 1);
+                emulator.mouse(mouse);
+                readEmulatorState();
+                return;
+            }
+        }
 
-        // Pass to children
+        // Emulator didn't consume it, pass it on
         super.onMouseDown(mouse);
+    }
+
+    /**
+     * Handle mouse release events.
+     *
+     * @param mouse mouse button release event
+     */
+    @Override
+    public void onMouseUp(final TMouseEvent mouse) {
+        if (inWindowMove || inWindowResize) {
+            // TWindow needs to deal with this.
+            super.onMouseUp(mouse);
+            return;
+        }
+
+        if (mouseOnEmulator(mouse)) {
+            synchronized (emulator) {
+                mouse.setX(mouse.getX() - 1);
+                mouse.setY(mouse.getY() - 1);
+                emulator.mouse(mouse);
+                readEmulatorState();
+                return;
+            }
+        }
+
+        // Emulator didn't consume it, pass it on
+        super.onMouseUp(mouse);
+    }
+
+    /**
+     * Handle mouse motion events.
+     *
+     * @param mouse mouse motion event
+     */
+    @Override
+    public void onMouseMotion(final TMouseEvent mouse) {
+        if (inWindowMove || inWindowResize) {
+            // TWindow needs to deal with this.
+            super.onMouseMotion(mouse);
+            return;
+        }
+
+        if (mouseOnEmulator(mouse)) {
+            synchronized (emulator) {
+                mouse.setX(mouse.getX() - 1);
+                mouse.setY(mouse.getY() - 1);
+                emulator.mouse(mouse);
+                readEmulatorState();
+                return;
+            }
+        }
+
+        // Emulator didn't consume it, pass it on
+        super.onMouseMotion(mouse);
     }
 
 }

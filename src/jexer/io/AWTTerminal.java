@@ -219,7 +219,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         System.err.printf("   ctrl: %s\n", ctrl);
         System.err.printf("   shift: %s\n", shift);
         System.err.printf("   ch: %s\n", ch);
-         */
+        */
 
         // Special case: not return the bare modifier presses
         switch (key.getKeyCode()) {
@@ -368,6 +368,9 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
             case 0x0D:
                 keypress = kbEnter;
                 break;
+            case 0x09:
+                keypress = kbTab;
+                break;
             case 0x7F:
                 keypress = kbDel;
                 break;
@@ -396,7 +399,10 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
      */
     @Override
     public void windowActivated(final WindowEvent event) {
-        // Ignore
+        // Force a total repaint
+        synchronized (screen) {
+            screen.clearPhysical();
+        }
     }
 
     /**

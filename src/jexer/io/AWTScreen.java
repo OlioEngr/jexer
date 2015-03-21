@@ -256,8 +256,6 @@ public final class AWTScreen extends Screen {
                 setFont(new Font(Font.MONOSPACED, Font.PLAIN, 24));
             }
             pack();
-            setVisible(true);
-            resizeToScreen();
 
             // Kill the X11 cursor
             // Transparent 16 x 16 pixel cursor image.
@@ -268,12 +266,13 @@ public final class AWTScreen extends Screen {
             Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
                 cursorImg, new Point(0, 0), "blank cursor");
             setCursor(blankCursor);
+            getFontDimensions();
         }
 
         /**
-         * Resize to font dimensions.
+         * Figure out my font dimensions.
          */
-        public void resizeToScreen() {
+        private void getFontDimensions() {
             Graphics gr = getGraphics();
             FontMetrics fm = gr.getFontMetrics();
             maxDescent = fm.getMaxDescent();
@@ -284,7 +283,12 @@ public final class AWTScreen extends Screen {
             // This also produces the same number, but works better for ugly
             // monospace.
             textHeight = fm.getMaxAscent() + maxDescent - leading;
+        }
 
+        /**
+         * Resize to font dimensions.
+         */
+        public void resizeToScreen() {
             // Figure out the thickness of borders and use that to set the
             // final size.
             Insets insets = getInsets();
@@ -293,11 +297,6 @@ public final class AWTScreen extends Screen {
 
             setSize(textWidth * screen.width + insets.left + insets.right,
                 textHeight * screen.height + insets.top + insets.bottom);
-
-            /*
-            System.err.printf("W: %d H: %d MD: %d L: %d\n", textWidth,
-                textHeight, maxDescent, leading);
-             */
         }
 
         /**
@@ -336,7 +335,7 @@ public final class AWTScreen extends Screen {
             if (bounds != null) {
                 // Only update what is in the bounds
                 xCellMin = screen.textColumn(bounds.x);
-                xCellMax = screen.textColumn(bounds.x + bounds.width) + 1;
+                xCellMax = screen.textColumn(bounds.x + bounds.width);
                 if (xCellMax > screen.width) {
                     xCellMax = screen.width;
                 }
@@ -347,7 +346,7 @@ public final class AWTScreen extends Screen {
                     xCellMin = 0;
                 }
                 yCellMin = screen.textRow(bounds.y);
-                yCellMax = screen.textRow(bounds.y + bounds.height) + 1;
+                yCellMax = screen.textRow(bounds.y + bounds.height);
                 if (yCellMax > screen.height) {
                     yCellMax = screen.height;
                 }
@@ -357,6 +356,9 @@ public final class AWTScreen extends Screen {
                 if (yCellMin < 0) {
                     yCellMin = 0;
                 }
+            } else {
+                // We need a total repaint
+                reallyCleared = true;
             }
 
             // Prevent updates to the screen's data from the TApplication
@@ -409,7 +411,8 @@ public final class AWTScreen extends Screen {
                 reallyCleared = false;
             } // synchronized (screen)
         }
-    }
+
+    } // class AWTFrame
 
     /**
      * The raw AWT Frame.  Note package private access.
@@ -424,6 +427,16 @@ public final class AWTScreen extends Screen {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     AWTScreen.this.frame = new AWTFrame(AWTScreen.this);
+                    AWTScreen.this.sessionInfo =
+                        new AWTSessionInfo(AWTScreen.this.frame,
+                            frame.textWidth,
+                            frame.textHeight);
+
+                    AWTScreen.this.setDimensions(sessionInfo.getWindowWidth(),
+                        sessionInfo.getWindowHeight());
+
+                    AWTScreen.this.frame.resizeToScreen();
+                    AWTScreen.this.frame.setVisible(true);
                 }
             } );
         } catch (Exception e) {
@@ -432,13 +445,16 @@ public final class AWTScreen extends Screen {
     }
 
     /**
+     * The sessionInfo.
+     */
+    private AWTSessionInfo sessionInfo;
+
+    /**
      * Create the AWTSessionInfo.  Note package private access.
      *
      * @return the sessionInfo
      */
     AWTSessionInfo getSessionInfo() {
-        AWTSessionInfo sessionInfo = new AWTSessionInfo(frame, frame.textWidth,
-            frame.textHeight);
         return sessionInfo;
     }
 

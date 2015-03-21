@@ -122,17 +122,17 @@ public class TApplication {
                         }
 
                         synchronized (this) {
-                            /*
-                            System.err.printf("%s %s sleep\n", this, primary ?
-                                "primary" : "secondary");
-                             */
+                            if (debugThreads) {
+                                System.err.printf("%s %s sleep\n", this,
+                                    primary ? "primary" : "secondary");
+                            }
 
                             this.wait();
 
-                            /*
-                            System.err.printf("%s %s AWAKE\n", this, primary ?
-                                "primary" : "secondary");
-                             */
+                            if (debugThreads) {
+                                System.err.printf("%s %s AWAKE\n", this,
+                                    primary ? "primary" : "secondary");
+                            }
 
                             if ((!primary)
                                 && (application.secondaryEventReceiver == null)
@@ -141,13 +141,12 @@ public class TApplication {
                                 // got here then something went wrong with
                                 // the handoff between yield() and
                                 // closeWindow().
-
-                                System.err.printf("secondary exiting at wrong time, why?\n");
                                 synchronized (application.primaryEventHandler) {
                                     application.primaryEventHandler.notify();
                                 }
                                 application.secondaryEventHandler = null;
-                                return;
+                                throw new RuntimeException(
+                                        "secondary exited at wrong time");
                             }
                             break;
                         }
@@ -169,12 +168,12 @@ public class TApplication {
                     // the event.
                     boolean oldLock = lockHandleEvent();
                     assert (oldLock == false);
+                    application.repaint = true;
                     if (primary) {
                         primaryHandleEvent(event);
                     } else {
                         secondaryHandleEvent(event);
                     }
-                    application.repaint = true;
                     if ((!primary)
                         && (application.secondaryEventReceiver == null)
                     ) {
@@ -263,7 +262,7 @@ public class TApplication {
         synchronized (this) {
             // Wait for TApplication.run() to finish using the global state
             // before allowing further event processing.
-            while (lockoutHandleEvent == true);
+            while (lockoutHandleEvent == true) {}
 
             oldValue = insideHandleEvent;
             insideHandleEvent = true;
@@ -312,7 +311,7 @@ public class TApplication {
         lockoutHandleEvent = true;
         // Wait for the last event to finish processing before returning
         // control to TApplication.run().
-        while (insideHandleEvent == true);
+        while (insideHandleEvent == true) {}
 
         if (debugThreads) {
             System.err.printf(" XXX\n");
@@ -354,6 +353,16 @@ public class TApplication {
      * Actual mouse coordinate Y.
      */
     private int mouseY;
+
+    /**
+     * Old version of mouse coordinate X.
+     */
+    private int oldMouseX;
+
+    /**
+     * Old version mouse coordinate Y.
+     */
+    private int oldMouseY;
 
     /**
      * Event queue that is filled by run().
@@ -419,12 +428,6 @@ public class TApplication {
      * When true, repaint the entire screen.
      */
     private volatile boolean repaint = true;
-
-    /**
-     * When true, just flush updates from the screen.  This is only used to
-     * minimize physical writes for the mouse cursor.
-     */
-    private boolean flush = false;
 
     /**
      * Y coordinate of the top edge of the desktop.  For now this is a
@@ -508,17 +511,17 @@ public class TApplication {
     }
 
     /**
-     * Invert the cell at the mouse pointer position.
+     * Invert the cell color at a position.  This is used to track the mouse.
+     *
+     * @param x column position
+     * @param y row position
      */
-    private void drawMouse() {
-        CellAttributes attr = getScreen().getAttrXY(mouseX, mouseY);
-        attr.setForeColor(attr.getForeColor().invert());
-        attr.setBackColor(attr.getBackColor().invert());
-        getScreen().putAttrXY(mouseX, mouseY, attr, false);
-        flush = true;
-
-        if (windows.size() == 0) {
-            repaint = true;
+    private void invertCell(final int x, final int y) {
+        synchronized (getScreen()) {
+            CellAttributes attr = getScreen().getAttrXY(x, y);
+            attr.setForeColor(attr.getForeColor().invert());
+            attr.setBackColor(attr.getBackColor().invert());
+            getScreen().putAttrXY(x, y, attr, false);
         }
     }
 
@@ -530,9 +533,20 @@ public class TApplication {
             System.err.printf("drawAll() enter\n");
         }
 
-        if ((flush) && (!repaint)) {
-            backend.flushScreen();
-            flush = false;
+        if (!repaint) {
+            synchronized (getScreen()) {
+                if ((oldMouseX != mouseX) || (oldMouseY != mouseY)) {
+                    // The only thing that has happened is the mouse moved.
+                    // Clear the old position and draw the new position.
+                    invertCell(oldMouseX, oldMouseY);
+                    invertCell(mouseX, mouseY);
+                    oldMouseX = mouseX;
+                    oldMouseY = mouseY;
+                }
+            }
+            if (getScreen().isDirty()) {
+                backend.flushScreen();
+            }
             return;
         }
 
@@ -598,7 +612,7 @@ public class TApplication {
         }
 
         // Draw the mouse pointer
-        drawMouse();
+        invertCell(mouseX, mouseY);
 
         // Place the cursor if it is visible
         TWidget activeWidget = null;
@@ -620,7 +634,6 @@ public class TApplication {
         backend.flushScreen();
 
         repaint = false;
-        flush = false;
     }
 
     /**
@@ -634,7 +647,9 @@ public class TApplication {
 
             // If I've got no updates to render, wait for something from the
             // backend or a timer.
-            if (!repaint && !flush) {
+            if (!repaint
+                && ((mouseX == oldMouseX) && (mouseY == oldMouseY))
+            ) {
                 // Never sleep longer than 100 millis, to get windows with
                 // background tasks an opportunity to update the display.
                 timeout = getSleepTime(100);
@@ -668,6 +683,7 @@ public class TApplication {
                     // I'm awake and don't care why, let's see what's going
                     // on out there.
                 }
+                repaint = true;
             }
 
             // Pull any pending I/O events
@@ -762,26 +778,32 @@ public class TApplication {
         // Screen resize
         if (event instanceof TResizeEvent) {
             TResizeEvent resize = (TResizeEvent) event;
-            getScreen().setDimensions(resize.getWidth(),
-                resize.getHeight());
-            desktopBottom = getScreen().getHeight() - 1;
-            repaint = true;
-            mouseX = 0;
-            mouseY = 0;
+            synchronized (getScreen()) {
+                getScreen().setDimensions(resize.getWidth(),
+                    resize.getHeight());
+                desktopBottom = getScreen().getHeight() - 1;
+                mouseX = 0;
+                mouseY = 0;
+                oldMouseX = 0;
+                oldMouseY = 0;
+            }
             return;
         }
 
         // Peek at the mouse position
         if (event instanceof TMouseEvent) {
             TMouseEvent mouse = (TMouseEvent) event;
-            if ((mouseX != mouse.getX()) || (mouseY != mouse.getY())) {
-                mouseX = mouse.getX();
-                mouseY = mouse.getY();
-                drawMouse();
+            synchronized (getScreen()) {
+                if ((mouseX != mouse.getX()) || (mouseY != mouse.getY())) {
+                    oldMouseX = mouseX;
+                    oldMouseY = mouseY;
+                    mouseX = mouse.getX();
+                    mouseY = mouse.getY();
+                }
             }
         }
 
-         // Put into the main queue
+        // Put into the main queue
         synchronized (drainEventQueue) {
             drainEventQueue.add(event);
         }
@@ -858,14 +880,15 @@ public class TApplication {
                 item = accelerators.get(keypressLowercase);
             }
             if (item != null) {
-                // Let the menu item dispatch
-                item.dispatch();
-                return;
-            } else {
-                // Handle the keypress
-                if (onKeypress(keypress)) {
+                if (item.getEnabled()) {
+                    // Let the menu item dispatch
+                    item.dispatch();
                     return;
                 }
+            }
+            // Handle the keypress
+            if (onKeypress(keypress)) {
+                return;
             }
         }
 
@@ -925,9 +948,6 @@ public class TApplication {
         secondaryEventReceiver = widget;
         secondaryEventHandler = new WidgetEventHandler(this, false);
         (new Thread(secondaryEventHandler)).start();
-
-        // Refresh
-        repaint = true;
     }
 
     /**
@@ -942,8 +962,6 @@ public class TApplication {
         boolean oldLock = unlockHandleEvent();
         assert (oldLock == true);
 
-        // System.err.printf("YIELD\n");
-
         while (secondaryEventReceiver != null) {
             synchronized (primaryEventHandler) {
                 try {
@@ -953,8 +971,6 @@ public class TApplication {
                 }
             }
         }
-
-        // System.err.printf("EXIT YIELD\n");
     }
 
     /**
@@ -992,7 +1008,7 @@ public class TApplication {
      * @param timeout = initial (maximum) timeout in millis
      * @return number of milliseconds between now and the next timer event
      */
-    protected long getSleepTime(final long timeout) {
+    private long getSleepTime(final long timeout) {
         Date now = new Date();
         long nowTime = now.getTime();
         long sleepTime = timeout;
@@ -1041,9 +1057,6 @@ public class TApplication {
 
         // Perform window cleanup
         window.onClose();
-
-        // Refresh screen
-        repaint = true;
 
         // Check if we are closing a TMessageBox or similar
         if (secondaryEventReceiver != null) {
@@ -1107,8 +1120,6 @@ public class TApplication {
 
         } // synchronized (windows)
 
-        // Refresh
-        repaint = true;
     }
 
     /**
@@ -1211,7 +1222,6 @@ public class TApplication {
                     menu.setActive(false);
                 }
             }
-            repaint = true;
             return;
         }
 
@@ -1242,7 +1252,6 @@ public class TApplication {
                 // They switched menus
                 oldMenu.setActive(false);
             }
-            repaint = true;
             return;
         }
 
@@ -1278,7 +1287,6 @@ public class TApplication {
                     windows.get(0).setZ(window.getZ());
                     window.setZ(0);
                     window.setActive(true);
-                    repaint = true;
                     return;
                 }
             }
@@ -1300,7 +1308,6 @@ public class TApplication {
             }
             subMenus.clear();
         }
-        repaint = true;
     }
 
     /**
@@ -1312,7 +1319,6 @@ public class TApplication {
         assert (item != null);
         item.setActive(false);
         subMenus.remove(subMenus.size() - 1);
-        repaint = true;
     }
 
     /**
@@ -1343,7 +1349,6 @@ public class TApplication {
                 activeMenu.setActive(false);
                 activeMenu = menus.get(i);
                 activeMenu.setActive(true);
-                repaint = true;
                 return;
             }
         }
@@ -1363,29 +1368,24 @@ public class TApplication {
                     TMessageBox.Type.YESNO).getResult() == TMessageBox.Result.YES) {
                 quit = true;
             }
-            repaint = true;
             return true;
         }
 
         if (command.equals(cmShell)) {
             openTerminal(0, 0, TWindow.RESIZABLE);
-            repaint = true;
             return true;
         }
 
         if (command.equals(cmTile)) {
             tileWindows();
-            repaint = true;
             return true;
         }
         if (command.equals(cmCascade)) {
             cascadeWindows();
-            repaint = true;
             return true;
         }
         if (command.equals(cmCloseAll)) {
             closeAllWindows();
-            repaint = true;
             return true;
         }
 
@@ -1407,30 +1407,24 @@ public class TApplication {
                     TMessageBox.Type.YESNO).getResult() == TMessageBox.Result.YES) {
                 quit = true;
             }
-            // System.err.printf("onMenu MID_EXIT result: quit = %s\n", quit);
-            repaint = true;
             return true;
         }
 
         if (menu.getId() == TMenu.MID_SHELL) {
             openTerminal(0, 0, TWindow.RESIZABLE);
-            repaint = true;
             return true;
         }
 
         if (menu.getId() == TMenu.MID_TILE) {
             tileWindows();
-            repaint = true;
             return true;
         }
         if (menu.getId() == TMenu.MID_CASCADE) {
             cascadeWindows();
-            repaint = true;
             return true;
         }
         if (menu.getId() == TMenu.MID_CLOSE_ALL) {
             closeAllWindows();
-            repaint = true;
             return true;
         }
         return false;
@@ -1460,7 +1454,6 @@ public class TApplication {
                 ) {
                     activeMenu = menu;
                     menu.setActive(true);
-                    repaint = true;
                     return true;
                 }
             }
@@ -1477,8 +1470,6 @@ public class TApplication {
      */
     public final void addAccelerator(final TMenuItem item,
         final TKeypress keypress) {
-
-        // System.err.printf("addAccelerator: key %s item %s\n", keypress, item);
 
         synchronized (accelerators) {
             assert (accelerators.get(keypress) == null);

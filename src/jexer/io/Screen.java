@@ -183,7 +183,7 @@ public abstract class Screen {
     /**
      * When true, logical != physical.
      */
-    protected boolean dirty;
+    protected volatile boolean dirty;
 
     /**
      * Get dirty flag.
@@ -225,7 +225,6 @@ public abstract class Screen {
      * @return attributes at (x, y)
      */
     public final CellAttributes getAttrXY(final int x, final int y) {
-
         CellAttributes attr = new CellAttributes();
         if ((x >= 0) && (x < width) && (y >= 0) && (y < height)) {
             attr.setTo(logical[x][y]);
@@ -591,10 +590,22 @@ public abstract class Screen {
     }
 
     /**
-     * Force the screen to be fully cleared and redrawn on the next flush().
+     * Clear the logical screen.
      */
     public final void clear() {
         reset();
+    }
+
+    /**
+     * Clear the physical screen.
+     */
+    public final void clearPhysical() {
+        dirty = true;
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                physical[col][row].reset();
+            }
+        }
     }
 
     /**

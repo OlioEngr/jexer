@@ -20,8 +20,9 @@ Two backends are available:
 
 * Java AWT UI.  This backend can be selected by setting
   jexer.AWT=true.  This is the default backend on Windows platforms.
-  AWT is VERY experimental, please consider filing bugs when you
-  encounter them.
+  AWT is experimental, please consider filing bugs when you encounter
+  them.  The default window size for AWT is 132x40, which is set in
+  jexer.session.AWTSession.
 
 A demo application showing the existing UI controls is available via
 'java -jar jexer.jar' or 'java -Djexer.AWT=true -jar jexer.jar' .
@@ -90,6 +91,9 @@ ambiguous.  This section describes such issues.
     is due to a Java limitation/interaction between blocking reads
     (necessary to get UTF8 translation correct) and file streams.
 
+  - See jexer.tterminal.ECMA48 for more specifics of terminal
+    emulation limitations.
+
 
 Roadmap
 -------
@@ -100,6 +104,7 @@ Many tasks remain before calling this version 1.0:
 
 - AWT:
   - Blinking cursor
+  - Handle kbTab (disable focus traversal BS)
 - ECMA48Backend running on socket
 - TTreeView
 - TDirectoryList

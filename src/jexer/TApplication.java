@@ -51,7 +51,7 @@ import jexer.event.TMenuEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.backend.Backend;
-import jexer.backend.AWTBackend;
+import jexer.backend.SwingBackend;
 import jexer.backend.ECMA48Backend;
 import jexer.io.Screen;
 import jexer.menu.TMenu;
@@ -61,7 +61,7 @@ import static jexer.TCommand.*;
 /**
  * TApplication sets up a full Text User Interface application.
  */
-public class TApplication {
+public class TApplication implements Runnable {
 
     /**
      * If true, emit thread stuff to System.err.
@@ -72,6 +72,26 @@ public class TApplication {
      * If true, emit events being processed to System.err.
      */
     private static final boolean debugEvents = false;
+
+    /**
+     * Two backend types are available.
+     */
+    public static enum BackendType {
+        /**
+         * A Swing JFrame.
+         */
+        SWING,
+
+        /**
+         * An ECMA48 / ANSI X3.64 / XTERM style terminal.
+         */
+        ECMA48,
+
+        /**
+         * Synonym for ECMA48
+         */
+        XTERM
+    }
 
     /**
      * WidgetEventHandler is the main event consumer loop.  There are at most
@@ -461,6 +481,29 @@ public class TApplication {
     /**
      * Public constructor.
      *
+     * @param backendType BackendType.XTERM, BackendType.ECMA48 or
+     * BackendType.SWING
+     * @throws UnsupportedEncodingException if an exception is thrown when
+     * creating the InputStreamReader
+     */
+    public TApplication(final BackendType backendType)
+        throws UnsupportedEncodingException {
+
+        switch (backendType) {
+        case SWING:
+            backend = new SwingBackend(this);
+            break;
+        case XTERM:
+            // Fall through...
+        case ECMA48:
+            backend = new ECMA48Backend(this, null, null);
+        }
+        TApplicationImpl();
+    }
+
+    /**
+     * Public constructor.  The backend type will be BackendType.ECMA48.
+     *
      * @param input an InputStream connected to the remote user, or null for
      * System.in.  If System.in is used, then on non-Windows systems it will
      * be put in raw mode; shutdown() will (blindly!) put System.in in cooked
@@ -474,26 +517,25 @@ public class TApplication {
     public TApplication(final InputStream input,
         final OutputStream output) throws UnsupportedEncodingException {
 
-        // AWT is the default backend on Windows unless explicitly overridden
-        // by jexer.AWT.
-        boolean useAWT = false;
-        if (System.getProperty("os.name").startsWith("Windows")) {
-            useAWT = true;
-        }
-        if (System.getProperty("jexer.AWT") != null) {
-            if (System.getProperty("jexer.AWT", "false").equals("true")) {
-                useAWT = true;
-            } else {
-                useAWT = false;
-            }
-        }
+        backend = new ECMA48Backend(this, input, output);
+        TApplicationImpl();
+    }
 
+    /**
+     * Public constructor.  This hook enables use with new non-Jexer
+     * backends.
+     *
+     * @param backend a Backend that is already ready to go.
+     */
+    public TApplication(final Backend backend) {
+        this.backend = backend;
+        TApplicationImpl();
+    }
 
-        if (useAWT) {
-            backend     = new AWTBackend(this);
-        } else {
-            backend     = new ECMA48Backend(this, input, output);
-        }
+    /**
+     * Finish construction once the backend is set.
+     */
+    private void TApplicationImpl() {
         theme           = new ColorTheme();
         desktopBottom   = getScreen().getHeight() - 1;
         fillEventQueue  = new ArrayList<TInputEvent>();
@@ -638,7 +680,7 @@ public class TApplication {
     /**
      * Run this application until it exits.
      */
-    public final void run() {
+    public void run() {
         while (!quit) {
             // Timeout is in milliseconds, so default timeout after 1 second
             // of inactivity.

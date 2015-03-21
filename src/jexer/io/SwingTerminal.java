@@ -51,26 +51,26 @@ import jexer.event.TKeypressEvent;
 import jexer.event.TMouseEvent;
 import jexer.event.TResizeEvent;
 import jexer.session.SessionInfo;
-import jexer.session.AWTSessionInfo;
+import jexer.session.SwingSessionInfo;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 
 /**
- * This class reads keystrokes and mouse events from an AWT Frame.
+ * This class reads keystrokes and mouse events from an Swing JFrame.
  */
-public final class AWTTerminal implements ComponentListener, KeyListener,
+public final class SwingTerminal implements ComponentListener, KeyListener,
                                MouseListener, MouseMotionListener,
                                MouseWheelListener, WindowListener {
 
     /**
      * The backend Screen.
      */
-    private AWTScreen screen;
+    private SwingScreen screen;
 
     /**
      * The session information.
      */
-    private AWTSessionInfo sessionInfo;
+    private SwingSessionInfo sessionInfo;
 
     /**
      * Getter for sessionInfo.
@@ -132,9 +132,9 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
      *
      * @param listener the object this backend needs to wake up when new
      * input comes in
-     * @param screen the top-level AWT frame
+     * @param screen the top-level Swing frame
      */
-    public AWTTerminal(final Object listener, final AWTScreen screen) {
+    public SwingTerminal(final Object listener, final SwingScreen screen) {
         this.listener    = listener;
         this.screen      = screen;
         mouse1           = false;
@@ -176,7 +176,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     }
 
     /**
-     * Pass AWT keystrokes into the event queue.
+     * Pass Swing keystrokes into the event queue.
      *
      * @param key keystroke received
      */
@@ -186,7 +186,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     }
 
     /**
-     * Pass AWT keystrokes into the event queue.
+     * Pass Swing keystrokes into the event queue.
      *
      * @param key keystroke received
      */
@@ -196,7 +196,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     }
 
     /**
-     * Pass AWT keystrokes into the event queue.
+     * Pass Swing keystrokes into the event queue.
      *
      * @param key keystroke received
      */
@@ -217,7 +217,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         shift = key.isShiftDown();
 
         /*
-        System.err.printf("AWT Key: %s\n", key);
+        System.err.printf("Swing Key: %s\n", key);
         System.err.printf("   isKey: %s\n", isKey);
         System.err.printf("   alt: %s\n", alt);
         System.err.printf("   ctrl: %s\n", ctrl);

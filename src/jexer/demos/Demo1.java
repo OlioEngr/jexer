@@ -446,10 +446,11 @@ class DemoApplication extends TApplication {
     /**
      * Public constructor.
      *
+     * @param backendType one of the TApplication.BackendType values
      * @throws Exception if TApplication can't instantiate the Backend.
      */
-    public DemoApplication() throws Exception {
-        super(null, null);
+    public DemoApplication(BackendType backendType) throws Exception {
+        super(backendType);
         new DemoMainWindow(this);
 
         // Add the menus
@@ -494,8 +495,21 @@ public class Demo1 {
      */
     public static void main(final String [] args) {
         try {
-            DemoApplication app = new DemoApplication();
-            app.run();
+            // Swing is the default backend on Windows unless explicitly
+            // overridden by jexer.Swing.
+            TApplication.BackendType backendType = TApplication.BackendType.XTERM;
+            if (System.getProperty("os.name").startsWith("Windows")) {
+                backendType = TApplication.BackendType.SWING;
+            }
+            if (System.getProperty("jexer.Swing") != null) {
+                if (System.getProperty("jexer.Swing", "false").equals("true")) {
+                    backendType = TApplication.BackendType.SWING;
+                } else {
+                    backendType = TApplication.BackendType.XTERM;
+                }
+            }
+            DemoApplication app = new DemoApplication(backendType);
+            (new Thread(app)).start();
         } catch (Exception e) {
             e.printStackTrace();
         }

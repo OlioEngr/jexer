@@ -33,19 +33,19 @@ package jexer.backend;
 import java.util.List;
 
 import jexer.event.TInputEvent;
-import jexer.io.AWTScreen;
-import jexer.io.AWTTerminal;
+import jexer.io.SwingScreen;
+import jexer.io.SwingTerminal;
 
 /**
- * This class uses standard AWT calls to handle screen, keyboard, and mouse
+ * This class uses standard Swing calls to handle screen, keyboard, and mouse
  * I/O.
  */
-public final class AWTBackend extends Backend {
+public final class SwingBackend extends Backend {
 
     /**
      * Input events are processed by this Terminal.
      */
-    private AWTTerminal terminal;
+    private SwingTerminal terminal;
 
     /**
      * Public constructor.
@@ -53,13 +53,13 @@ public final class AWTBackend extends Backend {
      * @param listener the object this backend needs to wake up when new
      * input comes in
      */
-    public AWTBackend(final Object listener) {
+    public SwingBackend(final Object listener) {
         // Create a screen
-        AWTScreen screen = new AWTScreen();
+        SwingScreen screen = new SwingScreen();
         this.screen = screen;
 
-        // Create the AWT event listeners
-        terminal = new AWTTerminal(listener, screen);
+        // Create the Swing event listeners
+        terminal = new SwingTerminal(listener, screen);
 
         // Hang onto the session info
         this.sessionInfo = terminal.getSessionInfo();

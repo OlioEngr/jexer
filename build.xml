@@ -35,9 +35,11 @@
     <property name="build.dir"     value="build"/>
     <property name="classes.dir"   value="${build.dir}/classes"/>
     <property name="jar.dir"       value="${build.dir}/jar"/>
+    <property name="apidocs.dir"   value="docs/api"/>
 
     <target name="clean">
 	<delete dir="${build.dir}"/>
+	<delete dir="${apidocs.dir}"/>
     </target>
 
     <target name="compile">
@@ -62,7 +64,7 @@
 
     <target name="run" depends="jar">
       <java jar="${jar.dir}/${ant.project.name}.jar" fork="true">
-	<arg value="-Djexer.AWT=true"/>
+	<arg value="-Djexer.Swing=true"/>
       </java>
     </target>
 
@@ -74,7 +76,7 @@
 
     <target name="docs" depends="jar">
       <javadoc
-	  destdir="docs/api"
+	  destdir="${apidocs.dir}"
 	  author="true"
 	  version="true"
 	  use="true"

@@ -38,9 +38,8 @@ import java.util.StringTokenizer;
 
 /**
  * TTYSessionInfo queries environment variables and the tty window size for
- * the session information.  The username is taken from
- * getpwuid(geteuid()).pw_name, language is taken from LANG, and text window
- * size from ioctl(TIOCGWINSIZ).
+ * the session information.  The username is taken from user.name, language
+ * is taken from user.language, and text window size from 'stty size'.
  */
 public final class TTYSessionInfo implements SessionInfo {
 

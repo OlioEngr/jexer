@@ -32,7 +32,7 @@ package jexer.io;
 
 import jexer.bits.Cell;
 import jexer.bits.CellAttributes;
-import jexer.session.AWTSessionInfo;
+import jexer.session.SwingSessionInfo;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -50,9 +50,9 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 /**
- * This Screen implementation draws to a Java AWT Frame.
+ * This Screen implementation draws to a Java Swing JFrame.
  */
-public final class AWTScreen extends Screen {
+public final class SwingScreen extends Screen {
 
     private static Color MYBLACK;
     private static Color MYRED;
@@ -75,7 +75,7 @@ public final class AWTScreen extends Screen {
     private static boolean dosColors = false;
 
     /**
-     * Setup AWT colors to match DOS color palette.
+     * Setup Swing colors to match DOS color palette.
      */
     private static void setDOSColors() {
         if (dosColors) {
@@ -102,9 +102,9 @@ public final class AWTScreen extends Screen {
     }
 
     /**
-     * AWTFrame is our top-level hook into the AWT system.
+     * SwingFrame is our top-level hook into the Swing system.
      */
-    class AWTFrame extends JFrame {
+    class SwingFrame extends JFrame {
 
         /**
          * Serializable version.
@@ -119,7 +119,7 @@ public final class AWTScreen extends Screen {
         /**
          * The TUI Screen data.
          */
-        AWTScreen screen;
+        SwingScreen screen;
 
         /**
          * Width of a character cell.
@@ -147,10 +147,10 @@ public final class AWTScreen extends Screen {
         private int left = 30;
 
         /**
-         * Convert a CellAttributes foreground color to an AWT Color.
+         * Convert a CellAttributes foreground color to an Swing Color.
          *
          * @param attr the text attributes
-         * @return the AWT Color
+         * @return the Swing Color
          */
         private Color attrToForegroundColor(final CellAttributes attr) {
             /*
@@ -200,10 +200,10 @@ public final class AWTScreen extends Screen {
         }
 
         /**
-         * Convert a CellAttributes background color to an AWT Color.
+         * Convert a CellAttributes background color to an Swing Color.
          *
          * @param attr the text attributes
-         * @return the AWT Color
+         * @return the Swing Color
          */
         private Color attrToBackgroundColor(final CellAttributes attr) {
             /*
@@ -237,7 +237,7 @@ public final class AWTScreen extends Screen {
          *
          * @param screen the Screen that Backend talks to
          */
-        public AWTFrame(final AWTScreen screen) {
+        public SwingFrame(final SwingScreen screen) {
             this.screen = screen;
             setDOSColors();
 
@@ -310,7 +310,7 @@ public final class AWTScreen extends Screen {
         /**
          * Update redraws the whole screen.
          *
-         * @param gr the AWT Graphics context
+         * @param gr the Swing Graphics context
          */
         @Override
         public void update(final Graphics gr) {
@@ -322,7 +322,7 @@ public final class AWTScreen extends Screen {
         /**
          * Paint redraws the whole screen.
          *
-         * @param gr the AWT Graphics context
+         * @param gr the Swing Graphics context
          */
         @Override
         public void paint(final Graphics gr) {
@@ -420,31 +420,31 @@ public final class AWTScreen extends Screen {
             } // synchronized (screen)
         }
 
-    } // class AWTFrame
+    } // class SwingFrame
 
     /**
-     * The raw AWT Frame.  Note package private access.
+     * The raw Swing JFrame.  Note package private access.
      */
-    AWTFrame frame;
+    SwingFrame frame;
 
     /**
      * Public constructor.
      */
-    public AWTScreen() {
+    public SwingScreen() {
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
-                    AWTScreen.this.frame = new AWTFrame(AWTScreen.this);
-                    AWTScreen.this.sessionInfo =
-                        new AWTSessionInfo(AWTScreen.this.frame,
+                    SwingScreen.this.frame = new SwingFrame(SwingScreen.this);
+                    SwingScreen.this.sessionInfo =
+                        new SwingSessionInfo(SwingScreen.this.frame,
                             frame.textWidth,
                             frame.textHeight);
 
-                    AWTScreen.this.setDimensions(sessionInfo.getWindowWidth(),
+                    SwingScreen.this.setDimensions(sessionInfo.getWindowWidth(),
                         sessionInfo.getWindowHeight());
 
-                    AWTScreen.this.frame.resizeToScreen();
-                    AWTScreen.this.frame.setVisible(true);
+                    SwingScreen.this.frame.resizeToScreen();
+                    SwingScreen.this.frame.setVisible(true);
                 }
             } );
         } catch (Exception e) {
@@ -455,14 +455,14 @@ public final class AWTScreen extends Screen {
     /**
      * The sessionInfo.
      */
-    private AWTSessionInfo sessionInfo;
+    private SwingSessionInfo sessionInfo;
 
     /**
-     * Create the AWTSessionInfo.  Note package private access.
+     * Create the SwingSessionInfo.  Note package private access.
      *
      * @return the sessionInfo
      */
-    AWTSessionInfo getSessionInfo() {
+    SwingSessionInfo getSessionInfo() {
         return sessionInfo;
     }
 

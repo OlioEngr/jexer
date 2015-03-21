@@ -34,14 +34,14 @@ import java.awt.Frame;
 import java.awt.Insets;
 
 /**
- * AWTSessionInfo provides a session implementation with a callback into an
- * AWT Frame to support queryWindowSize().  The username is blank, language
+ * SwingSessionInfo provides a session implementation with a callback into an
+ * Swing Frame to support queryWindowSize().  The username is blank, language
  * is "en_US", with a 132x40 text window.
  */
-public final class AWTSessionInfo implements SessionInfo {
+public final class SwingSessionInfo implements SessionInfo {
 
     /**
-     * The AWT Frame.
+     * The Swing Frame.
      */
     private Frame frame;
 
@@ -132,11 +132,11 @@ public final class AWTSessionInfo implements SessionInfo {
     /**
      * Public constructor.
      *
-     * @param frame the AWT Frame
+     * @param frame the Swing Frame
      * @param textWidth the width of a cell in pixels
      * @param textHeight the height of a cell in pixels
      */
-    public AWTSessionInfo(final Frame frame, final int textWidth,
+    public SwingSessionInfo(final Frame frame, final int textWidth,
         final int textHeight) {
 
         this.frame      = frame;

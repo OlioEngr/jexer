@@ -120,8 +120,14 @@ public final class TTYSessionInfo implements SessionInfo {
             String line = in.readLine();
             if ((line != null) && (line.length() > 0)) {
                 StringTokenizer tokenizer = new StringTokenizer(line);
-                windowHeight = Integer.parseInt(tokenizer.nextToken());
-                windowWidth = Integer.parseInt(tokenizer.nextToken());
+                int rc = Integer.parseInt(tokenizer.nextToken());
+                if (rc > 0) {
+                    windowHeight = rc;
+                }
+                rc = Integer.parseInt(tokenizer.nextToken());
+                if (rc > 0) {
+                    windowWidth = rc;
+                }
             }
             while (true) {
                 BufferedReader err = new BufferedReader(

@@ -129,6 +129,8 @@ public final class ColorTheme {
             color.setBackColor(Color.getColor(backColor));
             colors.put(key, color);
         }
+        // All done.
+        reader.close();
     }
 
     /**

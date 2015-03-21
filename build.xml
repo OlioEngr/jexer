@@ -70,13 +70,15 @@
 
     <target name="main" depends="clean,run"/>
 
+    <target name="doc" depends="docs"/>
+
     <target name="docs" depends="jar">
       <javadoc
 	  destdir="docs/api"
 	  author="true"
 	  version="true"
 	  use="true"
-	  access="private"
+	  access="protected"
 	  failonwarning="true"
 	  windowtitle="Jexer - Java Text User Interface - API docs">
 

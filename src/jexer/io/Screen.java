@@ -644,8 +644,6 @@ public abstract class Screen {
         final CellAttributes border, final CellAttributes background,
         final int borderType, final boolean shadow) {
 
-        int boxTop = top;
-        int boxLeft = left;
         int boxWidth = right - left;
         int boxHeight = bottom - top;
 

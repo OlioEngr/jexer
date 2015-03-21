@@ -76,19 +76,14 @@ public final class TSubMenu extends TMenuItem {
     public void draw() {
         super.draw();
 
-        CellAttributes background = getTheme().getColor("tmenu");
         CellAttributes menuColor;
-        CellAttributes menuMnemonicColor;
         if (getAbsoluteActive()) {
             menuColor = getTheme().getColor("tmenu.highlighted");
-            menuMnemonicColor = getTheme().getColor("tmenu.mnemonic.highlighted");
         } else {
             if (getEnabled()) {
                 menuColor = getTheme().getColor("tmenu");
-                menuMnemonicColor = getTheme().getColor("tmenu.mnemonic");
             } else {
                 menuColor = getTheme().getColor("tmenu.disabled");
-                menuMnemonicColor = getTheme().getColor("tmenu.disabled");
             }
         }
 

@@ -38,7 +38,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Point;
@@ -106,6 +105,11 @@ public final class AWTScreen extends Screen {
      * AWTFrame is our top-level hook into the AWT system.
      */
     class AWTFrame extends JFrame {
+
+        /**
+         * Serializable version.
+         */
+        private static final long serialVersionUID = 1;
 
         /**
          * The terminus font resource filename.

@@ -711,8 +711,6 @@ public final class ECMA48Terminal implements Runnable {
         boolean ctrl = false;
         boolean alt = false;
         boolean shift = false;
-        char keyCh = ch;
-        TKeypress key;
 
         // System.err.printf("state: %s ch %c\r\n", state, ch);
 

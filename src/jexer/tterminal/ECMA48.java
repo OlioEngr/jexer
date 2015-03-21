@@ -179,7 +179,7 @@ public class ECMA48 implements Runnable {
      * @param deviceType DeviceType.VT100, DeviceType, XTERM, etc.
      * @param baseLang a base language without UTF-8 flag such as "C" or
      * "en_US"
-     * @return "LANG=en_US", "LANG=en_US.UTF-8", etc.
+     * @return "en_US", "en_US.UTF-8", etc.
      */
     public static String deviceTypeLang(final DeviceType deviceType,
         final String baseLang) {
@@ -690,6 +690,15 @@ public class ECMA48 implements Runnable {
     private boolean columns132 = false;
 
     /**
+     * Get 132 columns value.
+     *
+     * @return if true, the terminal is in 132 column mode
+     */
+    public final boolean isColumns132() {
+                return columns132;
+        }
+
+        /**
      * true = reverse video.  Set by DECSCNM.
      */
     private boolean reverseVideo = false;
@@ -891,7 +900,7 @@ public class ECMA48 implements Runnable {
      * @param type one of the DeviceType constants to select VT100, VT102,
      * VT220, or XTERM
      * @param inputStream an InputStream connected to the remote side.  For
-     * type == XTERM, inputStrem is converted to a Reader with UTF-8
+     * type == XTERM, inputStream is converted to a Reader with UTF-8
      * encoding.
      * @param outputStream an OutputStream connected to the remote user.  For
      * type == XTERM, outputStream is converted to a Writer with UTF-8
@@ -978,7 +987,6 @@ public class ECMA48 implements Runnable {
      * Handle a linefeed.
      */
     private void linefeed() {
-        int i;
 
         if (currentState.cursorY < scrollRegionBottom) {
             // Increment screen y
@@ -3697,7 +3705,7 @@ public class ECMA48 implements Runnable {
      *
      * @param ch character from the remote side
      */
-    public void consume(char ch) {
+    private void consume(char ch) {
 
         // DEBUG
         // System.err.printf("%c", ch);

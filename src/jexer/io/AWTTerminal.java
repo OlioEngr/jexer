@@ -92,11 +92,6 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
     private List<TInputEvent> eventQueue;
 
     /**
-     * The reader thread.
-     */
-    private Thread readerThread;
-
-    /**
      * The last reported mouse X position.
      */
     private int oldMouseX = -1;
@@ -212,7 +207,6 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
         boolean ctrl = false;
         char ch = ' ';
         boolean isKey = false;
-        int fnKey = 0;
         if (key.isActionKey()) {
             isKey = true;
         } else {
@@ -386,7 +380,7 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
                 break;
             default:
                 if (!alt && ctrl && !shift) {
-                    ch = key.getKeyText(key.getKeyCode()).charAt(0);
+                    ch = KeyEvent.getKeyText(key.getKeyCode()).charAt(0);
                 }
                 // Not a special key, put it together
                 keypress = new TKeypress(false, 0, ch, alt, ctrl, shift);

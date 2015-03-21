@@ -57,7 +57,6 @@ import jexer.io.Screen;
 import jexer.menu.TMenu;
 import jexer.menu.TMenuItem;
 import static jexer.TCommand.*;
-import static jexer.TKeypress.*;
 
 /**
  * TApplication sets up a full Text User Interface application.

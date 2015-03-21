@@ -17,4 +17,6 @@ hs_err_pid*
 # Editor backup files
 *.java~
 *.xml~
-*Makefile~
+
+# Scratch space
+misc/**

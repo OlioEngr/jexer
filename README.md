@@ -129,6 +129,7 @@ Many tasks remain before calling this version 1.0:
 
 0.0.3:
 
+- TStatusBar
 - TEditor
 
 0.0.4:
@@ -168,6 +169,5 @@ Screenshots
 
 ![Several Windows Open Including A Terminal](/screenshots/screenshot1.png?raw=true "Several Windows Open Including A Terminal")
 
-![Yo Dawg...](/screenshots/yodawg.png?raw=true "Yo Dawg, I heard you
- like text windowing systems, so I ran a text windowing system inside your
- text windowing system so you can have a terminal in your terminal.")
+![Yo Dawg...](/screenshots/yodawg.png?raw=true "Yo Dawg, I heard you like text windowing systems, so I ran a text windowing system inside your text windowing system so you can have a terminal in your terminal.")
+

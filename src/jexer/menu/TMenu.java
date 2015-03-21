@@ -126,14 +126,7 @@ public final class TMenu extends TWindow {
      */
     @Override
     public void draw() {
-        CellAttributes menuColor;
         CellAttributes background = getTheme().getColor("tmenu");
-
-        if (getAbsoluteActive()) {
-            menuColor = getTheme().getColor("tmenu.highlighted");
-        } else {
-            menuColor = getTheme().getColor("tmenu");
-        }
 
         assert (getAbsoluteActive());
 
@@ -490,7 +483,9 @@ public final class TMenu extends TWindow {
         int newY = getChildren().size() + 1;
         assert (newY < getHeight());
 
-        TMenuItem menuItem = new TMenuSeparator(this, 1, newY);
+        // We just have to construct it, don't need to hang onto what it
+        // makes.
+        new TMenuSeparator(this, 1, newY);
         setHeight(getHeight() + 1);
     }
 

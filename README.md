@@ -87,9 +87,10 @@ ambiguous.  This section describes such issues.
   ---------------
 
   - TTerminalWindow will hang on input from the remote if the
-    TApplication is exited before closing the TTerminalWindow.  This
-    is due to a Java limitation/interaction between blocking reads
-    (necessary to get UTF8 translation correct) and file streams.
+    TApplication is exited before the TTerminalWindow's process has
+    closed on its own.  This is due to a Java limitation/interaction
+    between blocking reads (which is necessary to get UTF8 translation
+    correct) and file streams.
 
   - See jexer.tterminal.ECMA48 for more specifics of terminal
     emulation limitations.
@@ -102,15 +103,22 @@ Many tasks remain before calling this version 1.0:
 
 0.0.2:
 
+- Making TMenu keyboard accelerators active/inactive
 - AWT:
   - Blinking cursor
   - Handle kbTab (disable focus traversal BS)
+  - Block cursor
 - ECMA48Backend running on socket
 - TTreeView
 - TDirectoryList
 - TFileOpen
 - Decide on naming convention: getText, getValue, getLabel: one or all
   of them?
+- Refactor:
+  - TKeypress:
+    - getCh() --> getChar()
+    - getAlt/getCtrl/getShift --> isAltDown / isCtrlDown / isShiftDown
+  - Other boolean getters --> isSomething
 
 0.0.3:
 
@@ -120,7 +128,6 @@ Many tasks remain before calling this version 1.0:
 
 - Bugs
   - TSubMenu keyboard mnemonic not working
-  - Making TMenu keyboard accelerators active/inactive
   - TDirectoryList cannot be navigated only with keyboard
   - TTreeView cannot be navigated only with keyboard
   - RangeViolation after dragging scrollbar up/down

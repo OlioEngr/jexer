@@ -3307,17 +3307,31 @@ public class ECMA48 implements Runnable {
      * DECSTBM - Set top and bottom margins.
      */
     private void decstbm() {
-        int top = getCsiParam(0, 1, 1, height) - 1;
-        int bottom = getCsiParam(1, height, 1, height) - 1;
+        boolean decPrivateModeFlag = false;
 
-        if (top > bottom) {
-            top = bottom;
+        for (int i = 0; i < collectBuffer.length(); i++) {
+            if (collectBuffer.charAt(i) == '?') {
+                decPrivateModeFlag = true;
+                break;
+            }
         }
-        scrollRegionTop = top;
-        scrollRegionBottom = bottom;
+        if (decPrivateModeFlag) {
+            // This could be restore DEC private mode values.
+            // Ignore it.
+        } else {
+            // DECSTBM
+            int top = getCsiParam(0, 1, 1, height) - 1;
+            int bottom = getCsiParam(1, height, 1, height) - 1;
 
-        // Home cursor
-        cursorPosition(0, 0);
+            if (top > bottom) {
+                top = bottom;
+            }
+            scrollRegionTop = top;
+            scrollRegionBottom = bottom;
+
+            // Home cursor
+            cursorPosition(0, 0);
+        }
     }
 
     /**

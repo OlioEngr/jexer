@@ -113,7 +113,6 @@ Many tasks remain before calling this version 1.0:
 - Making TMenu keyboard accelerators active/inactive
 - AWT:
   - Blinking cursor
-  - Handle kbTab (disable focus traversal BS)
   - Block cursor
 - ECMA48Backend running on socket
 - TTreeView

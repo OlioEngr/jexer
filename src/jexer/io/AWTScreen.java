@@ -265,11 +265,15 @@ public final class AWTScreen extends Screen {
             // Transparent 16 x 16 pixel cursor image.
             BufferedImage cursorImg = new BufferedImage(16, 16,
                 BufferedImage.TYPE_INT_ARGB);
-
             // Create a new blank cursor.
             Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
                 cursorImg, new Point(0, 0), "blank cursor");
             setCursor(blankCursor);
+
+            // Be capable of seeing Tab / Shift-Tab
+            setFocusTraversalKeysEnabled(false);
+
+            // Save the text cell width/height
             getFontDimensions();
         }
 

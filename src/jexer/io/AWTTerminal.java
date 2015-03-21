@@ -373,7 +373,11 @@ public final class AWTTerminal implements ComponentListener, KeyListener,
                 keypress = kbEnter;
                 break;
             case 0x09:
-                keypress = kbTab;
+                if (shift) {
+                    keypress = kbShiftTab;
+                } else {
+                    keypress = kbTab;
+                }
                 break;
             case 0x7F:
                 keypress = kbDel;

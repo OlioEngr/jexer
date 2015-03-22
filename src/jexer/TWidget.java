@@ -133,7 +133,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      *
      * @return if true, this widget will receive events
      */
-    public final boolean getActive() {
+    public final boolean isActive() {
         return active;
     }
 
@@ -267,7 +267,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      *
      * @return if true, this widget can be tabbed to or receive events
      */
-    public final boolean getEnabled() {
+    public final boolean isEnabled() {
         return enabled;
     }
 
@@ -303,15 +303,15 @@ public abstract class TWidget implements Comparable<TWidget> {
     /**
      * If true, this widget has a cursor.
      */
-    private boolean hasCursor = false;
+    private boolean cursorVisible = false;
 
     /**
      * Set visible cursor flag.
      *
-     * @param hasCursor if true, this widget has a cursor
+     * @param cursorVisible if true, this widget has a cursor
      */
-    public final void setHasCursor(final boolean hasCursor) {
-        this.hasCursor = hasCursor;
+    public final void setCursorVisible(final boolean cursorVisible) {
+        this.cursorVisible = cursorVisible;
     }
 
     /**
@@ -319,8 +319,8 @@ public abstract class TWidget implements Comparable<TWidget> {
      *
      * @return if true, this widget has a visible cursor
      */
-    public final boolean visibleCursor() {
-        return hasCursor;
+    public final boolean isCursorVisible() {
+        return cursorVisible;
     }
 
     /**
@@ -392,11 +392,11 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @return true if this widget is active and all of its parents are
      * active.
      */
-    public final boolean getAbsoluteActive() {
+    public final boolean isAbsoluteActive() {
         if (parent == this) {
             return active;
         }
-        return (active && parent.getAbsoluteActive());
+        return (active && parent.isAbsoluteActive());
     }
 
     /**
@@ -405,7 +405,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @return absolute screen column number for the cursor's X position
      */
     public final int getCursorAbsoluteX() {
-        assert (hasCursor);
+        assert (cursorVisible);
         return getAbsoluteX() + cursorX;
     }
 
@@ -415,7 +415,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @return absolute screen row number for the cursor's Y position
      */
     public final int getCursorAbsoluteY() {
-        assert (hasCursor);
+        assert (cursorVisible);
         return getAbsoluteY() + cursorY;
     }
 
@@ -781,12 +781,12 @@ public abstract class TWidget implements Comparable<TWidget> {
         for (TWidget widget: children) {
             if (widget instanceof TButton) {
                 TButton button = (TButton) widget;
-                if (button.getEnabled()
-                    && !keypress.getKey().getIsKey()
-                    && keypress.getKey().getAlt()
-                    && !keypress.getKey().getCtrl()
+                if (button.isEnabled()
+                    && !keypress.getKey().isFnKey()
+                    && keypress.getKey().isAlt()
+                    && !keypress.getKey().isCtrl()
                     && (Character.toLowerCase(button.getMnemonic().getShortcut())
-                        == Character.toLowerCase(keypress.getKey().getCh()))
+                        == Character.toLowerCase(keypress.getKey().getChar()))
                 ) {
 
                     widget.handleEvent(new TKeypressEvent(kbEnter));

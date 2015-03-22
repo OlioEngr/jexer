@@ -128,7 +128,7 @@ public final class TMenu extends TWindow {
     public void draw() {
         CellAttributes background = getTheme().getColor("tmenu");
 
-        assert (getAbsoluteActive());
+        assert (isAbsoluteActive());
 
         // Fill in the interior background
         for (int i = 0; i < getHeight(); i++) {
@@ -221,7 +221,7 @@ public final class TMenu extends TWindow {
 
         // See if we should activate a different menu item
         for (TWidget widget: getChildren()) {
-            if ((mouse.getMouse1())
+            if ((mouse.isMouse1())
                 && (widget.mouseWouldHit(mouse))
             ) {
                 // Activate this menu item
@@ -276,14 +276,14 @@ public final class TMenu extends TWindow {
         }
 
         // Switch to a menuItem if it has an mnemonic
-        if (!keypress.getKey().getIsKey()
-            && !keypress.getKey().getAlt()
-            && !keypress.getKey().getCtrl()) {
+        if (!keypress.getKey().isFnKey()
+            && !keypress.getKey().isAlt()
+            && !keypress.getKey().isCtrl()) {
             for (TWidget widget: getChildren()) {
                 TMenuItem item = (TMenuItem) widget;
                 if ((item.getMnemonic() != null)
                     && (Character.toLowerCase(item.getMnemonic().getShortcut())
-                        == Character.toLowerCase(keypress.getKey().getCh()))
+                        == Character.toLowerCase(keypress.getKey().getChar()))
                 ) {
                     // Send an enter keystroke to it
                     activate(item);
@@ -295,7 +295,7 @@ public final class TMenu extends TWindow {
 
         // Dispatch the keypress to an active widget
         for (TWidget widget: getChildren()) {
-            if (widget.getActive()) {
+            if (widget.isActive()) {
                 widget.handleEvent(keypress);
                 return;
             }

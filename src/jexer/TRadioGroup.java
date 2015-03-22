@@ -65,7 +65,7 @@ public final class TRadioGroup extends TWidget {
      * @param button new button that became selected
      */
     void setSelected(final TRadioButton button) {
-        assert (button.getSelected());
+        assert (button.isSelected());
         if (selectedButton != null) {
             selectedButton.setSelected(false);
         }
@@ -96,7 +96,7 @@ public final class TRadioGroup extends TWidget {
     public void draw() {
         CellAttributes radioGroupColor;
 
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             radioGroupColor = getTheme().getColor("tradiogroup.active");
         } else {
             radioGroupColor = getTheme().getColor("tradiogroup.inactive");

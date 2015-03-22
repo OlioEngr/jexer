@@ -200,11 +200,11 @@ public class TMenuItem extends TWidget {
         CellAttributes background = getTheme().getColor("tmenu");
         CellAttributes menuColor;
         CellAttributes menuMnemonicColor;
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             menuColor = getTheme().getColor("tmenu.highlighted");
             menuMnemonicColor = getTheme().getColor("tmenu.mnemonic.highlighted");
         } else {
-            if (getEnabled()) {
+            if (isEnabled()) {
                 menuColor = getTheme().getColor("tmenu");
                 menuMnemonicColor = getTheme().getColor("tmenu.mnemonic");
             } else {
@@ -239,7 +239,7 @@ public class TMenuItem extends TWidget {
      * Dispatch event(s) due to selection or click.
      */
     public void dispatch() {
-        assert (getEnabled());
+        assert (isEnabled());
 
         getApplication().addMenuEvent(new TMenuEvent(id));
         if (checkable) {
@@ -269,7 +269,7 @@ public class TMenuItem extends TWidget {
      */
     @Override
     public void onMouseUp(final TMouseEvent mouse) {
-        if ((mouseOnMenuItem(mouse)) && (mouse.getMouse1())) {
+        if ((mouseOnMenuItem(mouse)) && (mouse.isMouse1())) {
             dispatch();
             return;
         }

@@ -40,24 +40,24 @@ public final class TLabel extends TWidget {
     /**
      * Label text.
      */
-    private String text = "";
+    private String label = "";
 
     /**
      * Get label text.
      *
      * @return label text
      */
-    public String getText() {
-        return text;
+    public String getLabel() {
+        return label;
     }
 
     /**
      * Set label text.
      *
-     * @param text new label text
+     * @param label new label text
      */
-    public void setText(final String text) {
-        this.text = text;
+    public void setLabel(final String label) {
+        this.label = label;
     }
 
     /**
@@ -94,7 +94,7 @@ public final class TLabel extends TWidget {
         // Set parent and window
         super(parent, false, x, y, text.length(), 1);
 
-        this.text = text;
+        this.label = text;
         this.colorKey = colorKey;
     }
 
@@ -108,7 +108,7 @@ public final class TLabel extends TWidget {
         CellAttributes background = getWindow().getBackground();
         color.setBackColor(background.getBackColor());
 
-        getScreen().putStrXY(0, 0, text, color);
+        getScreen().putStrXY(0, 0, label, color);
     }
 
 }

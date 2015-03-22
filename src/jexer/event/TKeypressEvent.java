@@ -87,7 +87,7 @@ public final class TKeypressEvent extends TInputEvent {
     public TKeypressEvent(final TKeypress key,
         final boolean alt, final boolean ctrl, final boolean shift) {
 
-        this.key = new TKeypress(key.getIsKey(), key.getFnKey(), key.getCh(),
+        this.key = new TKeypress(key.isFnKey(), key.getKeyCode(), key.getChar(),
             alt, ctrl, shift);
     }
 

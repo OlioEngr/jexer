@@ -136,13 +136,6 @@ Many tasks remain before calling this version 1.0:
   - Block cursor
 - ECMA48Backend running on socket
 - TFileOpen
-- Decide on naming convention: getText, getValue, getLabel: one or all
-  of them?
-- Refactor:
-  - TKeypress:
-    - getCh() --> getChar()
-    - getAlt/getCtrl/getShift --> isAltDown / isCtrlDown / isShiftDown
-  - Other boolean getters --> isSomething
 - Document any properties used
   - Expose use of 'stty'
 

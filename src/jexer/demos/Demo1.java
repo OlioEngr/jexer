@@ -426,8 +426,8 @@ class DemoMainWindow extends TWindow {
             new TAction() {
 
                 public void DO() {
-                    timerLabel.setText(String.format("Timer: %d", timerI));
-                    timerLabel.setWidth(timerLabel.getText().length());
+                    timerLabel.setLabel(String.format("Timer: %d", timerI));
+                    timerLabel.setWidth(timerLabel.getLabel().length());
                     if (timerI < 100) {
                         timerI++;
                     }

@@ -77,10 +77,10 @@ public final class TSubMenu extends TMenuItem {
         super.draw();
 
         CellAttributes menuColor;
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             menuColor = getTheme().getColor("tmenu.highlighted");
         } else {
-            if (getEnabled()) {
+            if (isEnabled()) {
                 menuColor = getTheme().getColor("tmenu");
             } else {
                 menuColor = getTheme().getColor("tmenu.disabled");
@@ -100,7 +100,7 @@ public final class TSubMenu extends TMenuItem {
     @Override
     public void onKeypress(final TKeypressEvent keypress) {
 
-        if (menu.getActive()) {
+        if (menu.isActive()) {
             menu.onKeypress(keypress);
             return;
         }
@@ -146,9 +146,9 @@ public final class TSubMenu extends TMenuItem {
      */
     @Override
     public void dispatch() {
-        assert (getEnabled());
-        if (getAbsoluteActive()) {
-            if (!menu.getActive()) {
+        assert (isEnabled());
+        if (isAbsoluteActive()) {
+            if (!menu.isActive()) {
                 getApplication().addSubMenu(menu);
                 menu.setActive(true);
             }
@@ -162,7 +162,7 @@ public final class TSubMenu extends TMenuItem {
      */
     @Override
     public TWidget getActiveChild() {
-        if (menu.getActive()) {
+        if (menu.isActive()) {
             return menu;
         }
         // Menu not active, return me

@@ -45,7 +45,7 @@ public class CellAttributes {
      *
      * @return bold value
      */
-    public final boolean getBold() {
+    public final boolean isBold() {
         return bold;
     }
 
@@ -68,7 +68,7 @@ public class CellAttributes {
      *
      * @return blink value
      */
-    public final boolean getBlink() {
+    public final boolean isBlink() {
         return blink;
     }
 
@@ -91,7 +91,7 @@ public class CellAttributes {
      *
      * @return reverse value
      */
-    public final boolean getReverse() {
+    public final boolean isReverse() {
         return reverse;
     }
 
@@ -114,7 +114,7 @@ public class CellAttributes {
      *
      * @return underline value
      */
-    public final boolean getUnderline() {
+    public final boolean isUnderline() {
         return underline;
     }
 
@@ -137,7 +137,7 @@ public class CellAttributes {
      *
      * @return protect value
      */
-    public final boolean getProtect() {
+    public final boolean isProtect() {
         return protect;
     }
 

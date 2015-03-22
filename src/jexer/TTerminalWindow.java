@@ -208,7 +208,7 @@ public class TTerminalWindow extends TWindow {
                     Cell ch = line.charAt(i);
                     Cell newCell = new Cell();
                     newCell.setTo(ch);
-                    boolean reverse = line.isReverseColor() ^ ch.getReverse();
+                    boolean reverse = line.isReverseColor() ^ ch.isReverse();
                     newCell.setReverse(false);
                     if (reverse) {
                         newCell.setBackColor(ch.getForeColor());
@@ -265,12 +265,12 @@ public class TTerminalWindow extends TWindow {
             if (vScroller != null) {
                 setCursorY(getCursorY() - vScroller.getValue());
             }
-            setHasCursor(emulator.visibleCursor());
+            setCursorVisible(emulator.isCursorVisible());
             if (getCursorX() > getWidth() - 2) {
-                setHasCursor(false);
+                setCursorVisible(false);
             }
             if ((getCursorY() > getHeight() - 2) || (getCursorY() < 0)) {
-                setHasCursor(false);
+                setCursorVisible(false);
             }
             if (emulator.getScreenTitle().length() > 0) {
                 // Only update the title if the shell is still alive
@@ -444,11 +444,11 @@ public class TTerminalWindow extends TWindow {
             return;
         }
 
-        if (mouse.getMouseWheelUp()) {
+        if (mouse.isMouseWheelUp()) {
             vScroller.decrement();
             return;
         }
-        if (mouse.getMouseWheelDown()) {
+        if (mouse.isMouseWheelDown()) {
             vScroller.increment();
             return;
         }

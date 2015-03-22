@@ -77,11 +77,11 @@ public final class Cell extends CellAttributes {
     public boolean isBlank() {
         if ((getForeColor().equals(Color.WHITE))
             && (getBackColor().equals(Color.BLACK))
-            && !getBold()
-            && !getBlink()
-            && !getReverse()
-            && !getUnderline()
-            && !getProtect()
+            && !isBold()
+            && !isBlink()
+            && !isReverse()
+            && !isUnderline()
+            && !isProtect()
             && (ch == ' ')
         ) {
             return true;
@@ -178,6 +178,6 @@ public final class Cell extends CellAttributes {
     @Override
     public String toString() {
         return String.format("fore: %d back: %d bold: %s blink: %s ch %c",
-            getForeColor(), getBackColor(), getBold(), getBlink(), ch);
+            getForeColor(), getBackColor(), isBold(), isBlink(), ch);
     }
 }

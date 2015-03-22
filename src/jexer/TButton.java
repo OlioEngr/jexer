@@ -145,10 +145,10 @@ public final class TButton extends TWidget {
         shadowColor.setForeColor(Color.BLACK);
         shadowColor.setBold(false);
 
-        if (!getEnabled()) {
+        if (!isEnabled()) {
             buttonColor = getTheme().getColor("tbutton.disabled");
             menuMnemonicColor = getTheme().getColor("tbutton.disabled");
-        } else if (getAbsoluteActive()) {
+        } else if (isAbsoluteActive()) {
             buttonColor = getTheme().getColor("tbutton.active");
             menuMnemonicColor = getTheme().getColor("tbutton.mnemonic.highlighted");
         } else {
@@ -191,7 +191,7 @@ public final class TButton extends TWidget {
     public void onMouseDown(final TMouseEvent mouse) {
         this.mouse = mouse;
 
-        if ((mouseOnButton()) && (mouse.getMouse1())) {
+        if ((mouseOnButton()) && (mouse.isMouse1())) {
             // Begin button press
             inButtonPress = true;
         }
@@ -206,7 +206,7 @@ public final class TButton extends TWidget {
     public void onMouseUp(final TMouseEvent mouse) {
         this.mouse = mouse;
 
-        if (inButtonPress && mouse.getMouse1()) {
+        if (inButtonPress && mouse.isMouse1()) {
             inButtonPress = false;
             // Dispatch the event
             if (action != null) {

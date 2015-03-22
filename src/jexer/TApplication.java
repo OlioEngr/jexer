@@ -569,7 +569,7 @@ public class TApplication implements Runnable {
     /**
      * Draw everything.
      */
-    public final void drawAll() {
+    private void drawAll() {
         if (debugThreads) {
             System.err.printf("drawAll() enter\n");
         }
@@ -623,7 +623,7 @@ public class TApplication implements Runnable {
         for (TMenu menu: menus) {
             CellAttributes menuColor;
             CellAttributes menuMnemonicColor;
-            if (menu.getActive()) {
+            if (menu.isActive()) {
                 menuColor = theme.getColor("tmenu.highlighted");
                 menuMnemonicColor = theme.getColor("tmenu.mnemonic.highlighted");
             } else {
@@ -638,7 +638,7 @@ public class TApplication implements Runnable {
             getScreen().putCharXY(x + 1 + menu.getMnemonic().getShortcutIdx(),
                 0, menu.getMnemonic().getShortcut(), menuMnemonicColor);
 
-            if (menu.getActive()) {
+            if (menu.isActive()) {
                 menu.drawChildren();
                 // Reset the screen clipping so we can draw the next title.
                 getScreen().resetClipping();
@@ -659,7 +659,7 @@ public class TApplication implements Runnable {
         TWidget activeWidget = null;
         if (sorted.size() > 0) {
             activeWidget = sorted.get(sorted.size() - 1).getActiveChild();
-            if (activeWidget.visibleCursor()) {
+            if (activeWidget.isCursorVisible()) {
                 getScreen().putCursor(true, activeWidget.getCursorAbsoluteX(),
                     activeWidget.getCursorAbsoluteY());
                 cursor = true;
@@ -885,11 +885,11 @@ public class TApplication implements Runnable {
                         break;
                     }
                     if ((mouse.getType() == TMouseEvent.Type.MOUSE_MOTION)
-                        && (!mouse.getMouse1())
-                        && (!mouse.getMouse2())
-                        && (!mouse.getMouse3())
-                        && (!mouse.getMouseWheelUp())
-                        && (!mouse.getMouseWheelDown())
+                        && (!mouse.isMouse1())
+                        && (!mouse.isMouse2())
+                        && (!mouse.isMouse3())
+                        && (!mouse.isMouseWheelUp())
+                        && (!mouse.isMouseWheelDown())
                     ) {
                         break;
                     }
@@ -921,7 +921,7 @@ public class TApplication implements Runnable {
                 item = accelerators.get(keypressLowercase);
             }
             if (item != null) {
-                if (item.getEnabled()) {
+                if (item.isEnabled()) {
                     // Let the menu item dispatch
                     item.dispatch();
                     return;
@@ -947,7 +947,7 @@ public class TApplication implements Runnable {
 
         // Dispatch events to the active window -------------------------------
         for (TWindow window: windows) {
-            if (window.getActive()) {
+            if (window.isActive()) {
                 if (event instanceof TMouseEvent) {
                     TMouseEvent mouse = (TMouseEvent) event;
                     // Convert the mouse relative x/y to window coordinates
@@ -1132,7 +1132,7 @@ public class TApplication implements Runnable {
             // Swap z/active between active window and the next in the list
             int activeWindowI = -1;
             for (int i = 0; i < windows.size(); i++) {
-                if (windows.get(i).getActive()) {
+                if (windows.get(i).isActive()) {
                     activeWindowI = i;
                     break;
                 }
@@ -1241,7 +1241,7 @@ public class TApplication implements Runnable {
 
         // See if they hit the menu bar
         if ((mouse.getType() == TMouseEvent.Type.MOUSE_DOWN)
-            && (mouse.getMouse1())
+            && (mouse.isMouse1())
             && (!modalWindowActive())
             && (mouse.getAbsoluteY() == 0)
         ) {
@@ -1268,7 +1268,7 @@ public class TApplication implements Runnable {
 
         // See if they hit the menu bar
         if ((mouse.getType() == TMouseEvent.Type.MOUSE_MOTION)
-            && (mouse.getMouse1())
+            && (mouse.isMouse1())
             && (activeMenu != null)
             && (mouse.getAbsoluteY() == 0)
         ) {
@@ -1322,8 +1322,8 @@ public class TApplication implements Runnable {
                     }
 
                     // We will be switching to another window
-                    assert (windows.get(0).getActive());
-                    assert (!window.getActive());
+                    assert (windows.get(0).isActive());
+                    assert (!window.isActive());
                     windows.get(0).setActive(false);
                     windows.get(0).setZ(window.getZ());
                     window.setZ(0);
@@ -1481,9 +1481,9 @@ public class TApplication implements Runnable {
         // Default: only menu shortcuts
 
         // Process Alt-F, Alt-E, etc. menu shortcut keys
-        if (!keypress.getKey().getIsKey()
-            && keypress.getKey().getAlt()
-            && !keypress.getKey().getCtrl()
+        if (!keypress.getKey().isFnKey()
+            && keypress.getKey().isAlt()
+            && !keypress.getKey().isCtrl()
             && (activeMenu == null)
         ) {
 
@@ -1491,7 +1491,7 @@ public class TApplication implements Runnable {
 
             for (TMenu menu: menus) {
                 if (Character.toLowerCase(menu.getMnemonic().getShortcut())
-                    == Character.toLowerCase(keypress.getKey().getCh())
+                    == Character.toLowerCase(keypress.getKey().getChar())
                 ) {
                     activeMenu = menu;
                     menu.setActive(true);

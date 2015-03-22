@@ -374,17 +374,17 @@ public class TWindow extends TWidget {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (getActive());
+            assert (isActive());
             return getTheme().getColor("twindow.background.windowmove");
         } else if (isModal() && inWindowMove) {
-            assert (getActive());
+            assert (isActive());
             return getTheme().getColor("twindow.background.modal");
         } else if (isModal()) {
-            if (getActive()) {
+            if (isActive()) {
                 return getTheme().getColor("twindow.background.modal");
             }
             return getTheme().getColor("twindow.background.modal.inactive");
-        } else if (getActive()) {
+        } else if (isActive()) {
             assert (!isModal());
             return getTheme().getColor("twindow.background");
         } else {
@@ -402,18 +402,18 @@ public class TWindow extends TWidget {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (getActive());
+            assert (isActive());
             return getTheme().getColor("twindow.border.windowmove");
         } else if (isModal() && inWindowMove) {
-            assert (getActive());
+            assert (isActive());
             return getTheme().getColor("twindow.border.modal.windowmove");
         } else if (isModal()) {
-            if (getActive()) {
+            if (isActive()) {
                 return getTheme().getColor("twindow.border.modal");
             } else {
                 return getTheme().getColor("twindow.border.modal.inactive");
             }
-        } else if (getActive()) {
+        } else if (isActive()) {
             assert (!isModal());
             return getTheme().getColor("twindow.border");
         } else {
@@ -431,18 +431,18 @@ public class TWindow extends TWidget {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {
-            assert (getActive());
+            assert (isActive());
             return 1;
         } else if (isModal() && inWindowMove) {
-            assert (getActive());
+            assert (isActive());
             return 1;
         } else if (isModal()) {
-            if (getActive()) {
+            if (isActive()) {
                 return 2;
             } else {
                 return 1;
             }
-        } else if (getActive()) {
+        } else if (isActive()) {
             return 2;
         } else {
             return 1;
@@ -476,12 +476,12 @@ public class TWindow extends TWidget {
         putStrXY(titleLeft + 1, 0, title);
         putCharXY(titleLeft + title.length() + 1, 0, ' ', border);
 
-        if (getActive()) {
+        if (isActive()) {
 
             // Draw the close button
             putCharXY(2, 0, '[', border);
             putCharXY(4, 0, ']', border);
-            if (mouseOnClose() && mouse.getMouse1()) {
+            if (mouseOnClose() && mouse.isMouse1()) {
                 putCharXY(3, 0, GraphicsChars.CP437[0x0F],
                     !isModal()
                     ? getTheme().getColor("twindow.border.windowmove")
@@ -498,7 +498,7 @@ public class TWindow extends TWidget {
 
                 putCharXY(getWidth() - 5, 0, '[', border);
                 putCharXY(getWidth() - 3, 0, ']', border);
-                if (mouseOnMaximize() && mouse.getMouse1()) {
+                if (mouseOnMaximize() && mouse.isMouse1()) {
                     putCharXY(getWidth() - 4, 0, GraphicsChars.CP437[0x0F],
                         getTheme().getColor("twindow.border.windowmove"));
                 } else {
@@ -536,7 +536,7 @@ public class TWindow extends TWidget {
         inKeyboardResize = false;
 
         if ((mouse.getAbsoluteY() == getY())
-            && mouse.getMouse1()
+            && mouse.isMouse1()
             && (getX() <= mouse.getAbsoluteX())
             && (mouse.getAbsoluteX() < getX() + getWidth())
             && !mouseOnClose()
@@ -605,26 +605,26 @@ public class TWindow extends TWidget {
     public void onMouseUp(final TMouseEvent mouse) {
         this.mouse = mouse;
 
-        if ((inWindowMove) && (mouse.getMouse1())) {
+        if ((inWindowMove) && (mouse.isMouse1())) {
             // Stop moving window
             inWindowMove = false;
             return;
         }
 
-        if ((inWindowResize) && (mouse.getMouse1())) {
+        if ((inWindowResize) && (mouse.isMouse1())) {
             // Stop resizing window
             inWindowResize = false;
             return;
         }
 
-        if (mouse.getMouse1() && mouseOnClose()) {
+        if (mouse.isMouse1() && mouseOnClose()) {
             // Close window
             application.closeWindow(this);
             return;
         }
 
         if ((mouse.getAbsoluteY() == getY())
-            && mouse.getMouse1()
+            && mouse.isMouse1()
             && mouseOnMaximize()) {
             if (maximized) {
                 // Restore

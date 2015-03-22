@@ -133,10 +133,10 @@ public final class ECMA48Screen extends Screen {
                 // Now emit only the modified attributes
                 if ((lCell.getForeColor() != lastAttr.getForeColor())
                     && (lCell.getBackColor() != lastAttr.getBackColor())
-                    && (lCell.getBold() == lastAttr.getBold())
-                    && (lCell.getReverse() == lastAttr.getReverse())
-                    && (lCell.getUnderline() == lastAttr.getUnderline())
-                    && (lCell.getBlink() == lastAttr.getBlink())
+                    && (lCell.isBold() == lastAttr.isBold())
+                    && (lCell.isReverse() == lastAttr.isReverse())
+                    && (lCell.isUnderline() == lastAttr.isUnderline())
+                    && (lCell.isBlink() == lastAttr.isBlink())
                 ) {
                     // Both colors changed, attributes the same
                     sb.append(terminal.color(lCell.getForeColor(),
@@ -147,27 +147,27 @@ public final class ECMA48Screen extends Screen {
                     }
                 } else if ((lCell.getForeColor() != lastAttr.getForeColor())
                     && (lCell.getBackColor() != lastAttr.getBackColor())
-                    && (lCell.getBold() != lastAttr.getBold())
-                    && (lCell.getReverse() != lastAttr.getReverse())
-                    && (lCell.getUnderline() != lastAttr.getUnderline())
-                    && (lCell.getBlink() != lastAttr.getBlink())
+                    && (lCell.isBold() != lastAttr.isBold())
+                    && (lCell.isReverse() != lastAttr.isReverse())
+                    && (lCell.isUnderline() != lastAttr.isUnderline())
+                    && (lCell.isBlink() != lastAttr.isBlink())
                 ) {
                     // Everything is different
                     sb.append(terminal.color(lCell.getForeColor(),
                             lCell.getBackColor(),
-                            lCell.getBold(), lCell.getReverse(),
-                            lCell.getBlink(),
-                            lCell.getUnderline()));
+                            lCell.isBold(), lCell.isReverse(),
+                            lCell.isBlink(),
+                            lCell.isUnderline()));
 
                     if (debugToStderr) {
                         System.err.printf("2 Set all attributes\n");
                     }
                 } else if ((lCell.getForeColor() != lastAttr.getForeColor())
                     && (lCell.getBackColor() == lastAttr.getBackColor())
-                    && (lCell.getBold() == lastAttr.getBold())
-                    && (lCell.getReverse() == lastAttr.getReverse())
-                    && (lCell.getUnderline() == lastAttr.getUnderline())
-                    && (lCell.getBlink() == lastAttr.getBlink())
+                    && (lCell.isBold() == lastAttr.isBold())
+                    && (lCell.isReverse() == lastAttr.isReverse())
+                    && (lCell.isUnderline() == lastAttr.isUnderline())
+                    && (lCell.isBlink() == lastAttr.isBlink())
                 ) {
 
                     // Attributes same, foreColor different
@@ -178,10 +178,10 @@ public final class ECMA48Screen extends Screen {
                     }
                 } else if ((lCell.getForeColor() == lastAttr.getForeColor())
                     && (lCell.getBackColor() != lastAttr.getBackColor())
-                    && (lCell.getBold() == lastAttr.getBold())
-                    && (lCell.getReverse() == lastAttr.getReverse())
-                    && (lCell.getUnderline() == lastAttr.getUnderline())
-                    && (lCell.getBlink() == lastAttr.getBlink())
+                    && (lCell.isBold() == lastAttr.isBold())
+                    && (lCell.isReverse() == lastAttr.isReverse())
+                    && (lCell.isUnderline() == lastAttr.isUnderline())
+                    && (lCell.isBlink() == lastAttr.isBlink())
                 ) {
                     // Attributes same, backColor different
                     sb.append(terminal.color(lCell.getBackColor(), false));
@@ -191,10 +191,10 @@ public final class ECMA48Screen extends Screen {
                     }
                 } else if ((lCell.getForeColor() == lastAttr.getForeColor())
                     && (lCell.getBackColor() == lastAttr.getBackColor())
-                    && (lCell.getBold() == lastAttr.getBold())
-                    && (lCell.getReverse() == lastAttr.getReverse())
-                    && (lCell.getUnderline() == lastAttr.getUnderline())
-                    && (lCell.getBlink() == lastAttr.getBlink())
+                    && (lCell.isBold() == lastAttr.isBold())
+                    && (lCell.isReverse() == lastAttr.isReverse())
+                    && (lCell.isUnderline() == lastAttr.isUnderline())
+                    && (lCell.isBlink() == lastAttr.isBlink())
                 ) {
 
                     // All attributes the same, just print the char
@@ -207,10 +207,10 @@ public final class ECMA48Screen extends Screen {
                     // Just reset everything again
                     sb.append(terminal.color(lCell.getForeColor(),
                             lCell.getBackColor(),
-                            lCell.getBold(),
-                            lCell.getReverse(),
-                            lCell.getBlink(),
-                            lCell.getUnderline()));
+                            lCell.isBold(),
+                            lCell.isReverse(),
+                            lCell.isBlink(),
+                            lCell.isUnderline()));
 
                     if (debugToStderr) {
                         System.err.printf("6 Change all attributes\n");

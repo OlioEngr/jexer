@@ -97,7 +97,7 @@ public final class TPasswordField extends TField {
         CellAttributes fieldColor;
 
         boolean showStars = false;
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             fieldColor = getTheme().getColor("tfield.active");
         } else {
             fieldColor = getTheme().getColor("tfield.inactive");

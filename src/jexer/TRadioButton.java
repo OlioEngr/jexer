@@ -52,7 +52,7 @@ public final class TRadioButton extends TWidget {
      * @return if true then this is the one button in the group that is
      * selected
      */
-    public boolean getSelected() {
+    public boolean isSelected() {
         return selected;
     }
 
@@ -106,7 +106,7 @@ public final class TRadioButton extends TWidget {
         this.label = label;
         this.id = id;
 
-        setHasCursor(true);
+        setCursorVisible(true);
         setCursorX(1);
     }
 
@@ -133,7 +133,7 @@ public final class TRadioButton extends TWidget {
     public void draw() {
         CellAttributes radioButtonColor;
 
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             radioButtonColor = getTheme().getColor("tradiobutton.active");
         } else {
             radioButtonColor = getTheme().getColor("tradiobutton.inactive");
@@ -157,7 +157,7 @@ public final class TRadioButton extends TWidget {
      */
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
-        if ((mouseOnRadioButton(mouse)) && (mouse.getMouse1())) {
+        if ((mouseOnRadioButton(mouse)) && (mouse.isMouse1())) {
             // Switch state
             selected = !selected;
             if (selected) {

@@ -141,7 +141,7 @@ public class TField extends TWidget {
         // Set parent and window
         super(parent, x, y, width, 1);
 
-        setHasCursor(true);
+        setCursorVisible(true);
         this.fixed = fixed;
         this.text = text;
         this.enterAction = enterAction;
@@ -190,7 +190,7 @@ public class TField extends TWidget {
     public void draw() {
         CellAttributes fieldColor;
 
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             fieldColor = getTheme().getColor("tfield.active");
         } else {
             fieldColor = getTheme().getColor("tfield.inactive");
@@ -230,7 +230,7 @@ public class TField extends TWidget {
     public void onMouseDown(final TMouseEvent mouse) {
         this.mouse = mouse;
 
-        if ((mouseOnField()) && (mouse.getMouse1())) {
+        if ((mouseOnField()) && (mouse.isMouse1())) {
             // Move cursor
             int deltaX = mouse.getX() - getCursorX();
             position += deltaX;
@@ -333,16 +333,16 @@ public class TField extends TWidget {
             return;
         }
 
-        if (!keypress.getKey().getIsKey()
-            && !keypress.getKey().getAlt()
-            && !keypress.getKey().getCtrl()
+        if (!keypress.getKey().isFnKey()
+            && !keypress.getKey().isAlt()
+            && !keypress.getKey().isCtrl()
         ) {
             // Plain old keystroke, process it
             if ((position == text.length())
                 && (text.length() < getWidth())) {
 
                 // Append case
-                appendChar(keypress.getKey().getCh());
+                appendChar(keypress.getKey().getChar());
             } else if ((position < text.length())
                 && (text.length() < getWidth())) {
 
@@ -350,12 +350,12 @@ public class TField extends TWidget {
                 if (insertMode == false) {
                     // Replace character
                     text = text.substring(0, position)
-                            + keypress.getKey().getCh()
+                            + keypress.getKey().getChar()
                             + text.substring(position + 1);
                     position++;
                 } else {
                     // Insert character
-                    insertChar(keypress.getKey().getCh());
+                    insertChar(keypress.getKey().getChar());
                 }
             } else if ((position < text.length())
                 && (text.length() >= getWidth())) {
@@ -366,7 +366,7 @@ public class TField extends TWidget {
                 } else if ((fixed == true) && (insertMode == false)) {
                     // Overwrite the last character, maybe move position
                     text = text.substring(0, position)
-                            + keypress.getKey().getCh()
+                            + keypress.getKey().getChar()
                             + text.substring(position + 1);
                     if (position < getWidth() - 1) {
                         position++;
@@ -374,23 +374,23 @@ public class TField extends TWidget {
                 } else if ((fixed == false) && (insertMode == false)) {
                     // Overwrite the last character, definitely move position
                     text = text.substring(0, position)
-                            + keypress.getKey().getCh()
+                            + keypress.getKey().getChar()
                             + text.substring(position + 1);
                     position++;
                 } else {
                     if (position == text.length()) {
                         // Append this character
-                        appendChar(keypress.getKey().getCh());
+                        appendChar(keypress.getKey().getChar());
                     } else {
                         // Insert this character
-                        insertChar(keypress.getKey().getCh());
+                        insertChar(keypress.getKey().getChar());
                     }
                 }
             } else {
                 assert (!fixed);
 
                 // Append this character
-                appendChar(keypress.getKey().getCh());
+                appendChar(keypress.getKey().getChar());
             }
             dispatch(false);
             return;

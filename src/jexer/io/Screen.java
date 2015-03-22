@@ -275,11 +275,11 @@ public abstract class Screen {
             dirty = true;
             logical[X][Y].setForeColor(attr.getForeColor());
             logical[X][Y].setBackColor(attr.getBackColor());
-            logical[X][Y].setBold(attr.getBold());
-            logical[X][Y].setBlink(attr.getBlink());
-            logical[X][Y].setReverse(attr.getReverse());
-            logical[X][Y].setUnderline(attr.getUnderline());
-            logical[X][Y].setProtect(attr.getProtect());
+            logical[X][Y].setBold(attr.isBold());
+            logical[X][Y].setBlink(attr.isBlink());
+            logical[X][Y].setReverse(attr.isReverse());
+            logical[X][Y].setUnderline(attr.isUnderline());
+            logical[X][Y].setProtect(attr.isProtect());
         }
     }
 
@@ -343,11 +343,11 @@ public abstract class Screen {
             logical[X][Y].setChar(ch);
             logical[X][Y].setForeColor(attr.getForeColor());
             logical[X][Y].setBackColor(attr.getBackColor());
-            logical[X][Y].setBold(attr.getBold());
-            logical[X][Y].setBlink(attr.getBlink());
-            logical[X][Y].setReverse(attr.getReverse());
-            logical[X][Y].setUnderline(attr.getUnderline());
-            logical[X][Y].setProtect(attr.getProtect());
+            logical[X][Y].setBold(attr.isBold());
+            logical[X][Y].setBlink(attr.isBlink());
+            logical[X][Y].setReverse(attr.isReverse());
+            logical[X][Y].setUnderline(attr.isUnderline());
+            logical[X][Y].setProtect(attr.isProtect());
         }
     }
 

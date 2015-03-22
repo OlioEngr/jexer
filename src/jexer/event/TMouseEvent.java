@@ -161,7 +161,7 @@ public final class TMouseEvent extends TInputEvent {
      *
      * @return mouse1
      */
-    public boolean getMouse1() {
+    public boolean isMouse1() {
         return mouse1;
     }
 
@@ -175,7 +175,7 @@ public final class TMouseEvent extends TInputEvent {
      *
      * @return mouse2
      */
-    public boolean getMouse2() {
+    public boolean isMouse2() {
         return mouse2;
     }
 
@@ -189,7 +189,7 @@ public final class TMouseEvent extends TInputEvent {
      *
      * @return mouse3
      */
-    public boolean getMouse3() {
+    public boolean isMouse3() {
         return mouse3;
     }
 
@@ -203,7 +203,7 @@ public final class TMouseEvent extends TInputEvent {
      *
      * @return mouseWheelUp
      */
-    public boolean getMouseWheelUp() {
+    public boolean isMouseWheelUp() {
         return mouseWheelUp;
     }
 
@@ -217,7 +217,7 @@ public final class TMouseEvent extends TInputEvent {
      *
      * @return mouseWheelDown
      */
-    public boolean getMouseWheelDown() {
+    public boolean isMouseWheelDown() {
         return mouseWheelDown;
     }
 

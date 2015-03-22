@@ -291,7 +291,7 @@ public final class THScroller extends TWidget {
             return;
         }
 
-        if ((mouse.getMouse1())
+        if ((mouse.isMouse1())
             && (inScroll)
             && (mouse.getX() > 0)
             && (mouse.getX() < getWidth() - 1)

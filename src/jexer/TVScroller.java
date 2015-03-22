@@ -328,7 +328,7 @@ public final class TVScroller extends TWidget {
             return;
         }
 
-        if ((mouse.getMouse1()) &&
+        if ((mouse.isMouse1()) &&
             (inScroll) &&
             (mouse.getY() > 0) &&
             (mouse.getY() < getHeight() - 1)

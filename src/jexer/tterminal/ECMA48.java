@@ -614,7 +614,7 @@ public class ECMA48 implements Runnable {
      *
      * @return if true, the cursor is visible
      */
-    public final boolean visibleCursor() {
+    public final boolean isCursorVisible() {
         return cursorVisible;
     }
 
@@ -1145,11 +1145,11 @@ public class ECMA48 implements Runnable {
              * have a button down (i.e. drag-and-drop).
              */
             if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
-                if (!mouse.getMouse1()
-                    && !mouse.getMouse2()
-                    && !mouse.getMouse3()
-                    && !mouse.getMouseWheelUp()
-                    && !mouse.getMouseWheelDown()
+                if (!mouse.isMouse1()
+                    && !mouse.isMouse2()
+                    && !mouse.isMouse3()
+                    && !mouse.isMouseWheelUp()
+                    && !mouse.isMouseWheelDown()
                 ) {
                     return;
                 }
@@ -1168,15 +1168,15 @@ public class ECMA48 implements Runnable {
         sb.append('M');
         if (mouse.getType() == TMouseEvent.Type.MOUSE_UP) {
             sb.append((char) (0x03 + 32));
-        } else if (mouse.getMouse1()) {
+        } else if (mouse.isMouse1()) {
             sb.append((char) (0x00 + 32));
-        } else if (mouse.getMouse2()) {
+        } else if (mouse.isMouse2()) {
             sb.append((char) (0x01 + 32));
-        } else if (mouse.getMouse3()) {
+        } else if (mouse.isMouse3()) {
             sb.append((char) (0x02 + 32));
-        } else if (mouse.getMouseWheelUp()) {
+        } else if (mouse.isMouseWheelUp()) {
             sb.append((char) (0x04 + 64));
-        } else if (mouse.getMouseWheelDown()) {
+        } else if (mouse.isMouseWheelDown()) {
             sb.append((char) (0x05 + 64));
         } else {
             sb.append((char) (0x03 + 32));
@@ -1207,16 +1207,16 @@ public class ECMA48 implements Runnable {
      */
     private String keypressToString(final TKeypress keypress) {
 
-        if ((fullDuplex == false) && (!keypress.getIsKey())) {
+        if ((fullDuplex == false) && (!keypress.isFnKey())) {
             /*
              * If this is a control character, process it like it came from
              * the remote side.
              */
-            if (keypress.getCh() < 0x20) {
-                handleControlChar(keypress.getCh());
+            if (keypress.getChar() < 0x20) {
+                handleControlChar(keypress.getChar());
             } else {
                 // Local echo for everything else
-                printCharacter(keypress.getCh());
+                printCharacter(keypress.getChar());
             }
         }
 
@@ -1226,18 +1226,18 @@ public class ECMA48 implements Runnable {
         }
 
         // Handle control characters
-        if ((keypress.getCtrl()) && (!keypress.getIsKey())) {
+        if ((keypress.isCtrl()) && (!keypress.isFnKey())) {
             StringBuilder sb = new StringBuilder();
-            char ch = keypress.getCh();
+            char ch = keypress.getChar();
             ch -= 0x40;
             sb.append(ch);
             return sb.toString();
         }
 
         // Handle alt characters
-        if ((keypress.getAlt()) && (!keypress.getIsKey())) {
+        if ((keypress.isAlt()) && (!keypress.isFnKey())) {
             StringBuilder sb = new StringBuilder("\033");
-            char ch = keypress.getCh();
+            char ch = keypress.getChar();
             sb.append(ch);
             return sb.toString();
         }
@@ -1635,9 +1635,9 @@ public class ECMA48 implements Runnable {
         }
 
         // Non-alt, non-ctrl characters
-        if (!keypress.getIsKey()) {
+        if (!keypress.isFnKey()) {
             StringBuilder sb = new StringBuilder();
-            sb.append(keypress.getCh());
+            sb.append(keypress.getChar());
             return sb.toString();
         }
         return "";
@@ -3546,7 +3546,7 @@ public class ECMA48 implements Runnable {
         for (int i = start; i <= end; i++) {
             DisplayLine line = display.get(currentState.cursorY);
             if ((!honorProtected)
-                || ((honorProtected) && (!line.charAt(i).getProtect()))) {
+                || ((honorProtected) && (!line.charAt(i).isProtect()))) {
 
                 switch (type) {
                 case VT100:

@@ -30,11 +30,11 @@
  */
 package jexer;
 
+import static jexer.TKeypress.kbSpace;
 import jexer.bits.CellAttributes;
 import jexer.bits.GraphicsChars;
 import jexer.event.TKeypressEvent;
 import jexer.event.TMouseEvent;
-import static jexer.TKeypress.*;
 
 /**
  * TCheckbox implements an on/off checkbox.
@@ -45,6 +45,24 @@ public final class TCheckbox extends TWidget {
      * Checkbox state, true means checked.
      */
     private boolean checked = false;
+
+    /**
+     * Get checked value.
+     *
+     * @return if true, this is checked
+     */
+    public final boolean isChecked() {
+        return checked;
+    }
+
+    /**
+     * Set checked value.
+     *
+     * @param checked new checked value.
+     */
+    public final void setChecked(final boolean checked) {
+        this.checked = checked;
+    }
 
     /**
      * Label for this checkbox.
@@ -61,7 +79,7 @@ public final class TCheckbox extends TWidget {
      * @param checked initial check state
      */
     public TCheckbox(final TWidget parent, final int x, final int y,
-        final String label, final boolean checked) {
+            final String label, final boolean checked) {
 
         // Set parent and window
         super(parent, x, y, label.length() + 4, 1);
@@ -69,7 +87,7 @@ public final class TCheckbox extends TWidget {
         this.label = label;
         this.checked = checked;
 
-        setHasCursor(true);
+        setCursorVisible(true);
         setCursorX(1);
     }
 
@@ -81,9 +99,9 @@ public final class TCheckbox extends TWidget {
      */
     private boolean mouseOnCheckbox(final TMouseEvent mouse) {
         if ((mouse.getY() == 0)
-            && (mouse.getX() >= 0)
-            && (mouse.getX() <= 2)
-        ) {
+                && (mouse.getX() >= 0)
+                && (mouse.getX() <= 2)
+                ) {
             return true;
         }
         return false;
@@ -96,7 +114,7 @@ public final class TCheckbox extends TWidget {
     public void draw() {
         CellAttributes checkboxColor;
 
-        if (getAbsoluteActive()) {
+        if (isAbsoluteActive()) {
             checkboxColor = getTheme().getColor("tcheckbox.active");
         } else {
             checkboxColor = getTheme().getColor("tcheckbox.inactive");
@@ -119,7 +137,7 @@ public final class TCheckbox extends TWidget {
      */
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
-        if ((mouseOnCheckbox(mouse)) && (mouse.getMouse1())) {
+        if ((mouseOnCheckbox(mouse)) && (mouse.isMouse1())) {
             // Switch state
             checked = !checked;
         }

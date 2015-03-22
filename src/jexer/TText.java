@@ -30,16 +30,25 @@
  */
 package jexer;
 
+import static jexer.TKeypress.kbDown;
+import static jexer.TKeypress.kbEnd;
+import static jexer.TKeypress.kbHome;
+import static jexer.TKeypress.kbLeft;
+import static jexer.TKeypress.kbPgDn;
+import static jexer.TKeypress.kbPgUp;
+import static jexer.TKeypress.kbRight;
+import static jexer.TKeypress.kbUp;
+
 import java.util.LinkedList;
 import java.util.List;
 
 import jexer.bits.CellAttributes;
 import jexer.event.TKeypressEvent;
 import jexer.event.TMouseEvent;
-import static jexer.TKeypress.*;
 
 /**
- * TText implements a simple text windget.
+ * TText implements a simple scrollable text area. It reflows automatically on
+ * resize.
  */
 public final class TText extends TWidget {
 
@@ -81,7 +90,8 @@ public final class TText extends TWidget {
     /**
      * Convenience method used by TWindowLoggerOutput.
      *
-     * @param line new line to add
+     * @param line
+     *            new line to add
      */
     public void addLine(final String line) {
         if (text.length() == 0) {
@@ -98,13 +108,13 @@ public final class TText extends TWidget {
      */
     private void computeBounds() {
         maxLineWidth = 0;
-        for (String line: lines) {
+        for (String line : lines) {
             if (line.length() > maxLineWidth) {
                 maxLineWidth = line.length();
             }
         }
 
-        vScroller.setBottomValue(lines.size() - getHeight() + 1);
+        vScroller.setBottomValue((lines.size() - getHeight()) + 1);
         if (vScroller.getBottomValue() < 0) {
             vScroller.setBottomValue(0);
         }
@@ -112,7 +122,7 @@ public final class TText extends TWidget {
             vScroller.setValue(vScroller.getBottomValue());
         }
 
-        hScroller.setRightValue(maxLineWidth - getWidth() + 1);
+        hScroller.setRightValue((maxLineWidth - getWidth()) + 1);
         if (hScroller.getRightValue() < 0) {
             hScroller.setRightValue(0);
         }
@@ -122,12 +132,14 @@ public final class TText extends TWidget {
     }
 
     /**
-     * Insert newlines into a string to wrap it to a maximum column.
-     * Terminate the final string with a newline.  Note that interior
-     * newlines are converted to spaces.
+     * Insert newlines into a string to wrap it to a maximum column. Terminate
+     * the final string with a newline. Note that interior newlines are
+     * converted to spaces.
      *
-     * @param str the string
-     * @param n the maximum number of characters in a line
+     * @param str
+     *            the string
+     * @param n
+     *            the maximum number of characters in a line
      * @return the wrapped string
      */
     private String wrap(final String str, final int n) {
@@ -144,7 +156,7 @@ public final class TText extends TWidget {
             if (ch == ' ') {
                 sb.append(word.toString());
                 sb.append(ch);
-                if (word.length() >= n - 1) {
+                if (word.length() >= (n - 1)) {
                     sb.append('\n');
                     col = 0;
                 }
@@ -154,7 +166,7 @@ public final class TText extends TWidget {
             }
 
             col++;
-            if (col >= n - 1) {
+            if (col >= (n - 1)) {
                 sb.append('\n');
                 col = 0;
             }
@@ -164,7 +176,6 @@ public final class TText extends TWidget {
         return sb.toString();
     }
 
-
     /**
      * Resize text and scrollbars for a new width/height.
      */
@@ -173,10 +184,10 @@ public final class TText extends TWidget {
         lines.clear();
 
         // Break up text into paragraphs
-        String [] paragraphs = text.split("\n\n");
-        for (String p: paragraphs) {
+        String[] paragraphs = text.split("\n\n");
+        for (String p : paragraphs) {
             String paragraph = wrap(p, getWidth() - 1);
-            for (String line: paragraph.split("\n")) {
+            for (String line : paragraph.split("\n")) {
                 lines.add(line);
             }
             for (int i = 0; i < lineSpacing; i++) {
@@ -186,8 +197,7 @@ public final class TText extends TWidget {
 
         // Start at the top
         if (vScroller == null) {
-            vScroller = new TVScroller(this, getWidth() - 1, 0,
-                getHeight() - 1);
+            vScroller = new TVScroller(this, getWidth() - 1, 0, getHeight() - 1);
             vScroller.setTopValue(0);
             vScroller.setValue(0);
         } else {
@@ -198,8 +208,7 @@ public final class TText extends TWidget {
 
         // Start at the left
         if (hScroller == null) {
-            hScroller = new THScroller(this, 0, getHeight() - 1,
-                getWidth() - 1);
+            hScroller = new THScroller(this, 0, getHeight() - 1, getWidth() - 1);
             hScroller.setLeftValue(0);
             hScroller.setValue(0);
         } else {
@@ -214,15 +223,21 @@ public final class TText extends TWidget {
     /**
      * Public constructor.
      *
-     * @param parent parent widget
-     * @param text text on the screen
-     * @param x column relative to parent
-     * @param y row relative to parent
-     * @param width width of text area
-     * @param height height of text area
+     * @param parent
+     *            parent widget
+     * @param text
+     *            text on the screen
+     * @param x
+     *            column relative to parent
+     * @param y
+     *            row relative to parent
+     * @param width
+     *            width of text area
+     * @param height
+     *            height of text area
      */
     public TText(final TWidget parent, final String text, final int x,
-        final int y, final int width, final int height) {
+            final int y, final int width, final int height) {
 
         this(parent, text, x, y, width, height, "ttext");
     }
@@ -230,17 +245,25 @@ public final class TText extends TWidget {
     /**
      * Public constructor.
      *
-     * @param parent parent widget
-     * @param text text on the screen
-     * @param x column relative to parent
-     * @param y row relative to parent
-     * @param width width of text area
-     * @param height height of text area
-     * @param colorKey ColorTheme key color to use for foreground text.
-     * Default is "ttext"
+     * @param parent
+     *            parent widget
+     * @param text
+     *            text on the screen
+     * @param x
+     *            column relative to parent
+     * @param y
+     *            row relative to parent
+     * @param width
+     *            width of text area
+     * @param height
+     *            height of text area
+     * @param colorKey
+     *            ColorTheme key color to use for foreground text. Default is
+     *            "ttext"
      */
     public TText(final TWidget parent, final String text, final int x,
-        final int y, final int width, final int height, final String colorKey) {
+            final int y, final int width, final int height,
+            final String colorKey) {
 
         // Set parent and window
         super(parent, x, y, width, height);
@@ -272,16 +295,16 @@ public final class TText extends TWidget {
             }
             String formatString = "%-" + Integer.toString(getWidth() - 1) + "s";
             getScreen().putStrXY(0, topY, String.format(formatString, line),
-                color);
+                    color);
             topY++;
 
-            if (topY >= getHeight() - 1) {
+            if (topY >= (getHeight() - 1)) {
                 break;
             }
         }
 
         // Pad the rest with blank lines
-        for (int i = topY; i < getHeight() - 1; i++) {
+        for (int i = topY; i < (getHeight() - 1); i++) {
             getScreen().hLineXY(0, i, getWidth() - 1, ' ', color);
         }
 
@@ -290,15 +313,16 @@ public final class TText extends TWidget {
     /**
      * Handle mouse press events.
      *
-     * @param mouse mouse button press event
+     * @param mouse
+     *            mouse button press event
      */
     @Override
     public void onMouseDown(final TMouseEvent mouse) {
-        if (mouse.getMouseWheelUp()) {
+        if (mouse.isMouseWheelUp()) {
             vScroller.decrement();
             return;
         }
-        if (mouse.getMouseWheelDown()) {
+        if (mouse.isMouseWheelDown()) {
             vScroller.increment();
             return;
         }
@@ -310,7 +334,8 @@ public final class TText extends TWidget {
     /**
      * Handle keystrokes.
      *
-     * @param keypress keystroke event
+     * @param keypress
+     *            keystroke event
      */
     @Override
     public void onKeypress(final TKeypressEvent keypress) {

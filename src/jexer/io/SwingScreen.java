@@ -159,7 +159,7 @@ public final class SwingScreen extends Screen {
              *   blink
              *   underline
              */
-            if (attr.getBold()) {
+            if (attr.isBold()) {
                 if (attr.getForeColor().equals(jexer.bits.Color.BLACK)) {
                     return MYBOLD_BLACK;
                 } else if (attr.getForeColor().equals(jexer.bits.Color.RED)) {

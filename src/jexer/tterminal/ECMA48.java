@@ -522,7 +522,8 @@ public class ECMA48 implements Runnable {
      */
     private enum MouseEncoding {
         X10,
-        UTF8
+        UTF8,
+        SGR
     }
 
     /**
@@ -1110,7 +1111,7 @@ public class ECMA48 implements Runnable {
             mouseProtocol, mouseEncoding, mouse);
          */
 
-        if (mouseEncoding != MouseEncoding.UTF8) {
+        if (mouseEncoding == MouseEncoding.X10) {
             // We will support X10 but only for (160,94) and smaller.
             if ((mouse.getX() >= 160) || (mouse.getY() >= 94)) {
                 return;
@@ -1163,27 +1164,83 @@ public class ECMA48 implements Runnable {
 
         // Now encode the event
         StringBuilder sb = new StringBuilder(6);
-        sb.append((char) 0x1B);
-        sb.append('[');
-        sb.append('M');
-        if (mouse.getType() == TMouseEvent.Type.MOUSE_UP) {
-            sb.append((char) (0x03 + 32));
-        } else if (mouse.isMouse1()) {
-            sb.append((char) (0x00 + 32));
-        } else if (mouse.isMouse2()) {
-            sb.append((char) (0x01 + 32));
-        } else if (mouse.isMouse3()) {
-            sb.append((char) (0x02 + 32));
-        } else if (mouse.isMouseWheelUp()) {
-            sb.append((char) (0x04 + 64));
-        } else if (mouse.isMouseWheelDown()) {
-            sb.append((char) (0x05 + 64));
-        } else {
-            sb.append((char) (0x03 + 32));
-        }
+        if (mouseEncoding == MouseEncoding.SGR) {
+            sb.append((char) 0x1B);
+            sb.append("[<");
 
-        sb.append((char) (mouse.getX() + 33));
-        sb.append((char) (mouse.getY() + 33));
+            if (mouse.isMouse1()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append("32;");
+                } else {
+                    sb.append("0;");
+                }
+            } else if (mouse.isMouse2()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append("33;");
+                } else {
+                    sb.append("1;");
+                }
+            } else if (mouse.isMouse3()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append("34;");
+                } else {
+                    sb.append("2;");
+                }
+            } else if (mouse.isMouseWheelUp()) {
+                sb.append("64;");
+            } else if (mouse.isMouseWheelDown()) {
+                sb.append("65;");
+            } else {
+                // This is motion with no buttons down.
+                sb.append("35;");
+            }
+
+            sb.append(String.format("%d;%d", mouse.getX() + 1,
+                    mouse.getY() + 1));
+
+            if (mouse.getType() == TMouseEvent.Type.MOUSE_UP) {
+                sb.append("m");
+            } else {
+                sb.append("M");
+            }
+
+        } else {
+            // X10 and UTF8 encodings
+            sb.append((char) 0x1B);
+            sb.append('[');
+            sb.append('M');
+            if (mouse.getType() == TMouseEvent.Type.MOUSE_UP) {
+                sb.append((char) (0x03 + 32));
+            } else if (mouse.isMouse1()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append((char) (0x00 + 32 + 32));
+                } else {
+                    sb.append((char) (0x00 + 32));
+                }
+            } else if (mouse.isMouse2()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append((char) (0x01 + 32 + 32));
+                } else {
+                    sb.append((char) (0x01 + 32));
+                }
+            } else if (mouse.isMouse3()) {
+                if (mouse.getType() == TMouseEvent.Type.MOUSE_MOTION) {
+                    sb.append((char) (0x02 + 32 + 32));
+                } else {
+                    sb.append((char) (0x02 + 32));
+                }
+            } else if (mouse.isMouseWheelUp()) {
+                sb.append((char) (0x04 + 64));
+            } else if (mouse.isMouseWheelDown()) {
+                sb.append((char) (0x05 + 64));
+            } else {
+                // This is motion with no buttons down.
+                sb.append((char) (0x03 + 32));
+            }
+
+            sb.append((char) (mouse.getX() + 33));
+            sb.append((char) (mouse.getY() + 33));
+        }
 
         // System.err.printf("Would write: \'%s\'\n", sb.toString());
         writeRemote(sb.toString());
@@ -2435,6 +2492,19 @@ public class ECMA48 implements Runnable {
                     // Mouse: UTF-8 coordinates
                     if (value == true) {
                         mouseEncoding = MouseEncoding.UTF8;
+                    } else {
+                        mouseEncoding = MouseEncoding.X10;
+                    }
+                }
+                break;
+
+            case 1006:
+                if ((type == DeviceType.XTERM)
+                    && (decPrivateModeFlag == true)
+                ) {
+                    // Mouse: SGR coordinates
+                    if (value == true) {
+                        mouseEncoding = MouseEncoding.SGR;
                     } else {
                         mouseEncoding = MouseEncoding.X10;
                     }

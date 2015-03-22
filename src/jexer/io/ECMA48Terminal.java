@@ -107,7 +107,8 @@ public final class ECMA48Terminal implements Runnable {
         CSI_ENTRY,
         CSI_PARAM,
         // CSI_INTERMEDIATE,
-        MOUSE
+        MOUSE,
+        MOUSE_SGR,
     }
 
     /**
@@ -626,6 +627,105 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
+     * Produce mouse events based on "Any event tracking" and SGR
+     * coordinates.  See
+     * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
+     *
+     * @param release if true, this was a release ('m')
+     * @return a MOUSE_MOTION, MOUSE_UP, or MOUSE_DOWN event
+     */
+    private TInputEvent parseMouseSGR(final boolean release) {
+        // SGR extended coordinates - mode 1006
+        if (params.size() < 3) {
+            // Invalid position, bail out.
+            return null;
+        }
+        int buttons = Integer.parseInt(params.get(0));
+        int x = Integer.parseInt(params.get(1)) - 1;
+        int y = Integer.parseInt(params.get(2)) - 1;
+
+        // Clamp X and Y to the physical screen coordinates.
+        if (x >= windowResize.getWidth()) {
+            x = windowResize.getWidth() - 1;
+        }
+        if (y >= windowResize.getHeight()) {
+            y = windowResize.getHeight() - 1;
+        }
+
+        TMouseEvent.Type eventType = TMouseEvent.Type.MOUSE_DOWN;
+        boolean eventMouse1 = false;
+        boolean eventMouse2 = false;
+        boolean eventMouse3 = false;
+        boolean eventMouseWheelUp = false;
+        boolean eventMouseWheelDown = false;
+
+        if (release) {
+            eventType = TMouseEvent.Type.MOUSE_UP;
+        }
+
+        switch (buttons) {
+        case 0:
+            eventMouse1 = true;
+            break;
+        case 1:
+            eventMouse2 = true;
+            break;
+        case 2:
+            eventMouse3 = true;
+            break;
+        case 35:
+            // Motion only, no buttons down
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 32:
+            // Dragging with mouse1 down
+            eventMouse1 = true;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 33:
+            // Dragging with mouse2 down
+            eventMouse2 = true;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 34:
+            // Dragging with mouse3 down
+            eventMouse3 = true;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 96:
+            // Dragging with mouse2 down after wheelUp
+            eventMouse2 = true;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 97:
+            // Dragging with mouse2 down after wheelDown
+            eventMouse2 = true;
+            eventType = TMouseEvent.Type.MOUSE_MOTION;
+            break;
+
+        case 64:
+            eventMouseWheelUp = true;
+            break;
+
+        case 65:
+            eventMouseWheelDown = true;
+            break;
+
+        default:
+            // Unknown, bail out
+            return null;
+        }
+        return new TMouseEvent(eventType, x, y, x, y,
+            eventMouse1, eventMouse2, eventMouse3,
+            eventMouseWheelUp, eventMouseWheelDown);
+    }
+
+    /**
      * Return any events in the IO queue.
      *
      * @param queue list to append new events to
@@ -886,9 +986,51 @@ public final class ECMA48Terminal implements Runnable {
                     // Mouse position
                     state = ParseState.MOUSE;
                     return;
+                case '<':
+                    // Mouse position, SGR (1006) coordinates
+                    state = ParseState.MOUSE_SGR;
+                    return;
                 default:
                     break;
                 }
+            }
+
+            // Unknown keystroke, ignore
+            reset();
+            return;
+
+        case MOUSE_SGR:
+            // Numbers - parameter values
+            if ((ch >= '0') && (ch <= '9')) {
+                params.set(params.size() - 1,
+                    params.get(params.size() - 1) + ch);
+                return;
+            }
+            // Parameter separator
+            if (ch == ';') {
+                params.add("");
+                return;
+            }
+
+            switch (ch) {
+            case 'M':
+                // Generate a mouse press event
+                TInputEvent event = parseMouseSGR(false);
+                if (event != null) {
+                    events.add(event);
+                }
+                reset();
+                return;
+            case 'm':
+                // Generate a mouse release event
+                event = parseMouseSGR(true);
+                if (event != null) {
+                    events.add(event);
+                }
+                reset();
+                return;
+            default:
+                break;
             }
 
             // Unknown keystroke, ignore
@@ -1015,7 +1157,7 @@ public final class ECMA48Terminal implements Runnable {
      * @param on if true, enable metaSendsEscape
      * @return the string to emit to xterm
      */
-    public String xtermMetaSendsEscape(final boolean on) {
+    private String xtermMetaSendsEscape(final boolean on) {
         if (on) {
             return "\033[?1036h\033[?1034l";
         }
@@ -1031,7 +1173,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[31;1m"
      */
-    public String addHeaderSGR(String str) {
+    private String addHeaderSGR(String str) {
         if (str.length() > 0) {
             // Nix any trailing ';' because that resets all attributes
             while (str.endsWith(":")) {
@@ -1042,14 +1184,15 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Create a SGR parameter sequence for a single color change.
+     * Create a SGR parameter sequence for a single color change.  Note
+     * package private access.
      *
      * @param color one of the Color.WHITE, Color.BLUE, etc. constants
      * @param foreground if true, this is a foreground color
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[42m"
      */
-    public String color(final Color color, final boolean foreground) {
+    String color(final Color color, final boolean foreground) {
         return color(color, foreground, true);
     }
 
@@ -1063,7 +1206,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[42m"
      */
-    public String color(final Color color, final boolean foreground,
+    private String color(final Color color, final boolean foreground,
         final boolean header) {
 
         int ecmaColor = color.getValue();
@@ -1083,15 +1226,15 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Create a SGR parameter sequence for both foreground and
-     * background color change.
+     * Create a SGR parameter sequence for both foreground and background
+     * color change.  Note package private access.
      *
      * @param foreColor one of the Color.WHITE, Color.BLUE, etc. constants
      * @param backColor one of the Color.WHITE, Color.BLUE, etc. constants
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[31;42m"
      */
-    public String color(final Color foreColor, final Color backColor) {
+    String color(final Color foreColor, final Color backColor) {
         return color(foreColor, backColor, true);
     }
 
@@ -1106,7 +1249,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[31;42m"
      */
-    public String color(final Color foreColor, final Color backColor,
+    private String color(final Color foreColor, final Color backColor,
         final boolean header) {
 
         int ecmaForeColor = foreColor.getValue();
@@ -1126,7 +1269,8 @@ public final class ECMA48Terminal implements Runnable {
     /**
      * Create a SGR parameter sequence for foreground, background, and
      * several attributes.  This sequence first resets all attributes to
-     * default, then sets attributes as per the parameters.
+     * default, then sets attributes as per the parameters.  Note package
+     * private access.
      *
      * @param foreColor one of the Color.WHITE, Color.BLUE, etc. constants
      * @param backColor one of the Color.WHITE, Color.BLUE, etc. constants
@@ -1137,7 +1281,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[0;1;31;42m"
      */
-    public String color(final Color foreColor, final Color backColor,
+    String color(final Color foreColor, final Color backColor,
         final boolean bold, final boolean reverse, final boolean blink,
         final boolean underline) {
 
@@ -1194,7 +1338,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[7m"
      */
-    public String reverse(final boolean on) {
+    private String reverse(final boolean on) {
         if (on) {
             return "\033[7m";
         }
@@ -1202,12 +1346,13 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Create a SGR parameter sequence to reset to defaults.
+     * Create a SGR parameter sequence to reset to defaults.  Note package
+     * private access.
      *
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[0m"
      */
-    public String normal() {
+    String normal() {
         return normal(true);
     }
 
@@ -1219,7 +1364,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[0m"
      */
-    public String normal(final boolean header) {
+    private String normal(final boolean header) {
         if (header) {
             return "\033[0;37;40m";
         }
@@ -1233,7 +1378,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[1m"
      */
-    public String bold(final boolean on) {
+    private String bold(final boolean on) {
         return bold(on, true);
     }
 
@@ -1246,7 +1391,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[1m"
      */
-    public String bold(final boolean on, final boolean header) {
+    private String bold(final boolean on, final boolean header) {
         if (header) {
             if (on) {
                 return "\033[1m";
@@ -1266,7 +1411,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[5m"
      */
-    public String blink(final boolean on) {
+    private String blink(final boolean on) {
         return blink(on, true);
     }
 
@@ -1279,7 +1424,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[5m"
      */
-    public String blink(final boolean on, final boolean header) {
+    private String blink(final boolean on, final boolean header) {
         if (header) {
             if (on) {
                 return "\033[5m";
@@ -1300,7 +1445,7 @@ public final class ECMA48Terminal implements Runnable {
      * @return the string to emit to an ANSI / ECMA-style terminal,
      * e.g. "\033[4m"
      */
-    public String underline(final boolean on) {
+    private String underline(final boolean on) {
         if (on) {
             return "\033[4m";
         }
@@ -1308,12 +1453,13 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Create a SGR parameter sequence for enabling the visible cursor.
+     * Create a SGR parameter sequence for enabling the visible cursor.  Note
+     * package private access.
      *
      * @param on if true, turn on cursor
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String cursor(final boolean on) {
+    String cursor(final boolean on) {
         if (on && !cursorOn) {
             cursorOn = true;
             return "\033[?25h";
@@ -1338,11 +1484,11 @@ public final class ECMA48Terminal implements Runnable {
     /**
      * Clear the line from the cursor (inclusive) to the end of the screen.
      * Because some terminals use back-color-erase, set the color to
-     * white-on-black beforehand.
+     * white-on-black beforehand.  Note package private access.
      *
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String clearRemainingLine() {
+    String clearRemainingLine() {
         return "\033[0;37;40m\033[K";
     }
 
@@ -1352,7 +1498,7 @@ public final class ECMA48Terminal implements Runnable {
      *
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String clearPreceedingLine() {
+    private String clearPreceedingLine() {
         return "\033[0;37;40m\033[1K";
     }
 
@@ -1362,7 +1508,7 @@ public final class ECMA48Terminal implements Runnable {
      *
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String clearLine() {
+    private String clearLine() {
         return "\033[0;37;40m\033[2K";
     }
 
@@ -1371,24 +1517,26 @@ public final class ECMA48Terminal implements Runnable {
      *
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String home() {
+    private String home() {
         return "\033[H";
     }
 
     /**
-     * Move the cursor to (x, y).
+     * Move the cursor to (x, y).  Note package private access.
      *
      * @param x column coordinate.  0 is the left-most column.
      * @param y row coordinate.  0 is the top-most row.
      * @return the string to emit to an ANSI / ECMA-style terminal
      */
-    public String gotoXY(final int x, final int y) {
+    String gotoXY(final int x, final int y) {
         return String.format("\033[%d;%dH", y + 1, x + 1);
     }
 
     /**
      * Tell (u)xterm that we want to receive mouse events based on "Any event
-     * tracking" and UTF-8 coordinates.  See
+     * tracking", UTF-8 coordinates, and then SGR coordinates.  Ideally we
+     * will end up with SGR coordinates with UTF-8 coordinates as a fallback.
+     * See
      * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
      *
      * Note that this also sets the alternate/primary screen buffer.
@@ -1398,11 +1546,11 @@ public final class ECMA48Terminal implements Runnable {
      * buffer.
      * @return the string to emit to xterm
      */
-    public String mouse(final boolean on) {
+    private String mouse(final boolean on) {
         if (on) {
-            return "\033[?1003;1005h\033[?1049h";
+            return "\033[?1003;1005;1006h\033[?1049h";
         }
-        return "\033[?1003;1005l\033[?1049l";
+        return "\033[?1003;1006;1005l\033[?1049l";
     }
 
     /**

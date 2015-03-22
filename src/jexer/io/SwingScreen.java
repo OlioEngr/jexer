@@ -30,10 +30,6 @@
  */
 package jexer.io;
 
-import jexer.bits.Cell;
-import jexer.bits.CellAttributes;
-import jexer.session.SwingSessionInfo;
-
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -46,13 +42,38 @@ import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.util.Date;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import jexer.bits.Cell;
+import jexer.bits.CellAttributes;
+import jexer.session.SwingSessionInfo;
 
 /**
  * This Screen implementation draws to a Java Swing JFrame.
  */
 public final class SwingScreen extends Screen {
+
+    /**
+     * Cursor style to draw.
+     */
+    public enum CursorStyle {
+        /**
+         * Use an underscore for the cursor.
+         */
+        UNDERLINE,
+
+        /**
+         * Use a solid block for the cursor.
+         */
+        BLOCK,
+
+        /**
+         * Use an outlined block for the cursor.
+         */
+        OUTLINE
+    }
 
     private static Color MYBLACK;
     private static Color MYRED;
@@ -137,14 +158,37 @@ public final class SwingScreen extends Screen {
         private int maxDescent = 0;
 
         /**
-         * Top pixel value.
+         * Top pixel absolute location.
          */
         private int top = 30;
 
         /**
-         * Left pixel value.
+         * Left pixel absolute location.
          */
         private int left = 30;
+
+        /**
+         * The cursor style to draw.
+         */
+        private CursorStyle cursorStyle = CursorStyle.UNDERLINE;
+
+        /**
+         * The number of millis to wait before switching the blink from
+         * visible to invisible.
+         */
+        private long blinkMillis = 500;
+
+        /**
+         * If true, the cursor should be visible right now based on the blink
+         * time.
+         */
+        private boolean cursorBlinkVisible = true;
+
+        /**
+         * The time that the blink last flipped from visible to invisible or
+         * from invisible to visible.
+         */
+        private long lastBlinkTime = 0;
 
         /**
          * Convert a CellAttributes foreground color to an Swing Color.
@@ -241,11 +285,20 @@ public final class SwingScreen extends Screen {
             this.screen = screen;
             setDOSColors();
 
+            // Figure out my cursor style
+            String cursorStyleString = System.getProperty("jexer.Swing.cursorStyle",
+                "underline").toLowerCase();
+
+            if (cursorStyleString.equals("underline")) {
+                cursorStyle = CursorStyle.UNDERLINE;
+            } else if (cursorStyleString.equals("outline")) {
+                cursorStyle = CursorStyle.OUTLINE;
+            } else if (cursorStyleString.equals("block")) {
+                cursorStyle = CursorStyle.BLOCK;
+            }
+
             setTitle("Jexer Application");
             setBackground(Color.black);
-            // setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
-            // setFont(new Font("Liberation Mono", Font.BOLD, 16));
-            // setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
 
             try {
                 // Always try to use Terminus, the one decent font.
@@ -334,6 +387,13 @@ public final class SwingScreen extends Screen {
                 return;
             }
 
+            // See if it is time to flip the blink time.
+            long nowTime = (new Date()).getTime();
+            if (nowTime > blinkMillis + lastBlinkTime) {
+                lastBlinkTime = nowTime;
+                cursorBlinkVisible = !cursorBlinkVisible;
+            }
+
             int xCellMin = 0;
             int xCellMax = screen.width;
             int yCellMin = 0;
@@ -404,15 +464,28 @@ public final class SwingScreen extends Screen {
                 }
 
                 // Draw the cursor if it is visible
-                if ((cursorVisible)
+                if (cursorVisible
                     && (cursorY <= screen.height - 1)
                     && (cursorX <= screen.width - 1)
+                    && cursorBlinkVisible
                 ) {
                     int xPixel = cursorX * textWidth + left;
                     int yPixel = cursorY * textHeight + top;
                     Cell lCell = screen.logical[cursorX][cursorY];
                     gr.setColor(attrToForegroundColor(lCell));
-                    gr.fillRect(xPixel, yPixel + textHeight - 2, textWidth, 2);
+                    switch (cursorStyle) {
+                    case UNDERLINE:
+                        gr.fillRect(xPixel, yPixel + textHeight - 2,
+                            textWidth, 2);
+                        break;
+                    case BLOCK:
+                        gr.fillRect(xPixel, yPixel, textWidth, textHeight);
+                        break;
+                    case OUTLINE:
+                        gr.drawRect(xPixel, yPixel, textWidth - 1,
+                            textHeight - 1);
+                        break;
+                    }
                 }
 
                 dirty = false;
@@ -543,7 +616,17 @@ public final class SwingScreen extends Screen {
      */
     @Override
     public void putCursor(final boolean visible, final int x, final int y) {
-        if ((cursorVisible)
+
+        if ((visible == cursorVisible) && ((x == cursorX) && (y == cursorY))) {
+            // See if it is time to flip the blink time.
+            long nowTime = (new Date()).getTime();
+            if (nowTime < frame.blinkMillis + frame.lastBlinkTime) {
+                // Nothing has changed, so don't do anything.
+                return;
+            }
+        }
+
+        if (cursorVisible
             && (cursorY <= height - 1)
             && (cursorX <= width - 1)
         ) {

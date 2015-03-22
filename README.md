@@ -93,9 +93,6 @@ Some arbitrary design decisions had to be made when either the
 obviously expected behavior did not happen or when a specification was
 ambiguous.  This section describes such issues.
 
-  TTerminalWindow
-  ---------------
-
   - TTerminalWindow will hang on input from the remote if the
     TApplication is exited before the TTerminalWindow's process has
     closed on its own.  This is due to a Java limitation/interaction
@@ -115,20 +112,15 @@ ambiguous.  This section describes such issues.
     checking for a tty: script launches $SHELL in a pseudo-tty.  This
     works on Linux but might not on other Posix-y platforms.
 
-  ECMA48 Backend
-  --------------
-
-  - Java's InputStreamReader requires a valid UTF-8 stream.  The
-    default X10 encoding for mouse coordinates outside (160,94) can
-    corrupt that stream, at best putting garbage keyboard events in
-    the input queue but at worst causing the backend reader thread to
-    throw an Exception and exit and make the entire UI unusable.
-    Mouse support therefore requires a terminal that can deliver
-    either UTF-8 coordinates (1005 mode) or SGR coordinates (1006
-    mode).  Most modern terminals can do this.
-
-  Use of 'stty'
-  -------------
+  - Java's InputStreamReader as used by the ECMA48 backend requires a
+    valid UTF-8 stream.  The default X10 encoding for mouse
+    coordinates outside (160,94) can corrupt that stream, at best
+    putting garbage keyboard events in the input queue but at worst
+    causing the backend reader thread to throw an Exception and exit
+    and make the entire UI unusable.  Mouse support therefore requires
+    a terminal that can deliver either UTF-8 coordinates (1005 mode)
+    or SGR coordinates (1006 mode).  Most modern terminals can do
+    this.
 
   - jexer.session.TTYSession calls 'stty size' once every second to
     check the current window size, performing the same function as
@@ -187,6 +179,7 @@ Many tasks remain before calling this version 1.0:
 0.0.5: BUG HUNT
 
 - TSubMenu keyboard mnemonic not working
+- Swing performance.  Even with double buffering it isn't great.
 
 0.1.0: BETA RELEASE
 

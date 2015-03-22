@@ -90,7 +90,7 @@ public final class SwingBackend extends Backend {
      */
     @Override
     public void shutdown() {
-        terminal.shutdown();
+        ((SwingScreen) screen).shutdown();
     }
 
 }

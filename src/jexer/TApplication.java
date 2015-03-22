@@ -691,9 +691,11 @@ public class TApplication implements Runnable {
             if (!repaint
                 && ((mouseX == oldMouseX) && (mouseY == oldMouseY))
             ) {
-                // Never sleep longer than 100 millis, to get windows with
-                // background tasks an opportunity to update the display.
-                timeout = getSleepTime(100);
+                // Never sleep longer than 50 millis.  We need time for
+                // windows with background tasks to update the display, and
+                // still flip buffers reasonably quickly in
+                // backend.flushPhysical().
+                timeout = getSleepTime(50);
 
                 // See if there are any definitely events waiting to be
                 // processed.  If so, do not wait -- either there is I/O

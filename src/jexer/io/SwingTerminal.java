@@ -152,14 +152,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
     }
 
     /**
-     * Restore terminal to normal state.
-     */
-    public void shutdown() {
-        // System.err.println("=== shutdown() ==="); System.err.flush();
-        screen.frame.dispose();
-    }
-
-    /**
      * Return any events in the IO queue.
      *
      * @param queue list to append new events to

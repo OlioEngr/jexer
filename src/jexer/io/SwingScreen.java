@@ -41,6 +41,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferStrategy;
 import java.io.InputStream;
 import java.util.Date;
 import javax.swing.JFrame;
@@ -54,6 +55,11 @@ import jexer.session.SwingSessionInfo;
  * This Screen implementation draws to a Java Swing JFrame.
  */
 public final class SwingScreen extends Screen {
+
+    /**
+     * If true, use double buffering thread.
+     */
+    private static final boolean doubleBuffer = true;
 
     /**
      * Cursor style to draw.
@@ -138,6 +144,11 @@ public final class SwingScreen extends Screen {
         private static final String FONTFILE = "terminus-ttf-4.39/TerminusTTF-Bold-4.39.ttf";
 
         /**
+         * The BufferStrategy object needed for double-buffering.
+         */
+        private BufferStrategy bufferStrategy;
+
+        /**
          * The TUI Screen data.
          */
         SwingScreen screen;
@@ -197,12 +208,6 @@ public final class SwingScreen extends Screen {
          * @return the Swing Color
          */
         private Color attrToForegroundColor(final CellAttributes attr) {
-            /*
-             * TODO:
-             *   reverse
-             *   blink
-             *   underline
-             */
             if (attr.isBold()) {
                 if (attr.getForeColor().equals(jexer.bits.Color.BLACK)) {
                     return MYBOLD_BLACK;
@@ -250,12 +255,6 @@ public final class SwingScreen extends Screen {
          * @return the Swing Color
          */
         private Color attrToBackgroundColor(final CellAttributes attr) {
-            /*
-             * TODO:
-             *   reverse
-             *   blink
-             *   underline
-             */
             if (attr.getBackColor().equals(jexer.bits.Color.BLACK)) {
                 return MYBLACK;
             } else if (attr.getBackColor().equals(jexer.bits.Color.RED)) {
@@ -328,6 +327,13 @@ public final class SwingScreen extends Screen {
 
             // Save the text cell width/height
             getFontDimensions();
+
+            // Setup double-buffering
+            if (screen.doubleBuffer) {
+                setIgnoreRepaint(true);
+                createBufferStrategy(2);
+                bufferStrategy = getBufferStrategy();
+            }
         }
 
         /**
@@ -447,6 +453,14 @@ public final class SwingScreen extends Screen {
                         Cell pCell = screen.physical[x][y];
 
                         if (!lCell.equals(pCell) || reallyCleared) {
+
+                            /*
+                             * TODO:
+                             *   reverse
+                             *   blink
+                             *   underline
+                             */
+
                             // Draw the background rectangle, then the
                             // foreground character.
                             gr.setColor(attrToBackgroundColor(lCell));
@@ -501,6 +515,13 @@ public final class SwingScreen extends Screen {
     SwingFrame frame;
 
     /**
+     * Restore terminal to normal state.
+     */
+    public void shutdown() {
+        frame.dispose();
+    }
+
+    /**
      * Public constructor.
      */
     public SwingScreen() {
@@ -547,7 +568,15 @@ public final class SwingScreen extends Screen {
 
         if (reallyCleared) {
             // Really refreshed, do it all
-            frame.repaint();
+            if (doubleBuffer) {
+                Graphics gr = frame.bufferStrategy.getDrawGraphics();
+                frame.paint(gr);
+                gr.dispose();
+                frame.bufferStrategy.show();
+                Toolkit.getDefaultToolkit().sync();
+            } else {
+                frame.repaint();
+            }
             return;
         }
 
@@ -603,8 +632,20 @@ public final class SwingScreen extends Screen {
         }
 
         // Repaint the desired area
-        frame.repaint(xMin, yMin, xMax - xMin, yMax - yMin);
-        // System.err.printf("REPAINT X %d %d Y %d %d\n", xMin, xMax, yMin, yMax);
+        // System.err.printf("REPAINT X %d %d Y %d %d\n", xMin, xMax,
+        //     yMin, yMax);
+        if (doubleBuffer) {
+            Graphics gr = frame.bufferStrategy.getDrawGraphics();
+            Rectangle bounds = new Rectangle(xMin, yMin, xMax - xMin,
+                yMax - yMin);
+            gr.setClip(bounds);
+            frame.paint(gr);
+            gr.dispose();
+            frame.bufferStrategy.show();
+            Toolkit.getDefaultToolkit().sync();
+        } else {
+            frame.repaint(xMin, yMin, xMax - xMin, yMax - yMin);
+        }
     }
 
     /**

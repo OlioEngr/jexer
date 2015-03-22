@@ -28,7 +28,7 @@
 
 -->
 
-<project name="jexer" basedir="." default="run">
+<project name="jexer" basedir="." default="jar">
 
     <property name="src.dir"       value="src"/>
     <property name="resources.dir" value="resources"/>

@@ -110,6 +110,16 @@ ambiguous.  This section describes such issues.
     input (see the ENABLE_LINE_INPUT flag for GetConsoleMode() and
     SetConsoleMode()).
 
+  ECMA48 Backend
+  --------------
+  
+  - Mouse support for BackendType.ECMA48/XTERM currently requires UTF-8 
+    coordinates (1005 mode).  Terminals that support UTF-8 mouse coordinates
+    include xterm, rxvt-unicode, gnome-terminal, and konsole.  Due to Java's
+    InputStreamReader requirement of a valid UTF-8 stream, one must assume
+    the terminal will always generate correct UTF-8 bytes.  Mode 1006 (SGR)
+    will be supported in a future release.
+
 
 
 Roadmap
@@ -154,6 +164,8 @@ Many tasks remain before calling this version 1.0:
 0.0.5: BUG HUNT
 
 - TSubMenu keyboard mnemonic not working
+- ECMA48Terminal
+  - Mode 1006 mouse coordinates
 
 0.1.0: BETA RELEASE
 

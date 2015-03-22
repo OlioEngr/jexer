@@ -46,7 +46,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
 
-import jexer.TKeypress;
 import jexer.bits.Color;
 import jexer.event.TInputEvent;
 import jexer.event.TKeypressEvent;
@@ -186,14 +185,6 @@ public final class ECMA48Terminal implements Runnable {
      * The listening object that run() wakes up on new input.
      */
     private Object listener;
-
-    /**
-     * When true, the terminal is sending non-UTF8 bytes when reporting mouse
-     * events.
-     *
-     * TODO: Add broken mouse detection back into the reader.
-     */
-    private boolean brokenTerminalUTFMouse = false;
 
     /**
      * Get the output writer.

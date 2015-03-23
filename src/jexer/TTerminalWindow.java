@@ -281,11 +281,18 @@ public class TTerminalWindow extends TWindow {
 
             // Check to see if the shell has died.
             if (!emulator.isReading() && (shell != null)) {
-                // The emulator exited on its own, all is fine
-                setTitle(String.format("%s [Completed - %d]",
-                        getTitle(), shell.exitValue()));
-                shell = null;
-                emulator.close();
+                try {
+                    int rc = shell.exitValue();
+                    // The emulator exited on its own, all is fine
+                    setTitle(String.format("%s [Completed - %d]",
+                            getTitle(), shell.exitValue()));
+                    shell = null;
+                    emulator.close();
+                } catch (IllegalThreadStateException e) {
+                    // The emulator thread has exited, but the shell Process
+                    // hasn't figured that out yet.  Do nothing, we will see
+                    // this in a future tick.
+                }
             } else if (emulator.isReading() && (shell != null)) {
                 // The shell might be dead, let's check
                 try {

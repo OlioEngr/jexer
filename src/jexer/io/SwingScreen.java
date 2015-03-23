@@ -452,24 +452,38 @@ public final class SwingScreen extends Screen {
                         Cell lCell = screen.logical[x][y];
                         Cell pCell = screen.physical[x][y];
 
-                        if (!lCell.equals(pCell) || reallyCleared) {
+                        if (!lCell.equals(pCell)
+                            || lCell.isBlink()
+                            || reallyCleared) {
 
-                            /*
-                             * TODO:
-                             *   reverse
-                             *   blink
-                             *   underline
-                             */
+                            Cell lCellColor = new Cell();
+                            lCellColor.setTo(lCell);
+
+                            // Check for reverse
+                            if (lCell.isReverse()) {
+                                lCellColor.setForeColor(lCell.getBackColor());
+                                lCellColor.setBackColor(lCell.getForeColor());
+                            }
 
                             // Draw the background rectangle, then the
                             // foreground character.
-                            gr.setColor(attrToBackgroundColor(lCell));
+                            gr.setColor(attrToBackgroundColor(lCellColor));
                             gr.fillRect(xPixel, yPixel, textWidth, textHeight);
-                            gr.setColor(attrToForegroundColor(lCell));
-                            char [] chars = new char[1];
-                            chars[0] = lCell.getChar();
-                            gr.drawChars(chars, 0, 1, xPixel,
-                                yPixel + textHeight - maxDescent);
+
+                            // Handle blink and underline
+                            if (!lCell.isBlink()
+                                || (lCell.isBlink() && cursorBlinkVisible)
+                            ) {
+                                gr.setColor(attrToForegroundColor(lCellColor));
+                                char [] chars = new char[1];
+                                chars[0] = lCell.getChar();
+                                gr.drawChars(chars, 0, 1, xPixel,
+                                    yPixel + textHeight - maxDescent);
+                                if (lCell.isUnderline()) {
+                                    gr.fillRect(xPixel, yPixel + textHeight - 2,
+                                        textWidth, 2);
+                                }
+                            }
 
                             // Physical is always updated
                             physical[x][y].setTo(lCell);
@@ -607,6 +621,7 @@ public final class SwingScreen extends Screen {
                         || ((x == cursorX)
                             && (y == cursorY)
                             && cursorVisible)
+                        || lCell.isBlink()
                     ) {
                         if (xPixel < xMin) {
                             xMin = xPixel;

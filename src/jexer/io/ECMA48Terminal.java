@@ -332,6 +332,7 @@ public final class ECMA48Terminal implements Runnable {
 
         // Enable mouse reporting and metaSendsEscape
         this.output.printf("%s%s", mouse(true), xtermMetaSendsEscape(true));
+        this.output.flush();
 
         // Hang onto the window size
         windowResize = new TResizeEvent(TResizeEvent.Type.SCREEN,

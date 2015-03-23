@@ -11,7 +11,7 @@ wishing to use the actual C++ Turbo Vision library, see [Sergio
 Sigala's updated version](http://tvision.sourceforge.net/) that runs
 on many more platforms.
 
-Two backends are available:
+Three backends are available:
 
 * System.in/out to a command-line ECMA-48 / ANSI X3.64 type terminal
   (tested on Linux + xterm).  I/O is handled through terminal escape
@@ -20,13 +20,20 @@ Two backends are available:
   are supported.  For the demo application, this is the default
   backend on non-Windows platforms.
 
+* The same command-line ECMA-48 / ANSI X3.64 type terminal as above,
+  but to any general InputStream/OutputStream.  See the file
+  jexer.demos.Demo2 for an example of running the demo over a TCP
+  socket.
+
 * Java Swing UI.  This backend can be selected by setting
   jexer.Swing=true.  The default window size for Swing is 132x40,
   which is set in jexer.session.SwingSession.  For the demo
   application, this is the default backend on Windows platforms.
 
 The demo application showing the existing UI controls is available via
-'java -jar jexer.jar' or 'java -Djexer.Swing=true -jar jexer.jar' .
+'java -jar jexer.jar', 'java -Djexer.Swing=true -jar jexer.jar', or
+'java -cp jexer.jar jexer.demos.Demo2 PORT' (where PORT is a number to
+run the TCP daemon on).
 
 Additional backends can be created by subclassing
 jexer.backend.Backend and passing it into the TApplication
@@ -82,7 +89,7 @@ public class MyApplication extends TApplication {
 }
 ```
 
-See the file demos/Demo1.java for detailed examples.
+See the files in jexer.demos for more detailed examples.
 
 
 
@@ -127,8 +134,9 @@ ambiguous.  This section describes such issues.
     ioctl(TIOCGWINSZ) but without requiring a native library.
 
   - jexer.io.ECMA48Terminal calls 'stty' to perform the equivalent of
-    cfmakeraw().  The terminal is (blindly!) put back in 'stty sane
-    cooked' mode when exiting.
+    cfmakeraw() when using System.in/out.  System.out is also
+    (blindly!)  put in 'stty sane cooked' mode when exiting.
+
 
 
 System Properties
@@ -155,10 +163,6 @@ Roadmap
 -------
 
 Many tasks remain before calling this version 1.0:
-
-0.0.2: STABILIZE EXISTING
-
-- ECMA48Backend running on socket
 
 0.0.3: FINISH PORTING
 

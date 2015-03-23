@@ -30,6 +30,8 @@
  */
 package jexer.demos;
 
+import java.io.*;
+
 import jexer.*;
 import jexer.event.*;
 import jexer.menu.*;
@@ -40,13 +42,9 @@ import jexer.menu.*;
 class DemoApplication extends TApplication {
 
     /**
-     * Public constructor.
-     *
-     * @param backendType one of the TApplication.BackendType values
-     * @throws Exception if TApplication can't instantiate the Backend.
+     * Add all the widgets of the demo.
      */
-    public DemoApplication(BackendType backendType) throws Exception {
-        super(backendType);
+    private void addAllWidgets() {
         new DemoMainWindow(this);
 
         // Add the menus
@@ -76,6 +74,35 @@ class DemoApplication extends TApplication {
         item = subMenu.addItem(2002, "&Normal (sub)");
 
         addWindowMenu();
-
+    }
+    
+    /**
+     * Public constructor.
+     *
+     * @param input an InputStream connected to the remote user, or null for
+     * System.in.  If System.in is used, then on non-Windows systems it will
+     * be put in raw mode; shutdown() will (blindly!) put System.in in cooked
+     * mode.  input is always converted to a Reader with UTF-8 encoding.
+     * @param output an OutputStream connected to the remote user, or null
+     * for System.out.  output is always converted to a Writer with UTF-8
+     * encoding.
+     * @throws UnsupportedEncodingException if an exception is thrown when
+     * creating the InputStreamReader
+     */
+    public DemoApplication(final InputStream input,
+        final OutputStream output) throws UnsupportedEncodingException {
+        super(input, output);
+        addAllWidgets();
+    }
+    
+    /**
+     * Public constructor.
+     *
+     * @param backendType one of the TApplication.BackendType values
+     * @throws Exception if TApplication can't instantiate the Backend.
+     */
+    public DemoApplication(BackendType backendType) throws Exception {
+        super(backendType);
+        addAllWidgets();
     }
 }

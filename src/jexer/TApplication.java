@@ -174,6 +174,11 @@ public class TApplication implements Runnable {
                     }
                 }
 
+                // Wait for drawAll() or doIdle() to be done, then handle the
+                // events.
+                boolean oldLock = lockHandleEvent();
+                assert (oldLock == false);
+
                 // Pull all events off the queue
                 for (;;) {
                     TInputEvent event = null;
@@ -183,10 +188,6 @@ public class TApplication implements Runnable {
                         }
                         event = application.drainEventQueue.remove(0);
                     }
-                    // Wait for drawAll() or doIdle() to be done, then handle
-                    // the event.
-                    boolean oldLock = lockHandleEvent();
-                    assert (oldLock == false);
                     application.repaint = true;
                     if (primary) {
                         primaryHandleEvent(event);
@@ -210,13 +211,13 @@ public class TApplication implements Runnable {
 
                         // All done!
                         return;
-                    } else {
-                        // Unlock.  Either I am primary thread, or I am
-                        // secondary thread and still running.
-                        oldLock = unlockHandleEvent();
-                        assert (oldLock == true);
                     }
                 } // for (;;)
+
+                // Unlock.  Either I am primary thread, or I am secondary
+                // thread and still running.
+                oldLock = unlockHandleEvent();
+                assert (oldLock == true);
 
                 // I have done some work of some kind.  Tell the main run()
                 // loop to wake up now.
@@ -281,7 +282,14 @@ public class TApplication implements Runnable {
         synchronized (this) {
             // Wait for TApplication.run() to finish using the global state
             // before allowing further event processing.
-            while (lockoutHandleEvent == true) {}
+            while (lockoutHandleEvent == true) {
+                try {
+                    // Backoff so that the backend can finish its work.
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    // SQUASH
+                }
+            }
 
             oldValue = insideHandleEvent;
             insideHandleEvent = true;
@@ -330,7 +338,14 @@ public class TApplication implements Runnable {
         lockoutHandleEvent = true;
         // Wait for the last event to finish processing before returning
         // control to TApplication.run().
-        while (insideHandleEvent == true) {}
+        while (insideHandleEvent == true) {
+            try {
+                // Backoff so that the event handler can finish its work.
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                // SQUASH
+            }
+        }
 
         if (debugThreads) {
             System.err.printf(" XXX\n");
@@ -575,15 +590,13 @@ public class TApplication implements Runnable {
         }
 
         if (!repaint) {
-            synchronized (getScreen()) {
-                if ((oldMouseX != mouseX) || (oldMouseY != mouseY)) {
-                    // The only thing that has happened is the mouse moved.
-                    // Clear the old position and draw the new position.
-                    invertCell(oldMouseX, oldMouseY);
-                    invertCell(mouseX, mouseY);
-                    oldMouseX = mouseX;
-                    oldMouseY = mouseY;
-                }
+            if ((oldMouseX != mouseX) || (oldMouseY != mouseY)) {
+                // The only thing that has happened is the mouse moved.
+                // Clear the old position and draw the new position.
+                invertCell(oldMouseX, oldMouseY);
+                invertCell(mouseX, mouseY);
+                oldMouseX = mouseX;
+                oldMouseY = mouseY;
             }
             if (getScreen().isDirty()) {
                 backend.flushScreen();
@@ -696,21 +709,6 @@ public class TApplication implements Runnable {
                 // still flip buffers reasonably quickly in
                 // backend.flushPhysical().
                 timeout = getSleepTime(50);
-
-                // See if there are any definitely events waiting to be
-                // processed.  If so, do not wait -- either there is I/O
-                // coming in or the primary/secondary threads are still
-                // working.
-                synchronized (drainEventQueue) {
-                    if (drainEventQueue.size() > 0) {
-                        timeout = 0;
-                    }
-                }
-                synchronized (fillEventQueue) {
-                    if (fillEventQueue.size() > 0) {
-                        timeout = 0;
-                    }
-                }
             }
 
             if (timeout > 0) {
@@ -729,30 +727,26 @@ public class TApplication implements Runnable {
                 repaint = true;
             }
 
+            // Prevent stepping on the primary or secondary event handler.
+            stopEventHandlers();
+
             // Pull any pending I/O events
             backend.getEvents(fillEventQueue);
 
             // Dispatch each event to the appropriate handler, one at a time.
             for (;;) {
                 TInputEvent event = null;
-                synchronized (fillEventQueue) {
-                    if (fillEventQueue.size() == 0) {
-                        break;
-                    }
-                    event = fillEventQueue.remove(0);
+                if (fillEventQueue.size() == 0) {
+                    break;
                 }
+                event = fillEventQueue.remove(0);
                 metaHandleEvent(event);
             }
 
             // Wake a consumer thread if we have any pending events.
-            synchronized (drainEventQueue) {
-                if (drainEventQueue.size() > 0) {
-                    wakeEventHandler();
-                }
+            if (drainEventQueue.size() > 0) {
+                wakeEventHandler();
             }
-
-            // Prevent stepping on the primary or secondary event handler.
-            stopEventHandlers();
 
             // Process timers and call doIdle()'s
             doIdle();
@@ -847,9 +841,7 @@ public class TApplication implements Runnable {
         }
 
         // Put into the main queue
-        synchronized (drainEventQueue) {
-            drainEventQueue.add(event);
-        }
+        drainEventQueue.add(event);
     }
 
     /**

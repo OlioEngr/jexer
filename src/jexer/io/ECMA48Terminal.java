@@ -308,9 +308,9 @@ public final class ECMA48Terminal implements Runnable {
         }
         this.input = new InputStreamReader(inputStream, "UTF-8");
 
-        // TODO: include TelnetSocket from NIB and have it implement
-        // SessionInfo
         if (input instanceof SessionInfo) {
+            // This is a TelnetInputStream that exposes window size and
+            // environment variables from the telnet layer.
             sessionInfo = (SessionInfo) input;
         }
         if (sessionInfo == null) {

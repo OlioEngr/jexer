@@ -31,6 +31,7 @@
 package jexer.demos;
 
 import java.net.*;
+import jexer.net.*;
 
 /**
  * This class is the main driver for a simple demonstration of Jexer's
@@ -52,7 +53,7 @@ public class Demo2 {
             }
 
             int port = Integer.parseInt(args[0]);
-            ServerSocket server = new ServerSocket(port);
+            ServerSocket server = new TelnetServerSocket(port);
             while (true) {
                 Socket socket = server.accept();
                 System.out.printf("New connection: %s\n", socket);

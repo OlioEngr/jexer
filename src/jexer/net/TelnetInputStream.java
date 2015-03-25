@@ -54,14 +54,46 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     private InputStream input;
 
     /**
+     * The telnet-aware OutputStream.
+     */
+    private TelnetOutputStream output;
+
+    /**
+     * Persistent read buffer.  In practice this will only be used if the
+     * single-byte read() is called sometime.
+     */
+    private byte [] readBuffer;
+
+    /**
+     * Current writing position in readBuffer - what is passed into
+     * input.read().
+     */
+    private int readBufferEnd;
+
+    /**
+     * Current read position in readBuffer - what is passed to the client in
+     * response to this.read().
+     */
+    private int readBufferStart;
+
+    /**
      * Package private constructor.
      *
      * @param master the master TelnetSocket
      * @param input the underlying socket's InputStream
+     * @param output the telnet-aware OutputStream
      */
-    TelnetInputStream(TelnetSocket master, InputStream input) {
+    TelnetInputStream(final TelnetSocket master, final InputStream input,
+        final TelnetOutputStream output) {
+
         this.master = master;
         this.input  = input;
+        this.output = output;
+
+        // Setup new read buffer
+        readBuffer      = new byte[1024];
+        readBufferStart = 0;
+        readBufferEnd   = 0;
     }
 
     // SessionInfo interface --------------------------------------------------
@@ -157,8 +189,13 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public int available() throws IOException {
-        // TODO
-        return 0;
+        if (readBuffer == null) {
+            throw new IOException("InputStream is closed");
+        }
+        if (readBufferEnd - readBufferStart > 0) {
+            return (readBufferEnd - readBufferStart);
+        }
+        return input.available();
     }
 
     /**
@@ -167,7 +204,10 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public void close() throws IOException {
-        // TODO
+        if (readBuffer != null) {
+            readBuffer = null;
+            input.close();
+        }
     }
 
     /**
@@ -175,7 +215,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public void mark(int readlimit) {
-        // TODO
+        // Do nothing
     }
 
     /**
@@ -191,8 +231,31 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public int read() throws IOException {
-        // TODO
-        return -1;
+
+        // If the post-processed buffer has bytes, use that.
+        if (readBufferEnd - readBufferStart > 0) {
+            readBufferStart++;
+            return readBuffer[readBufferStart - 1];
+        }
+
+        // The buffer is empty, so reset the indexes to 0.
+        readBufferStart = 0;
+        readBufferEnd   = 0;
+
+        // Read some fresh data and run it through the telnet protocol.
+        int rc = readImpl(readBuffer, readBufferEnd,
+            readBuffer.length - readBufferEnd);
+
+        // If we got something, return it.
+        if (rc > 0) {
+            readBufferStart++;
+            return readBuffer[readBufferStart - 1];
+        }
+        // If we read 0, I screwed up big time.
+        assert (rc != 0);
+
+        // We read -1 (EOF).
+        return rc;
     }
 
     /**
@@ -201,8 +264,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public int read(byte[] b) throws IOException {
-        // TODO
-        return -1;
+        return read(b, 0, b.length);
     }
 
     /**
@@ -211,8 +273,41 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        // TODO
-        return -1;
+        // The only time we can return 0 is if len is 0, as per the
+        // InputStream contract.
+        if (len == 0) {
+            return 0;
+        }
+
+        // If the post-processed buffer has bytes, use that.
+        if (readBufferEnd - readBufferStart > 0) {
+            int n = Math.min(len, readBufferEnd - readBufferStart);
+            System.arraycopy(b, off, readBuffer, readBufferStart, n);
+            readBufferStart += n;
+            return n;
+        }
+
+        // The buffer is empty, so reset the indexes to 0.
+        readBufferStart = 0;
+        readBufferEnd   = 0;
+
+        // The maximum number of bytes we will ask for will definitely be
+        // within the bounds of what we can return in a single call.
+        int n = Math.min(len, readBuffer.length);
+
+        // Read some fresh data and run it through the telnet protocol.
+        int rc = readImpl(readBuffer, readBufferEnd, n);
+
+        // If we got something, return it.
+        if (rc > 0) {
+            System.arraycopy(readBuffer, 0, b, off, len);
+            return rc;
+        }
+        // If we read 0, I screwed up big time.
+        assert (rc != 0);
+
+        // We read -1 (EOF).
+        return rc;
     }
 
     /**
@@ -221,7 +316,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public void reset() throws IOException {
-        // TODO
+        throw new IOException("InputStream does not support mark/reset");
     }
 
     /**
@@ -229,10 +324,14 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      */
     @Override
     public long skip(long n) throws IOException {
-        // TODO
-        return -1;
+        if (n < 0) {
+            return 0;
+        }
+        for (int i = 0; i < n; i++) {
+            read();
+        }
+        return n;
     }
-
 
     // Telnet protocol --------------------------------------------------------
 
@@ -325,7 +424,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
         buffer[1] = (byte)response;
         buffer[2] = (byte)option;
 
-        master.output.write(buffer);
+        output.rawWrite(buffer);
     }
 
     /**
@@ -396,7 +495,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
         System.arraycopy(response, 0, buffer, 3, response.length);
         buffer[response.length + 3] = (byte)TELNET_IAC;
         buffer[response.length + 4] = (byte)TELNET_SE;
-        master.output.write(buffer);
+        output.rawWrite(buffer);
     }
 
     /**
@@ -455,7 +554,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * When run as a server:
      *     Echo
      */
-    private void telnetSendOptions() throws IOException {
+    void telnetSendOptions() throws IOException {
         if (master.nvt.binaryMode == false) {
             // Binary Transmission: must ask both do and will
             DO(0);
@@ -712,6 +811,16 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
             // Ignore this one
             break;
         }
+    }
+
+    /**
+     * Reads up to len bytes of data from the input stream into an array of
+     * bytes.
+     */
+    private int readImpl(byte[] b, int off, int len) throws IOException {
+        assert (len > 0);
+        // TODO
+        return -1;
     }
 
 

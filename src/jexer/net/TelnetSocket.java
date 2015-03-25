@@ -108,10 +108,7 @@ public final class TelnetSocket extends Socket {
         boolean readCR;
 
         // Flags used by the TelnetOutputStream
-        int writeRC;
-        int writeLastErrno;
-        boolean writeLastError;
-        boolean writeCR;
+	boolean writeCR;
 
         /**
          * Constuctor calls reset().
@@ -141,11 +138,7 @@ public final class TelnetSocket extends Socket {
             eofMsg              = false;
             readCR              = false;
 
-            writeRC             = 0;
-            writeLastErrno      = 0;
-            writeLastError      = false;
             writeCR             = false;
-
         }
     }
 
@@ -172,6 +165,12 @@ public final class TelnetSocket extends Socket {
         super();
         nvt = new TelnetState();
         this.socket = socket;
+
+        output = new TelnetOutputStream(this, super.getOutputStream());
+        input = new TelnetInputStream(this, super.getInputStream(), output);
+
+        // Initiate the telnet protocol negotiation.
+        input.telnetSendOptions();
     }
 
     // Socket interface -------------------------------------------------------
@@ -183,9 +182,6 @@ public final class TelnetSocket extends Socket {
      */
     @Override
     public InputStream getInputStream() throws IOException {
-        if (input == null) {
-            input = new TelnetInputStream(this, super.getInputStream());
-        }
         return input;
     }
 
@@ -196,9 +192,6 @@ public final class TelnetSocket extends Socket {
      */
     @Override
     public OutputStream getOutputStream() throws IOException {
-        if (output == null) {
-            output = new TelnetOutputStream(this, super.getOutputStream());
-        }
         return output;
     }
 

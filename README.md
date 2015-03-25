@@ -30,10 +30,19 @@ Three backends are available:
   which is set in jexer.session.SwingSession.  For the demo
   application, this is the default backend on Windows platforms.
 
-The demo application showing the existing UI controls is available via
-'java -jar jexer.jar', 'java -Djexer.Swing=true -jar jexer.jar', or
-'java -cp jexer.jar jexer.demos.Demo2 PORT' (where PORT is a number to
-run the TCP daemon on).
+The demo application showing the existing UI controls can be seen in
+three ways:
+
+  * 'java -jar jexer.jar' .  This will use System.in/out on
+    non-Windows, or Swing on Windows.
+
+  * 'java -Djexer.Swing=true -jar jexer.jar' .  This will always use
+    Swing.
+
+  * 'java -cp jexer.jar jexer.demos.Demo2 PORT' (where PORT is a
+    number to run the TCP daemon on).  This will use the telnet
+    protocol to establish an 8-bit clean channel and be aware of
+    screen size changes.
 
 Additional backends can be created by subclassing
 jexer.backend.Backend and passing it into the TApplication

@@ -43,109 +43,90 @@ import java.net.Socket;
 public final class TelnetSocket extends Socket {
 
     /**
-     * The wrapped socket.
-     */
-    private Socket socket;
-
-    /**
      * The telnet-aware socket InputStream.
      */
     private TelnetInputStream input;
 
     /**
-     * The telnet-aware socket OutputStream. Note package private access:
-     * input sends stuff to output.
+     * The telnet-aware socket OutputStream.
      */
-    TelnetOutputStream output;
+    private TelnetOutputStream output;
 
     // Telnet protocol special characters.  Note package private access.
-    public static final int TELNET_SE         = 240;
-    public static final int TELNET_NOP        = 241;
-    public static final int TELNET_DM         = 242;
-    public static final int TELNET_BRK        = 243;
-    public static final int TELNET_IP         = 244;
-    public static final int TELNET_AO         = 245;
-    public static final int TELNET_AYT        = 246;
-    public static final int TELNET_EC         = 247;
-    public static final int TELNET_EL         = 248;
-    public static final int TELNET_GA         = 249;
-    public static final int TELNET_SB         = 250;
-    public static final int TELNET_WILL       = 251;
-    public static final int TELNET_WONT       = 252;
-    public static final int TELNET_DO         = 253;
-    public static final int TELNET_DONT       = 254;
-    public static final int TELNET_IAC        = 255;
-    public static final int C_NUL             = 0x00;
-    public static final int C_LF              = 0x0A;
-    public static final int C_CR              = 0x0D;
+    static final int TELNET_SE         = 240;
+    static final int TELNET_NOP        = 241;
+    static final int TELNET_DM         = 242;
+    static final int TELNET_BRK        = 243;
+    static final int TELNET_IP         = 244;
+    static final int TELNET_AO         = 245;
+    static final int TELNET_AYT        = 246;
+    static final int TELNET_EC         = 247;
+    static final int TELNET_EL         = 248;
+    static final int TELNET_GA         = 249;
+    static final int TELNET_SB         = 250;
+    static final int TELNET_WILL       = 251;
+    static final int TELNET_WONT       = 252;
+    static final int TELNET_DO         = 253;
+    static final int TELNET_DONT       = 254;
+    static final int TELNET_IAC        = 255;
+    static final int C_NUL             = 0x00;
+    static final int C_LF              = 0x0A;
+    static final int C_CR              = 0x0D;
 
     /**
-     * Telnet protocol speaks to a Network Virtual Terminal (NVT).
+     * If true, this is a server socket (i.e. created by accept()).
      */
-    class TelnetState {
-
-        // General status flags outside the NVT spec
-        boolean doInit;
-        boolean isServer;
-
-        // NVT flags
-        boolean echoMode;
-        boolean binaryMode;
-        boolean goAhead;
-        boolean doTermType;
-        boolean doTermSpeed;
-        boolean doNAWS;
-        boolean doEnvironment;
-        String terminal = "";
-
-        // Flags used by the TelnetInputStream
-        boolean iac;
-        boolean dowill;
-        int dowillType;
-        boolean subnegEnd;
-        boolean isEof;
-        boolean eofMsg;
-        boolean readCR;
-
-        // Flags used by the TelnetOutputStream
-	boolean writeCR;
-
-        /**
-         * Constuctor calls reset().
-         */
-        public TelnetState() {
-            reset();
-        }
-
-        /**
-         * Reset NVT to default state as per RFC 854.
-         */
-        public void reset() {
-            echoMode            = false;
-            binaryMode          = false;
-            goAhead             = true;
-            doTermType          = true;
-            doTermSpeed         = true;
-            doNAWS              = true;
-            doEnvironment       = true;
-            doInit              = true;
-            isServer            = true;
-
-            iac                 = false;
-            dowill              = false;
-            subnegEnd           = false;
-            isEof               = false;
-            eofMsg              = false;
-            readCR              = false;
-
-            writeCR             = false;
-        }
-    }
+    boolean isServer = true;
 
     /**
-     * State of the protocol.  Note package private access.
+     * If true, telnet ECHO mode is set such that local echo is off and
+     * remote echo is on.  This is appropriate for server sockets.
      */
-    TelnetState nvt;
+    boolean echoMode = false;
+
+    /**
+     * If true, telnet BINARY mode is enabled.  We always want this to
+     * ensure a Unicode-safe stream.
+     */
+    boolean binaryMode = false;
+
+    /**
+     * If true, the SUPPRESS-GO-AHEAD option is enabled.  We always want
+     * this.
+     */
+    boolean goAhead = true;
+
+    /**
+     * If true, request the client terminal type.
+     */
+    boolean doTermType = true;
+
+    /**
+     * If true, request the client terminal speed.
+     */
+    boolean doTermSpeed = true;
+
+    /**
+     * If true, request the Negotiate About Window Size option to
+     * determine the client text width/height.
+     */
+    boolean doNAWS = true;
+
+    /**
+     * If true, request the New Environment option to obtain the client
+     * LOGNAME, USER, and LANG variables.
+     */
+    boolean doEnvironment;
+
+    /**
+     * The terminal type reported by the client.
+     */
+    String terminalType = "";
+
+    /**
+     * The terminal speed reported by the client.
+     */
+    String terminalSpeed = "";
 
     /**
      * See if telnet server/client is in ASCII mode.
@@ -153,24 +134,17 @@ public final class TelnetSocket extends Socket {
      * @return if true, this connection is in ASCII mode
      */
     public boolean isAscii() {
-        return (!nvt.binaryMode);
+        return (!binaryMode);
     }
 
     /**
-     * Creates a Socket that knows the telnet protocol.
+     * Creates a Socket that knows the telnet protocol.  Note package private
+     * access, this is only used by TelnetServerSocket.
      *
-     * @param socket the underlying Socket
+     * @throws IOException if an I/O error occurs
      */
-    TelnetSocket(Socket socket) throws IOException {
+    TelnetSocket() throws IOException {
         super();
-        nvt = new TelnetState();
-        this.socket = socket;
-
-        output = new TelnetOutputStream(this, super.getOutputStream());
-        input = new TelnetInputStream(this, super.getInputStream(), output);
-
-        // Initiate the telnet protocol negotiation.
-        input.telnetSendOptions();
     }
 
     // Socket interface -------------------------------------------------------
@@ -179,9 +153,16 @@ public final class TelnetSocket extends Socket {
      * Returns an input stream for this socket.
      *
      * @return the input stream
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public InputStream getInputStream() throws IOException {
+        if (input == null) {
+            assert (output == null);
+            output = new TelnetOutputStream(this, super.getOutputStream());
+            input = new TelnetInputStream(this, super.getInputStream(), output);
+            input.telnetSendOptions();
+        }
         return input;
     }
 
@@ -189,9 +170,16 @@ public final class TelnetSocket extends Socket {
      * Returns an output stream for this socket.
      *
      * @return the output stream
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public OutputStream getOutputStream() throws IOException {
+        if (output == null) {
+            assert (input == null);
+            output = new TelnetOutputStream(this, super.getOutputStream());
+            input = new TelnetInputStream(this, super.getInputStream(), output);
+            input.telnetSendOptions();
+        }
         return output;
     }
 

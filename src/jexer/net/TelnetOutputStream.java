@@ -54,7 +54,7 @@ public final class TelnetOutputStream extends OutputStream {
      * @param master the master TelnetSocket
      * @param output the underlying socket's OutputStream
      */
-    TelnetOutputStream(TelnetSocket master, OutputStream output) {
+    TelnetOutputStream(final TelnetSocket master, final OutputStream output) {
         this.master = master;
         this.output = output;
     }
@@ -64,6 +64,8 @@ public final class TelnetOutputStream extends OutputStream {
     /**
      * Closes this output stream and releases any system resources associated
      * with this stream.
+     *
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public void close() throws IOException {
@@ -76,16 +78,18 @@ public final class TelnetOutputStream extends OutputStream {
     /**
      * Flushes this output stream and forces any buffered output bytes to be
      * written out.
+     *
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public void flush() throws IOException {
-        if ((master.nvt.binaryMode == false) && (master.nvt.writeCR == true)) {
+        if ((master.binaryMode == false) && (writeCR == true)) {
             // The last byte sent to this.write() was a CR, which was never
             // actually sent.  So send the CR in ascii mode, then flush.
             // CR <anything> -> CR NULL
             output.write(master.C_CR);
             output.write(master.C_NUL);
-            master.nvt.writeCR = false;
+            writeCR = false;
         }
         output.flush();
     }
@@ -93,26 +97,39 @@ public final class TelnetOutputStream extends OutputStream {
     /**
      * Writes b.length bytes from the specified byte array to this output
      * stream.
+     *
+     * @param b the data.
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public void write(byte[] b) throws IOException {
+    public void write(final byte[] b) throws IOException {
         writeImpl(b, 0, b.length);
     }
 
     /**
      * Writes len bytes from the specified byte array starting at offset off
      * to this output stream.
+     *
+     * @param b the data.
+     * @param off the start offset in the data.
+     * @param len the number of bytes to write.
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    public void write(final byte[] b, final int off,
+        final int len) throws IOException {
+
         writeImpl(b, off, len);
     }
 
     /**
      * Writes the specified byte to this output stream.
+     *
+     * @param b the byte to write.
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public void write(int b) throws IOException {
+    public void write(final int b) throws IOException {
         byte [] bytes = new byte[1];
         bytes[0] = (byte)b;
         writeImpl(bytes, 0, 1);
@@ -121,14 +138,29 @@ public final class TelnetOutputStream extends OutputStream {
     /**
      * Writes b.length bytes from the specified byte array to this output
      * stream.  Note package private access.
+     *
+     * @param b the data.
+     * @throws IOException if an I/O error occurs
      */
-    void rawWrite(byte[] b) throws IOException {
+    void rawWrite(final byte[] b) throws IOException {
         output.write(b, 0, b.length);
     }
+
+    // Telnet protocol --------------------------------------------------------
+
+    /**
+     * When true, the last byte the caller passed to write() was a CR.
+     */
+    private boolean writeCR = false;
 
     /**
      * Writes len bytes from the specified byte array starting at offset off
      * to this output stream.
+     *
+     * @param b the data.
+     * @param off the start offset in the data.
+     * @param len the number of bytes to write.
+     * @throws IOException if an I/O error occurs
      */
     private void writeImpl(final byte[] b, final int off,
         final int len) throws IOException {
@@ -141,14 +173,14 @@ public final class TelnetOutputStream extends OutputStream {
                 // Flush what we have generated so far and reset the buffer,
                 // because the next byte could generate up to 4 output bytes
                 // (CR <something> <IAC> <IAC>).
-                super.write(writeBuffer, 0, writeBufferI);
+                output.write(writeBuffer, 0, writeBufferI);
                 writeBufferI = 0;
             }
 
             // Pull the next byte
             byte ch = b[i + off];
 
-            if (master.nvt.binaryMode == true) {
+            if (master.binaryMode == true) {
 
                 if (ch == master.TELNET_IAC) {
                     // IAC -> IAC IAC
@@ -166,39 +198,39 @@ public final class TelnetOutputStream extends OutputStream {
 
             // Bare carriage return -> CR NUL
             if (ch == master.C_CR) {
-                if (master.nvt.writeCR == true) {
+                if (writeCR == true) {
                     // Flush the previous CR to the stream.
                     // CR <anything> -> CR NULL
                     writeBuffer[writeBufferI++] = (byte)master.C_CR;
                     writeBuffer[writeBufferI++] = (byte)master.C_NUL;
                 }
-                master.nvt.writeCR = true;
+                writeCR = true;
             } else if (ch == master.C_LF) {
-                if (master.nvt.writeCR == true) {
+                if (writeCR == true) {
                     // CR LF -> CR LF
                     writeBuffer[writeBufferI++] = (byte)master.C_CR;
                     writeBuffer[writeBufferI++] = (byte)master.C_LF;
-                    master.nvt.writeCR = false;
+                    writeCR = false;
                 } else {
                     // Bare LF -> LF
                     writeBuffer[writeBufferI++] = ch;
                 }
             } else if (ch == master.TELNET_IAC) {
-                if (master.nvt.writeCR == true) {
+                if (writeCR == true) {
                     // CR <anything> -> CR NULL
                     writeBuffer[writeBufferI++] = (byte)master.C_CR;
                     writeBuffer[writeBufferI++] = (byte)master.C_NUL;
-                    master.nvt.writeCR = false;
+                    writeCR = false;
                 }
                 // IAC -> IAC IAC
                 writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
                 writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
             } else {
-                if (master.nvt.writeCR == true) {
+                if (writeCR == true) {
                     // CR <anything> -> CR NULL
                     writeBuffer[writeBufferI++] = (byte)master.C_CR;
                     writeBuffer[writeBufferI++] = (byte)master.C_NUL;
-                    master.nvt.writeCR = false;
+                    writeCR = false;
                 } else {
                     // Normal character */
                     writeBuffer[writeBufferI++] = ch;
@@ -209,9 +241,8 @@ public final class TelnetOutputStream extends OutputStream {
 
         if (writeBufferI > 0) {
             // Flush what we have generated so far and reset the buffer.
-            super.write(writeBuffer, 0, writeBufferI);
+            output.write(writeBuffer, 0, writeBufferI);
         }
     }
-
 
 }

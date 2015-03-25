@@ -32,6 +32,7 @@ package jexer.net;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -41,7 +42,8 @@ import static jexer.net.TelnetSocket.*;
 /**
  * TelnetInputStream works with TelnetSocket to perform the telnet protocol.
  */
-public final class TelnetInputStream extends InputStream implements SessionInfo {
+public final class TelnetInputStream extends InputStream
+        implements SessionInfo {
 
     /**
      * The root TelnetSocket that has my telnet protocol state.
@@ -94,6 +96,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
         readBuffer      = new byte[1024];
         readBufferStart = 0;
         readBufferEnd   = 0;
+        subnegBuffer    = new ArrayList<Byte>();
     }
 
     // SessionInfo interface --------------------------------------------------
@@ -186,6 +189,10 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * skipped over) from this input stream without blocking by the next
      * invocation of a method for this input stream.
      *
+     * @return an estimate of the number of bytes that can be read (or
+     * skipped over) from this input stream without blocking or 0 when it
+     * reaches the end of the input stream.
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public int available() throws IOException {
@@ -201,6 +208,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     /**
      * Closes this input stream and releases any system resources associated
      * with the stream.
+     *
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public void close() throws IOException {
@@ -212,14 +221,20 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Marks the current position in this input stream.
+     *
+     * @param readLimit the maximum limit of bytes that can be read before
+     * the mark position becomes invalid
      */
     @Override
-    public void mark(int readlimit) {
+    public void mark(final int readLimit) {
         // Do nothing
     }
 
     /**
      * Tests if this input stream supports the mark and reset methods.
+     *
+     * @return true if this stream instance supports the mark and reset
+     * methods; false otherwise
      */
     @Override
     public boolean markSupported() {
@@ -228,6 +243,10 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Reads the next byte of data from the input stream.
+     *
+     * @return the next byte of data, or -1 if there is no more data because
+     * the end of the stream has been reached.
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public int read() throws IOException {
@@ -261,18 +280,32 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     /**
      * Reads some number of bytes from the input stream and stores them into
      * the buffer array b.
+     *
+     * @param b the buffer into which the data is read.
+     * @return the total number of bytes read into the buffer, or -1 if there
+     * is no more data because the end of the stream has been reached.
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public int read(byte[] b) throws IOException {
+    public int read(final byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 
     /**
      * Reads up to len bytes of data from the input stream into an array of
      * bytes.
+     *
+     * @param b the buffer into which the data is read.
+     * @param off the start offset in array b at which the data is written.
+     * @param len the maximum number of bytes to read.
+     * @return the total number of bytes read into the buffer, or -1 if there
+     * is no more data because the end of the stream has been reached.
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public int read(byte[] b, int off, int len) throws IOException {
+    public int read(final byte[] b, final int off,
+        final int len) throws IOException {
+
         // The only time we can return 0 is if len is 0, as per the
         // InputStream contract.
         if (len == 0) {
@@ -300,7 +333,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
         // If we got something, return it.
         if (rc > 0) {
-            System.arraycopy(readBuffer, 0, b, off, len);
+            System.arraycopy(readBuffer, 0, b, off, rc);
             return rc;
         }
         // If we read 0, I screwed up big time.
@@ -312,7 +345,10 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Repositions this stream to the position at the time the mark method
-     * was last called on this input stream.
+     * was last called on this input stream.  This is not supported by
+     * TelnetInputStream, so IOException is always thrown.
+     *
+     * @throws IOException if this function is used
      */
     @Override
     public void reset() throws IOException {
@@ -321,9 +357,13 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Skips over and discards n bytes of data from this input stream.
+     *
+     * @param n the number of bytes to be skipped
+     * @return the actual number of bytes skipped
+     * @throws IOException if an I/O error occurs
      */
     @Override
-    public long skip(long n) throws IOException {
+    public long skip(final long n) throws IOException {
         if (n < 0) {
             return 0;
         }
@@ -335,15 +375,43 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     // Telnet protocol --------------------------------------------------------
 
+
+    /**
+     * When true, the last read byte from the remote side was IAC.
+     */
+    private boolean iac = false;
+
+    /**
+     * When true, we are in the middle of a DO/DONT/WILL/WONT negotiation.
+     */
+    private boolean dowill = false;
+
+    /**
+     * The telnet option being negotiated.
+     */
+    private int dowillType = 0;
+
+    /**
+     * When true, we are waiting to see the end of the sub-negotiation
+     * sequence.
+     */
+    private boolean subnegEnd = false;
+
+    /**
+     * When true, the last byte read from the remote side was CR.
+     */
+    private boolean readCR = false;
+
     /**
      * The subnegotiation buffer.
      */
-    private byte [] subnegBuffer;
+    private ArrayList<Byte> subnegBuffer;
 
     /**
      * For debugging, return a descriptive string for this telnet option.
      * These are pulled from: http://www.iana.org/assignments/telnet-options
      *
+     * @param option the telnet option byte
      * @return a string describing the telnet option code
      */
     private String optionString(final int option) {
@@ -415,6 +483,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      *
      * @param response a TELNET_DO/DONT/WILL/WONT byte
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void respond(final int response,
         final int option) throws IOException {
@@ -431,6 +500,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * Tell the remote side we WILL support an option.
      *
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void WILL(final int option) throws IOException {
         respond(TELNET_WILL, option);
@@ -440,6 +510,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * Tell the remote side we WON'T support an option.
      *
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void WONT(final int option) throws IOException {
         respond(TELNET_WONT, option);
@@ -449,6 +520,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * Tell the remote side we DO support an option.
      *
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void DO(final int option) throws IOException {
         respond(TELNET_DO, option);
@@ -458,6 +530,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * Tell the remote side we DON'T support an option.
      *
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void DONT(final int option) throws IOException {
         respond(TELNET_DONT, option);
@@ -468,6 +541,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      *
      * @param remoteQuery a TELNET_DO/DONT/WILL/WONT byte
      * @param option telnet option byte (binary mode, term type, etc.)
+     * @throws IOException if an I/O error occurs
      */
     private void refuse(final int remoteQuery,
         final int option) throws IOException {
@@ -480,10 +554,11 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     }
 
     /**
-     * Build sub-negotiation packet (RFC 855)
+     * Build sub-negotiation packet (RFC 855).
      *
      * @param option telnet option
      * @param response output buffer of response bytes
+     * @throws IOException if an I/O error occurs
      */
     private void telnetSendSubnegResponse(final int option,
         final byte [] response) throws IOException {
@@ -500,6 +575,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Telnet option: Terminal Speed (RFC 1079).  Client side.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void telnetSendTerminalSpeed() throws IOException {
         byte [] response = {0, '3', '8', '4', '0', '0', ',',
@@ -509,6 +586,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Telnet option: Terminal Type (RFC 1091).  Client side.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void telnetSendTerminalType() throws IOException {
         byte [] response = {0, 'v', 't', '1', '0', '0' };
@@ -517,6 +596,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Telnet option: Terminal Type (RFC 1091).  Server side.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void requestTerminalType() throws IOException {
         byte [] response = new byte[1];
@@ -526,6 +607,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Telnet option: Terminal Speed (RFC 1079).  Server side.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void requestTerminalSpeed() throws IOException {
         byte [] response = new byte[1];
@@ -535,6 +618,8 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Telnet option: New Environment (RFC 1572).  Server side.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void requestEnvironment() throws IOException {
         byte [] response = new byte[1];
@@ -543,7 +628,12 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     }
 
     /**
-     * Send the options we want to negotiate on:
+     * Send the options we want to negotiate on.
+     *
+     * <p>The options we use are:
+     *
+     * <p>
+     * <pre>
      *     Binary Transmission           RFC 856
      *     Suppress Go Ahead             RFC 858
      *     Negotiate About Window Size   RFC 1073
@@ -552,70 +642,75 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      *     New Environment               RFC 1572
      *
      * When run as a server:
-     *     Echo
+     *     Echo                          RFC 857
+     * </pre>
+     *
+     * @throws IOException if an I/O error occurs
      */
     void telnetSendOptions() throws IOException {
-        if (master.nvt.binaryMode == false) {
+        if (master.binaryMode == false) {
             // Binary Transmission: must ask both do and will
             DO(0);
             WILL(0);
         }
 
-        if (master.nvt.goAhead == true) {
+        if (master.goAhead == true) {
             // Suppress Go Ahead
             DO(3);
             WILL(3);
         }
 
         // Server only options
-        if (master.nvt.isServer == true) {
+        if (master.isServer == true) {
             // Enable Echo - I echo to them, they do not echo back to me.
             DONT(1);
             WILL(1);
 
-            if (master.nvt.doTermType == true) {
+            if (master.doTermType == true) {
                 // Terminal type - request it
                 DO(24);
             }
 
-            if (master.nvt.doTermSpeed == true) {
+            if (master.doTermSpeed == true) {
                 // Terminal speed - request it
                 DO(32);
             }
 
-            if (master.nvt.doNAWS == true) {
+            if (master.doNAWS == true) {
                 // NAWS - request it
                 DO(31);
             }
 
-            if (master.nvt.doEnvironment == true) {
+            if (master.doEnvironment == true) {
                 // Environment - request it
                 DO(39);
             }
 
         } else {
 
-            if (master.nvt.doTermType == true) {
+            if (master.doTermType == true) {
                 // Terminal type - request it
                 WILL(24);
             }
 
-            if (master.nvt.doTermSpeed == true) {
+            if (master.doTermSpeed == true) {
                 // Terminal speed - request it
                 WILL(32);
             }
 
-            if (master.nvt.doNAWS == true) {
+            if (master.doNAWS == true) {
                 // NAWS - request it
                 WILL(31);
             }
 
-            if (master.nvt.doEnvironment == true) {
+            if (master.doEnvironment == true) {
                 // Environment - request it
                 WILL(39);
             }
-
         }
+
+        // Push it all out
+        output.flush();
     }
 
     /**
@@ -633,13 +728,15 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
      * fails to handle ESC as defined in RFC 1572.
      */
     private void handleNewEnvironment() {
-        Map<StringBuilder, StringBuilder> newEnv = new TreeMap<StringBuilder, StringBuilder>();
+        Map<StringBuilder, StringBuilder> newEnv =
+                new TreeMap<StringBuilder, StringBuilder>();
+
         EnvState state = EnvState.INIT;
         StringBuilder name = new StringBuilder();
         StringBuilder value = new StringBuilder();
 
-        for (int i = 0; i < subnegBuffer.length; i++) {
-            byte b = subnegBuffer[i];
+        for (int i = 0; i < subnegBuffer.size(); i++) {
+            Byte b = subnegBuffer.get(i);
 
             switch (state) {
 
@@ -677,7 +774,7 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
                     value = new StringBuilder();
                 } else {
                     // Take it as an environment variable name/key byte
-                    name.append((char)b);
+                    name.append((char)b.byteValue());
                 }
 
                 break;
@@ -700,9 +797,13 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
                     name = new StringBuilder();
                 } else {
                     // Take it as an environment variable value byte
-                    value.append((char)b);
+                    value.append((char)b.byteValue());
                 }
                 break;
+
+            default:
+                throw new RuntimeException("Invalid state: " + state);
+
             }
         }
 
@@ -725,80 +826,84 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
 
     /**
      * Handle an option sub-negotiation.
+     *
+     * @throws IOException if an I/O error occurs
      */
     private void handleSubneg() throws IOException {
-        byte option;
+        Byte option;
 
         // Sanity check: there must be at least 1 byte in subnegBuffer
-        if (subnegBuffer.length < 1) {
+        if (subnegBuffer.size() < 1) {
             // Buffer too small: the other side is a broken telnetd, it did
             // not send the right sub-negotiation data.  Bail out now.
             return;
         }
-        option = subnegBuffer[0];
+        option = subnegBuffer.get(0);
 
         switch (option) {
 
         case 24:
             // Terminal Type
-            if ((subnegBuffer.length > 1) && (subnegBuffer[1] == 1)) {
+            if ((subnegBuffer.size() > 1) && (subnegBuffer.get(1) == 1)) {
                 // Server sent "SEND", we say "IS"
                 telnetSendTerminalType();
             }
-            if ((subnegBuffer.length > 1) && (subnegBuffer[1] == 0)) {
+            if ((subnegBuffer.size() > 1) && (subnegBuffer.get(1) == 0)) {
                 // Client sent "IS", record it
                 StringBuilder terminalString = new StringBuilder();
-                for (int i = 2; i < subnegBuffer.length; i++) {
-                    terminalString.append((char)subnegBuffer[i]);
+                for (int i = 2; i < subnegBuffer.size(); i++) {
+                    terminalString.append((char)subnegBuffer.
+                        get(i).byteValue());
                 }
-                master.nvt.terminal = terminalString.toString();
+                master.terminalType = terminalString.toString();
             }
             break;
 
         case 32:
             // Terminal Speed
-            if ((subnegBuffer.length > 1) && (subnegBuffer[1] == 1)) {
+            if ((subnegBuffer.size() > 1) && (subnegBuffer.get(1) == 1)) {
                 // Server sent "SEND", we say "IS"
                 telnetSendTerminalSpeed();
             }
-            if ((subnegBuffer.length > 1) && (subnegBuffer[1] == 0)) {
+            if ((subnegBuffer.size() > 1) && (subnegBuffer.get(1) == 0)) {
                 // Client sent "IS", record it
                 StringBuilder speedString = new StringBuilder();
-                for (int i = 2; i < subnegBuffer.length; i++) {
-                    speedString.append((char)subnegBuffer[i]);
+                for (int i = 2; i < subnegBuffer.size(); i++) {
+                    speedString.append((char)subnegBuffer.get(i).byteValue());
                 }
                 String termSpeed = speedString.toString();
+                master.terminalSpeed = speedString.toString();
             }
             break;
 
         case 31:
             // NAWS
-            if (subnegBuffer.length >= 5) {
+            if (subnegBuffer.size() >= 5) {
                 int i = 0;
 
                 i++;
-                if (subnegBuffer[i] == TELNET_IAC) {
+                if (subnegBuffer.get(i) == (byte)TELNET_IAC) {
                     i++;
                 }
-                windowWidth = subnegBuffer[i] * 256;
+                windowWidth = subnegBuffer.get(i) * 256;
 
                 i++;
-                if (subnegBuffer[i] == TELNET_IAC) {
+                if (subnegBuffer.get(i) == (byte)TELNET_IAC) {
                     i++;
                 }
-                windowWidth += subnegBuffer[i];
+                windowWidth += subnegBuffer.get(i);
 
                 i++;
-                if (subnegBuffer[i] == TELNET_IAC) {
+                if (subnegBuffer.get(i) == (byte)TELNET_IAC) {
                     i++;
                 }
-                windowHeight = subnegBuffer[i] * 256;
+                windowHeight = subnegBuffer.get(i) * 256;
 
                 i++;
-                if (subnegBuffer[i] == TELNET_IAC) {
+                if (subnegBuffer.get(i) == (byte)TELNET_IAC) {
                     i++;
                 }
-                windowHeight += subnegBuffer[i];
+                windowHeight += subnegBuffer.get(i);
             }
             break;
 
@@ -816,11 +921,406 @@ public final class TelnetInputStream extends InputStream implements SessionInfo 
     /**
      * Reads up to len bytes of data from the input stream into an array of
      * bytes.
+     *
+     * @param buf the buffer into which the data is read.
+     * @param off the start offset in array b at which the data is written.
+     * @param len the maximum number of bytes to read.
+     * @return the total number of bytes read into the buffer, or -1 if there
+     * is no more data because the end of the stream has been reached.
+     * @throws IOException if an I/O error occurs
      */
-    private int readImpl(byte[] b, int off, int len) throws IOException {
+    private int readImpl(final byte[] buf, final int off,
+        final int len) throws IOException {
+
         assert (len > 0);
-        // TODO
-        return -1;
+
+        // The current writing position in buf.
+        int bufN = 0;
+
+        // We will keep trying to read() until we have something to return.
+        do {
+
+            // Read up to len bytes
+            byte [] buffer = new byte[len];
+            int bufferN = 0;
+
+            // Read some data from the other end
+            int rc = input.read(buffer);
+
+            // Check for EOF or error
+            if (rc > 0) {
+                // More data came in
+                bufferN = rc;
+            } else {
+                // EOF, just return it.
+                return rc;
+            }
+
+            // Loop through the read bytes
+            for (int i = 0; i < bufferN; i++) {
+                byte b = buffer[i];
+
+                if (subnegEnd == true) {
+                    // Looking for IAC SE to end this subnegotiation
+                    if (b == (byte)TELNET_SE) {
+                        if (iac == true) {
+                            iac = false;
+                            subnegEnd = false;
+                            handleSubneg();
+                        }
+                    } else if (b == (byte)TELNET_IAC) {
+                        if (iac == true) {
+                            // An argument to the subnegotiation option
+                            subnegBuffer.add((byte)TELNET_IAC);
+                        } else {
+                            iac = true;
+                        }
+                    } else {
+                        // An argument to the subnegotiation option
+                        subnegBuffer.add(b);
+                    }
+                    continue;
+                }
+
+                // Look for DO/DON'T/WILL/WON'T option
+                if (dowill == true) {
+
+                    // Look for option/
+                    switch (b) {
+
+                    case 0:
+                        // Binary Transmission
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use binary transmission, yay.
+                            master.binaryMode = true;
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for binary transmission.
+                            WILL(b);
+                            master.binaryMode = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // We're screwed, server won't do binary
+                            // transmission.
+                            master.binaryMode = false;
+                        } else {
+                            // Server demands NVT ASCII mode.
+                            master.binaryMode = false;
+                        }
+                        break;
+
+                    case 1:
+                        // Echo
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use echo, yay.
+                            master.echoMode = true;
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for echo.
+                            WILL(b);
+                            master.echoMode = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // We're screwed, server won't do echo.
+                            master.echoMode = false;
+                        } else {
+                            // Server demands no echo.
+                            master.echoMode = false;
+                        }
+                        break;
+
+                    case 3:
+                        // Suppress Go Ahead
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use suppress go-ahead, yay.
+                            master.goAhead = false;
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for suppress go-ahead.
+                            WILL(b);
+                            master.goAhead = false;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // We're screwed, server won't do suppress
+                            // go-ahead.
+                            master.goAhead = true;
+                        } else {
+                            // Server demands Go-Ahead mode.
+                            master.goAhead = true;
+                        }
+                        break;
+
+                    case 24:
+                        // Terminal Type - send what's in TERM
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use terminal type, yay.
+                            if (master.isServer
+                                && master.doTermType
+                            ) {
+                                requestTerminalType();
+                                master.doTermType = false;
+                            } else if (!master.isServer) {
+                                master.doTermType = true;
+                            }
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for terminal type.
+                            WILL(b);
+                            master.doTermType = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // We're screwed, server won't do terminal type.
+                            master.doTermType = false;
+                        } else {
+                            // Server will not listen to terminal type.
+                            master.doTermType = false;
+                        }
+                        break;
+
+                    case 31:
+                        // NAWS
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use NAWS, yay.
+                            master.doNAWS = true;
+                            // NAWS cannot be requested by the server, it is
+                            // only sent by the client.
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for NAWS.
+                            WILL(b);
+                            master.doNAWS = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // Server won't do NAWS.
+                            master.doNAWS = false;
+                        } else {
+                            // Server will not listen to NAWS.
+                            master.doNAWS = false;
+                        }
+                        break;
+
+                    case 32:
+                        // Terminal Speed
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use terminal speed, yay.
+                            if (master.isServer
+                                && master.doTermSpeed
+                            ) {
+                                requestTerminalSpeed();
+                                master.doTermSpeed = false;
+                            } else if (!master.isServer) {
+                                master.doTermSpeed = true;
+                            }
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for terminal speed.
+                            WILL(b);
+                            master.doTermSpeed = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // We're screwed, server won't do terminal speed.
+                            master.doTermSpeed = false;
+                        } else {
+                            // Server will not listen to terminal speed.
+                            master.doTermSpeed = false;
+                        }
+                        break;
+
+                    case 39:
+                        // New Environment
+                        if (dowillType == (byte)TELNET_WILL) {
+                            // Server will use NewEnvironment, yay.
+                            if (master.isServer
+                                && master.doEnvironment
+                            ) {
+                                requestEnvironment();
+                                master.doEnvironment = false;
+                            } else if (!master.isServer) {
+                                master.doEnvironment = true;
+                            }
+                        } else if (dowillType == (byte)TELNET_DO) {
+                            // Server asks for NewEnvironment.
+                            WILL(b);
+                            master.doEnvironment = true;
+                        } else if (dowillType == (byte)TELNET_WONT) {
+                            // Server won't do NewEnvironment.
+                            master.doEnvironment = false;
+                        } else {
+                            // Server will not listen to New Environment.
+                            master.doEnvironment = false;
+                        }
+                        break;
+
+
+                    default:
+                        // Other side asked for something we don't
+                        // understand.  Tell them we will not do this option.
+                        refuse(dowillType, b);
+                        break;
+                    }
+
+                    dowill = false;
+                    continue;
+                } // if (dowill == true)
+
+                // Perform read processing
+                if (b == (byte)TELNET_IAC) {
+
+                    // Telnet command
+                    if (iac == true) {
+                        // IAC IAC -> IAC
+                        buf[bufN++] = (byte)TELNET_IAC;
+                        iac = false;
+                    } else {
+                        iac = true;
+                    }
+                    continue;
+                } else {
+                    if (iac == true) {
+
+                        switch (b) {
+
+                        case (byte)TELNET_SE:
+                            // log.debug1(" END Sub-Negotiation");
+                            break;
+                        case (byte)TELNET_NOP:
+                            // log.debug1(" NOP");
+                            break;
+                        case (byte)TELNET_DM:
+                            // log.debug1(" Data Mark");
+                            break;
+                        case (byte)TELNET_BRK:
+                            // log.debug1(" Break");
+                            break;
+                        case (byte)TELNET_IP:
+                            // log.debug1(" Interrupt Process");
+                            break;
+                        case (byte)TELNET_AO:
+                            // log.debug1(" Abort Output");
+                            break;
+                        case (byte)TELNET_AYT:
+                            // log.debug1(" Are You There?");
+                            break;
+                        case (byte)TELNET_EC:
+                            // log.debug1(" Erase Character");
+                            break;
+                        case (byte)TELNET_EL:
+                            // log.debug1(" Erase Line");
+                            break;
+                        case (byte)TELNET_GA:
+                            // log.debug1(" Go Ahead");
+                            break;
+                        case (byte)TELNET_SB:
+                            // log.debug1(" START Sub-Negotiation");
+                            // From here we wait for the IAC SE
+                            subnegEnd = true;
+                            subnegBuffer.clear();
+                            break;
+                        case (byte)TELNET_WILL:
+                            // log.debug1(" WILL");
+                            dowill = true;
+                            dowillType = b;
+                            break;
+                        case (byte)TELNET_WONT:
+                            // log.debug1(" WON'T");
+                            dowill = true;
+                            dowillType = b;
+                            break;
+                        case (byte)TELNET_DO:
+                            // log.debug1(" DO");
+                            dowill = true;
+                            dowillType = b;
+
+                            if (master.binaryMode == true) {
+                                // log.debug1("Telnet DO in binary mode");
+                            }
+
+                            break;
+                        case (byte)TELNET_DONT:
+                            // log.debug1(" DON'T");
+                            dowill = true;
+                            dowillType = b;
+                            break;
+                        default:
+                            // This should be equivalent to IAC NOP
+                            // log.debug1("Will treat as IAC NOP");
+                            break;
+                        }
+                        iac = false;
+                        continue;
+
+                    } // if (iac == true)
+
+                    /*
+                     * All of the regular IAC processing is completed at this
+                     * point.  Now we need to handle the CR and CR LF cases.
+                     *
+                     * According to RFC 854, in NVT ASCII mode:
+                     *     Bare CR -> CR NUL
+                     *     CR LF -> CR LF
+                     *
+                     */
+                    if (master.binaryMode == false) {
+
+                        if (b == C_LF) {
+                            if (readCR == true) {
+                                // This is CR LF.  Send CR LF and turn the cr
+                                // flag off.
+                                buf[bufN++] = C_CR;
+                                buf[bufN++] = C_LF;
+                                readCR = false;
+                                continue;
+                            }
+                            // This is bare LF.  Send LF.
+                            buf[bufN++] = C_LF;
+                            continue;
+                        }
+
+                        if (b == C_NUL) {
+                            if (readCR == true) {
+                                // This is CR NUL.  Send CR and turn the cr
+                                // flag off.
+                                buf[bufN++] = C_CR;
+                                readCR = false;
+                                continue;
+                            }
+                            // This is bare NUL.  Send NUL.
+                            buf[bufN++] = C_NUL;
+                            continue;
+                        }
+
+                        if (b == C_CR) {
+                            if (readCR == true) {
+                                // This is CR CR.  Send a CR NUL and leave
+                                // the cr flag on.
+                                buf[bufN++] = C_CR;
+                                buf[bufN++] = C_NUL;
+                                continue;
+                            }
+                            // This is the first CR.  Set the cr flag.
+                            readCR = true;
+                            continue;
+                        }
+
+                        if (readCR == true) {
+                            // This was a bare CR in the stream.
+                            buf[bufN++] = C_CR;
+                            readCR = false;
+                        }
+
+                        // This is a regular character.  Pass it on.
+                        buf[bufN++] = b;
+                        continue;
+                    }
+
+                    /*
+                     * This is the case for any of:
+                     *
+                     *     1) A NVT ASCII character that isn't CR, LF, or
+                     *        NUL.
+                     *
+                     *     2) A NVT binary character.
+                     *
+                     * For all of these cases, we just pass the character on.
+                     */
+                    buf[bufN++] = b;
+
+                } // if (b == TELNET_IAC)
+
+            } // for (int i = 0; i < bufferN; i++)
+
+        } while (bufN == 0);
+
+        // Return bytes read
+        return bufN;
     }
 
 

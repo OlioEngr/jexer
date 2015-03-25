@@ -30,12 +30,11 @@
  */
 package jexer.net;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * This class provides a ServerSocket that return TelnetSocket's in accept().
@@ -46,6 +45,8 @@ public final class TelnetServerSocket extends ServerSocket {
 
     /**
      * Creates an unbound server socket.
+     *
+     * @throws IOException if an I/O error occurs
      */
     public TelnetServerSocket() throws IOException {
         super();
@@ -53,6 +54,10 @@ public final class TelnetServerSocket extends ServerSocket {
 
     /**
      * Creates a server socket, bound to the specified port.
+     *
+     * @param port the port number, or 0 to use a port number that is
+     * automatically allocated.
+     * @throws IOException if an I/O error occurs
      */
     public TelnetServerSocket(final int port) throws IOException {
         super(port);
@@ -61,6 +66,12 @@ public final class TelnetServerSocket extends ServerSocket {
     /**
      * Creates a server socket and binds it to the specified local port
      * number, with the specified backlog.
+     *
+     * @param port the port number, or 0 to use a port number that is
+     * automatically allocated.
+     * @param backlog requested maximum length of the queue of incoming
+     * connections.
+     * @throws IOException if an I/O error occurs
      */
     public TelnetServerSocket(final int port,
         final int backlog) throws IOException {
@@ -71,6 +82,13 @@ public final class TelnetServerSocket extends ServerSocket {
     /**
      * Create a server with the specified port, listen backlog, and local IP
      * address to bind to.
+     *
+     * @param port the port number, or 0 to use a port number that is
+     * automatically allocated.
+     * @param backlog requested maximum length of the queue of incoming
+     * connections.
+     * @param bindAddr the local InetAddress the server will bind to
+     * @throws IOException if an I/O error occurs
      */
     public TelnetServerSocket(final int port, final int backlog,
         final InetAddress bindAddr) throws IOException {
@@ -81,11 +99,22 @@ public final class TelnetServerSocket extends ServerSocket {
     /**
      * Listens for a connection to be made to this socket and accepts it. The
      * method blocks until a connection is made.
+     *
+     * @return the new Socket
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public Socket accept() throws IOException {
-        Socket socket = super.accept();
-        return new TelnetSocket(socket);
+        if (isClosed()) {
+            throw new SocketException("Socket is closed");
+        }
+        if (!isBound()) {
+            throw new SocketException("Socket is not bound");
+        }
+
+        Socket socket = new TelnetSocket();
+        implAccept(socket);
+        return socket;
     }
-    
+
 }

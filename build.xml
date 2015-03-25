@@ -45,7 +45,10 @@
     <target name="compile">
 	<mkdir dir="${classes.dir}"/>
 	<javac srcdir="${src.dir}" destdir="${classes.dir}"
-	       includeantruntime="false"/>
+	       includeantruntime="false"
+	       debug="on"
+	       debuglevel="lines,vars,source"
+	       />
     </target>
 
     <target name="jar" depends="compile">

@@ -1584,17 +1584,18 @@ public final class ECMA48Terminal implements Runnable {
                         for (int i = 0; i < rc; i++) {
                             int ch = readBuffer[i];
                             processChar(events, (char)ch);
-                            if (events.size() > 0) {
-                                // Add to the queue for the backend thread to
-                                // be able to obtain.
-                                synchronized (eventQueue) {
-                                    eventQueue.addAll(events);
-                                }
-                                synchronized (listener) {
-                                    listener.notifyAll();
-                                }
-                                events.clear();
+                        }
+                        getIdleEvents(events);
+                        if (events.size() > 0) {
+                            // Add to the queue for the backend thread to
+                            // be able to obtain.
+                            synchronized (eventQueue) {
+                                eventQueue.addAll(events);
                             }
+                            synchronized (listener) {
+                                listener.notifyAll();
+                            }
+                            events.clear();
                         }
                     }
                 } else {

@@ -37,7 +37,7 @@ import jexer.menu.*;
 /**
  * This window demonstates the TMessageBox and TInputBox widgets.
  */
-class DemoMsgBoxWindow extends TWindow {
+public class DemoMsgBoxWindow extends TWindow {
 
     /**
      * Constructor.

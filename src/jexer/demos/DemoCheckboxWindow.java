@@ -38,7 +38,7 @@ import jexer.menu.*;
  * This window demonstates the TRadioGroup, TRadioButton, and TCheckbox
  * widgets.
  */
-class DemoCheckboxWindow extends TWindow {
+public class DemoCheckboxWindow extends TWindow {
 
     /**
      * Constructor.

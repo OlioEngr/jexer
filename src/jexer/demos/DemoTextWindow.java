@@ -37,7 +37,7 @@ import jexer.menu.*;
 /**
  * This window demonstates the TText, THScroller, and TVScroller widgets.
  */
-class DemoTextWindow extends TWindow {
+public class DemoTextWindow extends TWindow {
 
     /**
      * Hang onto my TText so I can resize it with the window.

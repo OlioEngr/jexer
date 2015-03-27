@@ -38,7 +38,7 @@ import jexer.menu.*;
  * This is the main "demo" application window.  It makes use of the TTimer,
  * TProgressBox, TLabel, TButton, and TField widgets.
  */
-class DemoMainWindow extends TWindow {
+public class DemoMainWindow extends TWindow {
 
     // Timer that increments a number.
     private TTimer timer;
@@ -153,17 +153,17 @@ class DemoMainWindow extends TWindow {
         }
         row += 2;
 
-        /*
         if (!isModal()) {
             addLabel("Tree views", 1, row);
             addButton("Tree&View", 35, row,
-                {
-                    new DemoTreeViewWindow(application);
+                new TAction() {
+                    public void DO() {
+                        new DemoTreeViewWindow(getApplication());
+                    }
                 }
             );
         }
         row += 2;
-         */
 
         if (!isModal()) {
             addLabel("Terminal", 1, row);

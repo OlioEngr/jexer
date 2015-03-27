@@ -39,7 +39,7 @@ import jexer.menu.*;
 /**
  * The demo application itself.
  */
-class DemoApplication extends TApplication {
+public class DemoApplication extends TApplication {
 
     /**
      * Add all the widgets of the demo.

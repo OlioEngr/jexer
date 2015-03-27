@@ -370,11 +370,16 @@ public abstract class TWidget implements Comparable<TWidget> {
     }
 
     /**
-     * Comparison operator sorts on tabOrder for TWidgets and z for TWindows.
+     * Comparison operator sorts on:
+     * <ul>
+     * <li>tabOrder for TWidgets</li>
+     * <li>z for TWindows</li>
+     * <li>text for TTreeItems</li>
+     * </ul>
      *
-     * @param that another TWidget or TWindow instance
+     * @param that another TWidget, TWindow, or TTreeItem instance
      * @return difference between this.tabOrder and that.tabOrder, or
-     * difference between this.z and that.z
+     * difference between this.z and that.z, or String.compareTo(text)
      */
     @Override
     public final int compareTo(final TWidget that) {
@@ -382,6 +387,12 @@ public abstract class TWidget implements Comparable<TWidget> {
             && (that instanceof TWindow)
         ) {
             return (((TWindow) this).getZ() - ((TWindow) that).getZ());
+        }
+        if ((this instanceof TTreeItem)
+            && (that instanceof TTreeItem)
+        ) {
+            return (((TTreeItem) this).getText().compareTo(
+                ((TTreeItem) that).getText()));
         }
         return (this.tabOrder - that.tabOrder);
     }
@@ -1271,5 +1282,35 @@ public abstract class TWidget implements Comparable<TWidget> {
         return new TPasswordField(this, x, y, width, fixed, text, enterAction,
             updateAction);
     }
+
+    /**
+     * Convenience function to add a tree view to this container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of tree view
+     * @param height height of tree view
+     */
+    public final TTreeView addTreeView(final int x, final int y,
+        final int width, final int height) {
+
+        return new TTreeView(this, x, y, width, height);
+    }
+
+    /**
+     * Convenience function to add a tree view to this container/window.
+     *
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of tree view
+     * @param height height of tree view
+     * @param action action to perform when an item is selected
+     */
+    public final TTreeView addTreeView(final int x, final int y,
+        final int width, final int height, final TAction action) {
+
+        return new TTreeView(this, x, y, width, height, action);
+    }
+
 
 }

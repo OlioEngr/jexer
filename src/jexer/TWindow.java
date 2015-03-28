@@ -473,7 +473,7 @@ public class TWindow extends TWidget {
         // Draw the title
         int titleLeft = (getWidth() - title.length() - 2) / 2;
         putCharXY(titleLeft, 0, ' ', border);
-        putStrXY(titleLeft + 1, 0, title);
+        putStringXY(titleLeft + 1, 0, title);
         putCharXY(titleLeft + title.length() + 1, 0, ' ', border);
 
         if (isActive()) {
@@ -776,6 +776,10 @@ public class TWindow extends TWidget {
                 }
             }
 
+            // Pass a resize event to my children
+            onResize(new TResizeEvent(TResizeEvent.Type.WIDGET,
+                    getWidth(), getHeight()));
+
             return;
         }
 
@@ -999,10 +1003,10 @@ public class TWindow extends TWidget {
      * @param str string to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public final void putStrXY(final int x, final int y, final String str,
+    public final void putStringXY(final int x, final int y, final String str,
         final CellAttributes attr) {
 
-        getScreen().putStrXY(x, y, str, attr);
+        getScreen().putStringXY(x, y, str, attr);
     }
 
     /**
@@ -1013,8 +1017,8 @@ public class TWindow extends TWidget {
      * @param y row coordinate.  0 is the top-most row.
      * @param str string to draw
      */
-    public final void putStrXY(final int x, final int y, final String str) {
-        getScreen().putStrXY(x, y, str);
+    public final void putStringXY(final int x, final int y, final String str) {
+        getScreen().putStringXY(x, y, str);
     }
 
     /**

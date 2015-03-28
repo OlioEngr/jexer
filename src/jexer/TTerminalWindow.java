@@ -285,7 +285,7 @@ public class TTerminalWindow extends TWindow {
                     int rc = shell.exitValue();
                     // The emulator exited on its own, all is fine
                     setTitle(String.format("%s [Completed - %d]",
-                            getTitle(), shell.exitValue()));
+                            getTitle(), rc));
                     shell = null;
                     emulator.close();
                 } catch (IllegalThreadStateException e) {

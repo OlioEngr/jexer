@@ -218,10 +218,10 @@ public class TMenuItem extends TWidget {
         getScreen().vLineXY(getWidth() - 1, 0, 1, cVSide, background);
 
         getScreen().hLineXY(1, 0, getWidth() - 2, ' ', menuColor);
-        getScreen().putStrXY(2, 0, mnemonic.getRawLabel(), menuColor);
+        getScreen().putStringXY(2, 0, mnemonic.getRawLabel(), menuColor);
         if (hasKey) {
             String keyLabel = key.toString();
-            getScreen().putStrXY((getWidth() - keyLabel.length() - 2), 0,
+            getScreen().putStringXY((getWidth() - keyLabel.length() - 2), 0,
                 keyLabel, menuColor);
         }
         if (mnemonic.getShortcutIdx() >= 0) {

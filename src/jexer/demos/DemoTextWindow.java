@@ -32,7 +32,6 @@ package jexer.demos;
 
 import jexer.*;
 import jexer.event.*;
-import jexer.menu.*;
 
 /**
  * This window demonstates the TText, THScroller, and TVScroller widgets.

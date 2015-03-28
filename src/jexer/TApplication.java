@@ -31,6 +31,7 @@
 package jexer;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
@@ -646,7 +647,7 @@ public class TApplication implements Runnable {
             // Draw the menu title
             getScreen().hLineXY(x, 0, menu.getTitle().length() + 2, ' ',
                 menuColor);
-            getScreen().putStrXY(x + 1, 0, menu.getTitle(), menuColor);
+            getScreen().putStringXY(x + 1, 0, menu.getTitle(), menuColor);
             // Draw the highlight character
             getScreen().putCharXY(x + 1 + menu.getMnemonic().getShortcutIdx(),
                 0, menu.getMnemonic().getShortcut(), menuMnemonicColor);
@@ -1818,6 +1819,32 @@ public class TApplication implements Runnable {
         final int flags) {
 
         return new TTerminalWindow(this, x, y, flags);
+    }
+
+    /**
+     * Convenience function to spawn an file open box.
+     *
+     * @param path path of selected file
+     * @return the result of the new file open box
+     */
+    public final String fileOpenBox(final String path) throws IOException {
+
+        TFileOpenBox box = new TFileOpenBox(this, path, TFileOpenBox.Type.OPEN);
+        return box.getFilename();
+    }
+
+    /**
+     * Convenience function to spawn an file open box.
+     *
+     * @param path path of selected file
+     * @param type one of the Type constants
+     * @return the result of the new file open box
+     */
+    public final String fileOpenBox(final String path,
+        final TFileOpenBox.Type type) throws IOException {
+
+        TFileOpenBox box = new TFileOpenBox(this, path, type);
+        return box.getFilename();
     }
 
 }

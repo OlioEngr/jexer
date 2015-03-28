@@ -1166,25 +1166,6 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Convert a list of SGR parameters into a full escape sequence.  This
-     * also eliminates a trailing ';' which would otherwise reset everything
-     * to white-on-black not-bold.
-     *
-     * @param str string of parameters, e.g. "31;1;"
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[31;1m"
-     */
-    private String addHeaderSGR(String str) {
-        if (str.length() > 0) {
-            // Nix any trailing ';' because that resets all attributes
-            while (str.endsWith(":")) {
-                str = str.substring(0, str.length() - 1);
-            }
-        }
-        return "\033[" + str + "m";
-    }
-
-    /**
      * Create a SGR parameter sequence for a single color change.  Note
      * package private access.
      *
@@ -1333,20 +1314,6 @@ public final class ECMA48Terminal implements Runnable {
     }
 
     /**
-     * Create a SGR parameter sequence for enabling reverse color.
-     *
-     * @param on if true, turn on reverse
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[7m"
-     */
-    private String reverse(final boolean on) {
-        if (on) {
-            return "\033[7m";
-        }
-        return "\033[27m";
-    }
-
-    /**
      * Create a SGR parameter sequence to reset to defaults.  Note package
      * private access.
      *
@@ -1370,87 +1337,6 @@ public final class ECMA48Terminal implements Runnable {
             return "\033[0;37;40m";
         }
         return "0;37;40";
-    }
-
-    /**
-     * Create a SGR parameter sequence for enabling boldface.
-     *
-     * @param on if true, turn on bold
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[1m"
-     */
-    private String bold(final boolean on) {
-        return bold(on, true);
-    }
-
-    /**
-     * Create a SGR parameter sequence for enabling boldface.
-     *
-     * @param on if true, turn on bold
-     * @param header if true, make the full header, otherwise just emit the
-     * bare parameter e.g. "1;"
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[1m"
-     */
-    private String bold(final boolean on, final boolean header) {
-        if (header) {
-            if (on) {
-                return "\033[1m";
-            }
-            return "\033[22m";
-        }
-        if (on) {
-            return "1;";
-        }
-        return "22;";
-    }
-
-    /**
-     * Create a SGR parameter sequence for enabling blinking text.
-     *
-     * @param on if true, turn on blink
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[5m"
-     */
-    private String blink(final boolean on) {
-        return blink(on, true);
-    }
-
-    /**
-     * Create a SGR parameter sequence for enabling blinking text.
-     *
-     * @param on if true, turn on blink
-     * @param header if true, make the full header, otherwise just emit the
-     * bare parameter e.g. "5;"
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[5m"
-     */
-    private String blink(final boolean on, final boolean header) {
-        if (header) {
-            if (on) {
-                return "\033[5m";
-            }
-            return "\033[25m";
-        }
-        if (on) {
-            return "5;";
-        }
-        return "25;";
-    }
-
-    /**
-     * Create a SGR parameter sequence for enabling underline / underscored
-     * text.
-     *
-     * @param on if true, turn on underline
-     * @return the string to emit to an ANSI / ECMA-style terminal,
-     * e.g. "\033[4m"
-     */
-    private String underline(final boolean on) {
-        if (on) {
-            return "\033[4m";
-        }
-        return "\033[24m";
     }
 
     /**
@@ -1491,35 +1377,6 @@ public final class ECMA48Terminal implements Runnable {
      */
     String clearRemainingLine() {
         return "\033[0;37;40m\033[K";
-    }
-
-    /**
-     * Clear the line up the cursor (inclusive).  Because some terminals use
-     * back-color-erase, set the color to white-on-black beforehand.
-     *
-     * @return the string to emit to an ANSI / ECMA-style terminal
-     */
-    private String clearPreceedingLine() {
-        return "\033[0;37;40m\033[1K";
-    }
-
-    /**
-     * Clear the line.  Because some terminals use back-color-erase, set the
-     * color to white-on-black beforehand.
-     *
-     * @return the string to emit to an ANSI / ECMA-style terminal
-     */
-    private String clearLine() {
-        return "\033[0;37;40m\033[2K";
-    }
-
-    /**
-     * Move the cursor to the top-left corner.
-     *
-     * @return the string to emit to an ANSI / ECMA-style terminal
-     */
-    private String home() {
-        return "\033[H";
     }
 
     /**

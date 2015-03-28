@@ -30,6 +30,7 @@
  */
 package jexer;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -381,7 +382,6 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @return difference between this.tabOrder and that.tabOrder, or
      * difference between this.z and that.z, or String.compareTo(text)
      */
-    @Override
     public final int compareTo(final TWidget that) {
         if ((this instanceof TWindow)
             && (that instanceof TWindow)
@@ -1312,5 +1312,57 @@ public abstract class TWidget implements Comparable<TWidget> {
         return new TTreeView(this, x, y, width, height, action);
     }
 
+    /**
+     * Convenience function to spawn a file open box.
+     *
+     * @param path path of selected file
+     * @return the result of the new file open box
+     */
+    public final String fileOpenBox(final String path) throws IOException {
+        return getApplication().fileOpenBox(path);
+    }
+
+    /**
+     * Convenience function to spawn a file open box.
+     *
+     * @param path path of selected file
+     * @param type one of the Type constants
+     * @return the result of the new file open box
+     */
+    public final String fileOpenBox(final String path,
+        final TFileOpenBox.Type type) throws IOException {
+
+        return getApplication().fileOpenBox(path, type);
+    }
+    /**
+     * Convenience function to add a directory list to this container/window.
+     *
+     * @param path directory path, must be a directory
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     */
+    public final TDirectoryList addDirectoryList(final String path, final int x,
+        final int y, final int width, final int height) {
+
+        return new TDirectoryList(this, path, x, y, width, height, null);
+    }
+
+    /**
+     * Convenience function to add a directory list to this container/window.
+     *
+     * @param path directory path, must be a directory
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @param action action to perform when an item is selected
+     */
+    public final TDirectoryList addDirectoryList(final String path, final int x,
+        final int y, final int width, final int height, final TAction action) {
+
+        return new TDirectoryList(this, path, x, y, width, height, action);
+    }
 
 }

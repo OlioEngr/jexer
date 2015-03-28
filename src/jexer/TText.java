@@ -294,7 +294,7 @@ public final class TText extends TWidget {
                 line = "";
             }
             String formatString = "%-" + Integer.toString(getWidth() - 1) + "s";
-            getScreen().putStrXY(0, topY, String.format(formatString, line),
+            getScreen().putStringXY(0, topY, String.format(formatString, line),
                     color);
             topY++;
 

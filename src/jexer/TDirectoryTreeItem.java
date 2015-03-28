@@ -31,6 +31,7 @@
 package jexer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
@@ -51,6 +52,8 @@ public class TDirectoryTreeItem extends TTreeItem {
      */
     @Override
     public void onExpand() {
+        // System.err.printf("onExpand() %s\n", dir);
+
         if (dir == null) {
             return;
         }
@@ -70,20 +73,26 @@ public class TDirectoryTreeItem extends TTreeItem {
             return;
         }
 
-        // Refresh my child list
         for (File file: dir.listFiles()) {
-            if (file.getName().equals(".")) {
+            // System.err.printf("   -> file %s %s\n", file, file.getName());
+
+            if (file.getName().startsWith(".")) {
+                // Hide dot-files
                 continue;
             }
             if (!file.isDirectory()) {
                 continue;
             }
 
-            TDirectoryTreeItem item = new TDirectoryTreeItem(getTreeView(),
-                file.getName(), false, false);
+            try {
+                TDirectoryTreeItem item = new TDirectoryTreeItem(getTreeView(),
+                    file.getCanonicalPath(), false, false);
 
-            item.level = this.level + 1;
-            getChildren().add(item);
+                item.level = this.level + 1;
+                getChildren().add(item);
+            } catch (IOException e) {
+                continue;
+            }
         }
         Collections.sort(getChildren());
 
@@ -110,7 +119,9 @@ public class TDirectoryTreeItem extends TTreeItem {
      * @param view root TTreeView
      * @param text text for this item
      */
-    public TDirectoryTreeItem(final TTreeView view, final String text) {
+    public TDirectoryTreeItem(final TTreeView view,
+        final String text) throws IOException {
+
         this(view, text, false, true);
     }
 
@@ -122,7 +133,7 @@ public class TDirectoryTreeItem extends TTreeItem {
      * @param expanded if true, have it expanded immediately
      */
     public TDirectoryTreeItem(final TTreeView view, final String text,
-        final boolean expanded) {
+        final boolean expanded) throws IOException {
 
         this(view, text, expanded, true);
     }
@@ -137,31 +148,38 @@ public class TDirectoryTreeItem extends TTreeItem {
      * return the root path entry
      */
     public TDirectoryTreeItem(final TTreeView view, final String text,
-        final boolean expanded, final boolean openParents) {
+        final boolean expanded, final boolean openParents) throws IOException {
 
         super(view, text, false);
 
-        List<TDirectoryTreeItem> parentItems = new LinkedList<TDirectoryTreeItem>();
         List<String> parentPaths = new LinkedList<String>();
         boolean oldExpanded = expanded;
+
+        // Convert to canonical path
+        File rootPath = new File(text);
+        rootPath = rootPath.getCanonicalFile();
 
         if (openParents == true) {
             setExpanded(true);
 
             // Go up the directory tree
-            File rootPath = new File(text);
             File parent = rootPath.getParentFile();
             while (parent != null) {
                 parentPaths.add(rootPath.getName());
                 rootPath = rootPath.getParentFile();
                 parent = rootPath.getParentFile();
             }
-            setText(rootPath.getName());
-        } else {
-            setText(text);
         }
-
-        dir = new File(getText());
+        dir = rootPath;
+        if (rootPath.getParentFile() == null) {
+            // This is a filesystem root, use its full name
+            setText(rootPath.getCanonicalPath());
+        } else {
+            // This is a relative path.  We got here because openParents was
+            // false.
+            assert (openParents == false);
+            setText(rootPath.getName());
+        }
         onExpand();
 
         if (openParents == true) {

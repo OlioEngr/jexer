@@ -204,6 +204,18 @@ public class TTreeItem extends TWidget {
     }
 
     /**
+     * Pointer to the previous keyboard-navigable item (kbUp).  Note package
+     * private access.
+     */
+    TTreeItem keyboardPrevious = null;
+
+    /**
+     * Pointer to the next keyboard-navigable item (kbDown).  Note package
+     * private access.
+     */
+    TTreeItem keyboardNext = null;
+
+    /**
      * Public constructor.
      *
      * @param view root TTreeView
@@ -323,7 +335,7 @@ public class TTreeItem extends TWidget {
      */
     @Override
     public void onMouseUp(final TMouseEvent mouse) {
-        if ((mouse.getX() == (getExpanderX() - view.hScroller.getValue()))
+        if ((mouse.getX() == (getExpanderX() - view.getHScroller().getValue()))
             && (mouse.getY() == 0)
         ) {
             if (selectable) {
@@ -357,6 +369,34 @@ public class TTreeItem extends TWidget {
     }
 
     /**
+     * Handle keystrokes.
+     *
+     * @param keypress keystroke event
+     */
+    @Override
+    public void onKeypress(final TKeypressEvent keypress) {
+        if (keypress.equals(kbLeft)
+            || keypress.equals(kbRight)
+            || keypress.equals(kbSpace)
+        ) {
+            if (selectable) {
+                // Flip expanded flag
+                expanded = !expanded;
+                if (expanded == false) {
+                    // Unselect children that became invisible
+                    unselect();
+                }
+                view.setSelected(this);
+            }
+            // Let subclasses do something with this
+            onExpand();
+        } else {
+            // Pass other keys (tab etc.) on to TWidget's handler.
+            super.onKeypress(keypress);
+        }
+    }
+
+    /**
      * Draw this item to a window.
      */
     @Override
@@ -365,7 +405,7 @@ public class TTreeItem extends TWidget {
             return;
         }
 
-        int offset = -view.hScroller.getValue();
+        int offset = -view.getHScroller().getValue();
 
         CellAttributes color = getTheme().getColor("ttreeview");
         CellAttributes textColor = getTheme().getColor("ttreeview");
@@ -384,7 +424,6 @@ public class TTreeItem extends TWidget {
         // Blank out the background
         getScreen().hLineXY(0, 0, getWidth(), ' ', color);
 
-        int expandX = 0;
         String line = prefix;
         if (level > 0) {
             if (last) {
@@ -397,12 +436,12 @@ public class TTreeItem extends TWidget {
                 line += "[ ] ";
             }
         }
-        getScreen().putStrXY(offset, 0, line, color);
+        getScreen().putStringXY(offset, 0, line, color);
         if (selected) {
-            getScreen().putStrXY(offset + line.length(), 0, text,
+            getScreen().putStringXY(offset + line.length(), 0, text,
                 selectedColor);
         } else {
-            getScreen().putStrXY(offset + line.length(), 0, text, textColor);
+            getScreen().putStringXY(offset + line.length(), 0, text, textColor);
         }
         if ((level > 0) && (expandable)) {
             if (expanded) {

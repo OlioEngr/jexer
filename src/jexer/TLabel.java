@@ -108,7 +108,7 @@ public final class TLabel extends TWidget {
         CellAttributes background = getWindow().getBackground();
         color.setBackColor(background.getBackColor());
 
-        getScreen().putStrXY(0, 0, label, color);
+        getScreen().putStringXY(0, 0, label, color);
     }
 
 }

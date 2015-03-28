@@ -33,6 +33,8 @@ package jexer.net;
 import java.io.OutputStream;
 import java.io.IOException;
 
+import static jexer.net.TelnetSocket.*;
+
 /**
  * TelnetOutputStream works with TelnetSocket to perform the telnet protocol.
  */
@@ -87,8 +89,8 @@ public final class TelnetOutputStream extends OutputStream {
             // The last byte sent to this.write() was a CR, which was never
             // actually sent.  So send the CR in ascii mode, then flush.
             // CR <anything> -> CR NULL
-            output.write(master.C_CR);
-            output.write(master.C_NUL);
+            output.write(C_CR);
+            output.write(C_NUL);
             writeCR = false;
         }
         output.flush();
@@ -182,10 +184,10 @@ public final class TelnetOutputStream extends OutputStream {
 
             if (master.binaryMode == true) {
 
-                if (ch == master.TELNET_IAC) {
+                if (ch == TELNET_IAC) {
                     // IAC -> IAC IAC
-                    writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
-                    writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
+                    writeBuffer[writeBufferI++] = (byte)TELNET_IAC;
+                    writeBuffer[writeBufferI++] = (byte)TELNET_IAC;
                 } else {
                     // Anything else -> just send
                     writeBuffer[writeBufferI++] = ch;
@@ -197,39 +199,39 @@ public final class TelnetOutputStream extends OutputStream {
             // the case that the last byte of b was a CR.
 
             // Bare carriage return -> CR NUL
-            if (ch == master.C_CR) {
+            if (ch == C_CR) {
                 if (writeCR == true) {
                     // Flush the previous CR to the stream.
                     // CR <anything> -> CR NULL
-                    writeBuffer[writeBufferI++] = (byte)master.C_CR;
-                    writeBuffer[writeBufferI++] = (byte)master.C_NUL;
+                    writeBuffer[writeBufferI++] = (byte)C_CR;
+                    writeBuffer[writeBufferI++] = (byte)C_NUL;
                 }
                 writeCR = true;
-            } else if (ch == master.C_LF) {
+            } else if (ch == C_LF) {
                 if (writeCR == true) {
                     // CR LF -> CR LF
-                    writeBuffer[writeBufferI++] = (byte)master.C_CR;
-                    writeBuffer[writeBufferI++] = (byte)master.C_LF;
+                    writeBuffer[writeBufferI++] = (byte)C_CR;
+                    writeBuffer[writeBufferI++] = (byte)C_LF;
                     writeCR = false;
                 } else {
                     // Bare LF -> LF
                     writeBuffer[writeBufferI++] = ch;
                 }
-            } else if (ch == master.TELNET_IAC) {
+            } else if (ch == TELNET_IAC) {
                 if (writeCR == true) {
                     // CR <anything> -> CR NULL
-                    writeBuffer[writeBufferI++] = (byte)master.C_CR;
-                    writeBuffer[writeBufferI++] = (byte)master.C_NUL;
+                    writeBuffer[writeBufferI++] = (byte)C_CR;
+                    writeBuffer[writeBufferI++] = (byte)C_NUL;
                     writeCR = false;
                 }
                 // IAC -> IAC IAC
-                writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
-                writeBuffer[writeBufferI++] = (byte)master.TELNET_IAC;
+                writeBuffer[writeBufferI++] = (byte)TELNET_IAC;
+                writeBuffer[writeBufferI++] = (byte)TELNET_IAC;
             } else {
                 if (writeCR == true) {
                     // CR <anything> -> CR NULL
-                    writeBuffer[writeBufferI++] = (byte)master.C_CR;
-                    writeBuffer[writeBufferI++] = (byte)master.C_NUL;
+                    writeBuffer[writeBufferI++] = (byte)C_CR;
+                    writeBuffer[writeBufferI++] = (byte)C_NUL;
                     writeCR = false;
                 } else {
                     // Normal character */

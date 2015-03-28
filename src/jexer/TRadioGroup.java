@@ -106,7 +106,7 @@ public final class TRadioGroup extends TWidget {
             radioGroupColor, radioGroupColor, 3, false);
 
         getScreen().hLineXY(1, 0, label.length() + 2, ' ', radioGroupColor);
-        getScreen().putStrXY(2, 0, label, radioGroupColor);
+        getScreen().putStringXY(2, 0, label, radioGroupColor);
     }
 
     /**

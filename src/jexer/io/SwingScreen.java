@@ -329,7 +329,7 @@ public final class SwingScreen extends Screen {
             getFontDimensions();
 
             // Setup double-buffering
-            if (screen.doubleBuffer) {
+            if (SwingScreen.doubleBuffer) {
                 setIgnoreRepaint(true);
                 createBufferStrategy(2);
                 bufferStrategy = getBufferStrategy();
@@ -582,7 +582,7 @@ public final class SwingScreen extends Screen {
 
         if (reallyCleared) {
             // Really refreshed, do it all
-            if (doubleBuffer) {
+            if (SwingScreen.doubleBuffer) {
                 Graphics gr = frame.bufferStrategy.getDrawGraphics();
                 frame.paint(gr);
                 gr.dispose();
@@ -649,7 +649,7 @@ public final class SwingScreen extends Screen {
         // Repaint the desired area
         // System.err.printf("REPAINT X %d %d Y %d %d\n", xMin, xMax,
         //     yMin, yMax);
-        if (doubleBuffer) {
+        if (SwingScreen.doubleBuffer) {
             Graphics gr = frame.bufferStrategy.getDrawGraphics();
             Rectangle bounds = new Rectangle(xMin, yMin, xMax - xMin,
                 yMax - yMin);

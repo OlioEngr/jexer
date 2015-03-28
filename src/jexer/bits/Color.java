@@ -66,26 +66,27 @@ public final class Color {
      * @return Color.RED, Color.BLUE, etc.
      */
     static Color getColor(final String colorName) {
-        switch (colorName.toLowerCase()) {
-        case "black":
+        String str = colorName.toLowerCase();
+
+        if (str.equals("black")) {
             return Color.BLACK;
-        case "white":
+        } else if (str.equals("white")) {
             return Color.WHITE;
-        case "red":
+        } else if (str.equals("red")) {
             return Color.RED;
-        case "cyan":
+        } else if (str.equals("cyan")) {
             return Color.CYAN;
-        case "green":
+        } else if (str.equals("green")) {
             return Color.GREEN;
-        case "magenta":
+        } else if (str.equals("magenta")) {
             return Color.MAGENTA;
-        case "blue":
+        } else if (str.equals("blue")) {
             return Color.BLUE;
-        case "yellow":
+        } else if (str.equals("yellow")) {
             return Color.YELLOW;
-        case "brown":
+        } else if (str.equals("brown")) {
             return Color.YELLOW;
-        default:
+        } else {
             // Let unknown strings become white
             return Color.WHITE;
         }

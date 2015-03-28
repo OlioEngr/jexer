@@ -31,8 +31,6 @@
 package jexer.demos;
 
 import jexer.*;
-import jexer.event.*;
-import jexer.menu.*;
 
 /**
  * This is the main "demo" application window.  It makes use of the TTimer,
@@ -158,7 +156,11 @@ public class DemoMainWindow extends TWindow {
             addButton("Tree&View", 35, row,
                 new TAction() {
                     public void DO() {
-                        new DemoTreeViewWindow(getApplication());
+                        try {
+                            new DemoTreeViewWindow(getApplication());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             );

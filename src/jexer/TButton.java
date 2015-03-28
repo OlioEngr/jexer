@@ -158,11 +158,11 @@ public final class TButton extends TWidget {
 
         if (inButtonPress) {
             getScreen().putCharXY(1, 0, ' ', buttonColor);
-            getScreen().putStrXY(2, 0, mnemonic.getRawLabel(), buttonColor);
+            getScreen().putStringXY(2, 0, mnemonic.getRawLabel(), buttonColor);
             getScreen().putCharXY(getWidth() - 1, 0, ' ', buttonColor);
         } else {
             getScreen().putCharXY(0, 0, ' ', buttonColor);
-            getScreen().putStrXY(1, 0, mnemonic.getRawLabel(), buttonColor);
+            getScreen().putStringXY(1, 0, mnemonic.getRawLabel(), buttonColor);
             getScreen().putCharXY(getWidth() - 2, 0, ' ', buttonColor);
 
             getScreen().putCharXY(getWidth() - 1, 0,

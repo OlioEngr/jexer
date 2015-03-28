@@ -30,8 +30,6 @@
  */
 package jexer;
 
-import jexer.bits.CellAttributes;
-import jexer.bits.GraphicsChars;
 import jexer.event.TKeypressEvent;
 import jexer.event.TMouseEvent;
 import static jexer.TKeypress.*;
@@ -47,9 +45,17 @@ public class TTreeView extends TWidget {
     private TVScroller vScroller;
 
     /**
-     * Horizontal scrollbar.  Note package private access.
+     * Horizontal scrollbar.
      */
-    THScroller hScroller;
+    private THScroller hScroller;
+
+    /**
+     * Get the horizontal scrollbar.  This is used by TTreeItem.draw(), and
+     * potentially subclasses.
+     */
+    public final THScroller getHScroller() {
+        return hScroller;
+    }
 
     /**
      * Root of the tree.
@@ -148,11 +154,11 @@ public class TTreeView extends TWidget {
     }
 
     /**
-     * Set the new selected tree view item.  Note package private access.
+     * Set the new selected tree view item.
      *
      * @param item new item that became selected
      */
-    void setSelected(final TTreeItem item) {
+    public void setSelected(final TTreeItem item) {
         if (item != null) {
             item.setSelected(true);
         }
@@ -163,9 +169,9 @@ public class TTreeView extends TWidget {
     }
 
     /**
-     * Perform user selection action.  Note package private access.
+     * Perform user selection action.
      */
-    void dispatch() {
+    public void dispatch() {
         if (action != null) {
             action.DO();
         }
@@ -217,12 +223,16 @@ public class TTreeView extends TWidget {
                 TTreeItem item = (TTreeItem) widget;
                 item.setInvisible(true);
                 item.setEnabled(false);
+                item.keyboardPrevious = null;
+                item.keyboardNext = null;
             }
         }
 
         // Expand the tree into a linear list
         getChildren().clear();
         getChildren().addAll(treeRoot.expandTree("", true));
+
+        // Locate the selected row and maximum line width
         for (TWidget widget: getChildren()) {
             TTreeItem item = (TTreeItem) widget;
 
@@ -239,6 +249,7 @@ public class TTreeView extends TWidget {
                 maxLineWidth = lineWidth;
             }
         }
+
         if ((centerWindow) && (foundSelectedRow)) {
             if ((selectedRow < vScroller.getValue())
                 || (selectedRow > vScroller.getValue() + getHeight() - 2)
@@ -282,12 +293,23 @@ public class TTreeView extends TWidget {
 
         int begin = vScroller.getValue();
         int topY = 0;
+
+        // As we walk the list we also adjust next/previous pointers,
+        // resulting in a doubly-linked list but only of the expanded items.
+        TTreeItem p = null;
+
         for (int i = 0; i < getChildren().size(); i++) {
             if (!(getChildren().get(i) instanceof TTreeItem)) {
-                // Skip
+                // Skip the scrollbars
                 continue;
             }
             TTreeItem item = (TTreeItem) getChildren().get(i);
+
+            if (p != null) {
+                item.keyboardPrevious = p;
+                p.keyboardNext = item;
+            }
+            p = item;
 
             if (i < begin) {
                 // Render invisible
@@ -309,6 +331,7 @@ public class TTreeView extends TWidget {
             item.setWidth(getWidth() - 1);
             topY++;
         }
+
     }
 
     /**
@@ -352,17 +375,35 @@ public class TTreeView extends TWidget {
      */
     @Override
     public void onKeypress(final TKeypressEvent keypress) {
-        if (keypress.equals(kbLeft)) {
+        if (keypress.equals(kbShiftLeft)
+            || keypress.equals(kbCtrlLeft)
+            || keypress.equals(kbAltLeft)
+        ) {
             hScroller.decrement();
-        } else if (keypress.equals(kbRight)) {
+        } else if (keypress.equals(kbShiftRight)
+            || keypress.equals(kbCtrlRight)
+            || keypress.equals(kbAltRight)
+        ) {
             hScroller.increment();
-        } else if (keypress.equals(kbUp)) {
+        } else if (keypress.equals(kbShiftUp)
+            || keypress.equals(kbCtrlUp)
+            || keypress.equals(kbAltUp)
+        ) {
             vScroller.decrement();
-        } else if (keypress.equals(kbDown)) {
+        } else if (keypress.equals(kbShiftDown)
+            || keypress.equals(kbCtrlDown)
+            || keypress.equals(kbAltDown)
+        ) {
             vScroller.increment();
-        } else if (keypress.equals(kbPgUp)) {
+        } else if (keypress.equals(kbShiftPgUp)
+            || keypress.equals(kbCtrlPgUp)
+            || keypress.equals(kbAltPgUp)
+        ) {
             vScroller.bigDecrement();
-        } else if (keypress.equals(kbPgDn)) {
+        } else if (keypress.equals(kbShiftPgDn)
+            || keypress.equals(kbCtrlPgDn)
+            || keypress.equals(kbAltPgDn)
+        ) {
             vScroller.bigIncrement();
         } else if (keypress.equals(kbHome)) {
             vScroller.toTop();
@@ -372,8 +413,33 @@ public class TTreeView extends TWidget {
             if (selectedItem != null) {
                 dispatch();
             }
+        } else if (keypress.equals(kbUp)) {
+            // Select the previous item
+            if (selectedItem != null) {
+                TTreeItem oldItem = selectedItem;
+                if (selectedItem.keyboardPrevious != null) {
+                    setSelected(selectedItem.keyboardPrevious);
+                    if (oldItem.getY() == 0) {
+                        vScroller.decrement();
+                    }
+                }
+            }
+        } else if (keypress.equals(kbDown)) {
+            // Select the next item
+            if (selectedItem != null) {
+                TTreeItem oldItem = selectedItem;
+                if (selectedItem.keyboardNext != null) {
+                    setSelected(selectedItem.keyboardNext);
+                    if (oldItem.getY() == getHeight() - 2) {
+                        vScroller.increment();
+                    }
+                }
+            }
+        } else if (selectedItem != null) {
+            // Give the TTreeItem a chance to handle arrow keys
+            selectedItem.onKeypress(keypress);
         } else {
-            // Pass other keys (tab etc.) on
+            // Pass other keys (tab etc.) on to TWidget's handler.
             super.onKeypress(keypress);
         }
 

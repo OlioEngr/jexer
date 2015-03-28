@@ -175,11 +175,10 @@ Many tasks remain before calling this version 1.0:
 
 0.0.3: FINISH PORTING
 
-- TTreeView
-  - Also add keyboard navigation
 - TDirectoryList
   - Also add keyboard navigation
 - TFileOpen
+  - Also add keyboard navigation
 
 0.0.4: NEW STUFF
 

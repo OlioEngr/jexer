@@ -387,7 +387,7 @@ public abstract class Screen {
      * @param str string to draw
      * @param attr attributes to use (bold, foreColor, backColor)
      */
-    public final void putStrXY(final int x, final int y, final String str,
+    public final void putStringXY(final int x, final int y, final String str,
         final CellAttributes attr) {
 
         int i = x;
@@ -409,7 +409,7 @@ public abstract class Screen {
      * @param y row coordinate.  0 is the top-most row.
      * @param str string to draw
      */
-    public final void putStrXY(final int x, final int y, final String str) {
+    public final void putStringXY(final int x, final int y, final String str) {
 
         int i = x;
         for (int j = 0; j < str.length(); j++) {

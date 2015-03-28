@@ -33,7 +33,6 @@ package jexer.demos;
 import java.io.*;
 
 import jexer.*;
-import jexer.event.*;
 import jexer.menu.*;
 
 /**

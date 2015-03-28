@@ -114,7 +114,7 @@ public final class TPasswordField extends TField {
             getScreen().hLineXY(0, 0, getWidth() - 2, '*',
                 fieldColor);
         } else {
-            getScreen().putStrXY(0, 0, text.substring(windowStart, end),
+            getScreen().putStringXY(0, 0, text.substring(windowStart, end),
                 fieldColor);
         }
 

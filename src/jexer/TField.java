@@ -201,7 +201,7 @@ public class TField extends TWidget {
             end = text.length();
         }
         getScreen().hLineXY(0, 0, getWidth(), GraphicsChars.HATCH, fieldColor);
-        getScreen().putStrXY(0, 0, text.substring(windowStart, end),
+        getScreen().putStringXY(0, 0, text.substring(windowStart, end),
             fieldColor);
 
         // Fix the cursor, it will be rendered by TApplication.drawAll().

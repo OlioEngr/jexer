@@ -127,7 +127,7 @@ public final class TCheckbox extends TWidget {
             getScreen().putCharXY(1, 0, ' ', checkboxColor);
         }
         getScreen().putCharXY(2, 0, ']', checkboxColor);
-        getScreen().putStrXY(4, 0, label, checkboxColor);
+        getScreen().putStringXY(4, 0, label, checkboxColor);
     }
 
     /**

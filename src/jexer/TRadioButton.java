@@ -147,7 +147,7 @@ public final class TRadioButton extends TWidget {
             getScreen().putCharXY(1, 0, ' ', radioButtonColor);
         }
         getScreen().putCharXY(2, 0, ')', radioButtonColor);
-        getScreen().putStrXY(4, 0, label, radioButtonColor);
+        getScreen().putStringXY(4, 0, label, radioButtonColor);
     }
 
     /**

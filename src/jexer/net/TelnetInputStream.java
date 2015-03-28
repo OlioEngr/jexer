@@ -414,6 +414,7 @@ public final class TelnetInputStream extends InputStream
      * @param option the telnet option byte
      * @return a string describing the telnet option code
      */
+    @SuppressWarnings("unused")
     private String optionString(final int option) {
         switch (option) {
         case 0: return "Binary Transmission";
@@ -871,7 +872,6 @@ public final class TelnetInputStream extends InputStream
                 for (int i = 2; i < subnegBuffer.size(); i++) {
                     speedString.append((char)subnegBuffer.get(i).byteValue());
                 }
-                String termSpeed = speedString.toString();
                 master.terminalSpeed = speedString.toString();
             }
             break;

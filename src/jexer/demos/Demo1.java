@@ -30,9 +30,7 @@
  */
 package jexer.demos;
 
-import jexer.*;
-import jexer.event.*;
-import jexer.menu.*;
+import jexer.TApplication;
 
 /**
  * This class is the main driver for a simple demonstration of Jexer's

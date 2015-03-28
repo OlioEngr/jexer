@@ -172,7 +172,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param key keystroke received
      */
-    @Override
     public void keyReleased(final KeyEvent key) {
         // Ignore release events
     }
@@ -182,7 +181,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param key keystroke received
      */
-    @Override
     public void keyTyped(final KeyEvent key) {
         // Ignore typed events
     }
@@ -192,7 +190,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param key keystroke received
      */
-    @Override
     public void keyPressed(final KeyEvent key) {
         boolean alt = false;
         boolean shift = false;
@@ -397,7 +394,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowActivated(final WindowEvent event) {
         // Force a total repaint
         synchronized (screen) {
@@ -410,7 +406,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowClosed(final WindowEvent event) {
         // Ignore
     }
@@ -420,7 +415,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowClosing(final WindowEvent event) {
         // Drop a cmAbort and walk away
         synchronized (eventQueue) {
@@ -436,7 +430,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowDeactivated(final WindowEvent event) {
         // Ignore
     }
@@ -446,7 +439,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowDeiconified(final WindowEvent event) {
         // Ignore
     }
@@ -456,7 +448,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowIconified(final WindowEvent event) {
         // Ignore
     }
@@ -466,7 +457,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event window event received
      */
-    @Override
     public void windowOpened(final WindowEvent event) {
         // Ignore
     }
@@ -476,7 +466,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event component event received
      */
-    @Override
     public void componentHidden(final ComponentEvent event) {
         // Ignore
     }
@@ -486,7 +475,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event component event received
      */
-    @Override
     public void componentShown(final ComponentEvent event) {
         // Ignore
     }
@@ -496,7 +484,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event component event received
      */
-    @Override
     public void componentMoved(final ComponentEvent event) {
         // Ignore
     }
@@ -506,7 +493,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param event component event received
      */
-    @Override
     public void componentResized(final ComponentEvent event) {
         // Drop a new TResizeEvent into the queue
         sessionInfo.queryWindowSize();
@@ -525,7 +511,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseDragged(final MouseEvent mouse) {
         int modifiers = mouse.getModifiersEx();
         boolean eventMouse1 = false;
@@ -562,7 +547,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseMoved(final MouseEvent mouse) {
         int x = screen.textColumn(mouse.getX());
         int y = screen.textRow(mouse.getY());
@@ -589,7 +573,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseClicked(final MouseEvent mouse) {
         // Ignore
     }
@@ -599,7 +582,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseEntered(final MouseEvent mouse) {
         // Ignore
     }
@@ -609,7 +591,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseExited(final MouseEvent mouse) {
         // Ignore
     }
@@ -619,7 +600,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mousePressed(final MouseEvent mouse) {
         int modifiers = mouse.getModifiersEx();
         boolean eventMouse1 = false;
@@ -656,7 +636,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseReleased(final MouseEvent mouse) {
         int modifiers = mouse.getModifiersEx();
         boolean eventMouse1 = false;
@@ -702,7 +681,6 @@ public final class SwingTerminal implements ComponentListener, KeyListener,
      *
      * @param mouse mouse event received
      */
-    @Override
     public void mouseWheelMoved(final MouseWheelEvent mouse) {
         int modifiers = mouse.getModifiersEx();
         boolean eventMouse1 = false;

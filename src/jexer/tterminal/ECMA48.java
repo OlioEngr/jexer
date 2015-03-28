@@ -683,6 +683,7 @@ public class ECMA48 implements Runnable {
      * Whether number pad keys send VT100 or VT52, application or numeric
      * sequences.
      */
+    @SuppressWarnings("unused")
     private KeypadMode keypadMode;
 
     /**

@@ -30,9 +30,10 @@
  */
 package jexer.demos;
 
+import java.io.IOException;
+
 import jexer.*;
 import jexer.event.*;
-import jexer.menu.*;
 
 /**
  * This window demonstates the TTreeView widget.
@@ -49,12 +50,12 @@ public class DemoTreeViewWindow extends TWindow {
      *
      * @param parent the main application
      */
-    public DemoTreeViewWindow(TApplication parent) {
+    public DemoTreeViewWindow(TApplication parent) throws IOException {
         super(parent, "Tree View", 0, 0, 44, 16, TWindow.RESIZABLE);
 
         // Load the treeview with "stuff"
         treeView = addTreeView(1, 1, 40, 12);
-        TDirectoryTreeItem root = new TDirectoryTreeItem(treeView, ".", true);
+        new TDirectoryTreeItem(treeView, ".", true);
     }
 
     /**

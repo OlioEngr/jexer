@@ -33,6 +33,9 @@ package jexer;
 import java.util.ArrayList;
 import java.util.List;
 
+import jexer.event.TKeypressEvent;
+import static jexer.TKeypress.*;
+
 /**
  * TMessageBox is a system-modal dialog with buttons for OK, Cancel, Yes, or
  * No.  Call it like:
@@ -78,6 +81,16 @@ public class TMessageBox extends TWindow {
     };
 
     /**
+     * The type of this message box.
+     */
+    private Type type;
+
+    /**
+     * My buttons.
+     */
+    List<TButton> buttons;
+
+    /**
      * Message boxes have these possible results.
      */
     public enum Result {
@@ -101,7 +114,6 @@ public class TMessageBox extends TWindow {
          */
         NO
     };
-
 
     /**
      * Which button was clicked: OK, CANCEL, YES, or NO.
@@ -163,6 +175,10 @@ public class TMessageBox extends TWindow {
         // Start as 50x50 at (1, 1).  These will be changed later.
         super(application, title, 1, 1, 100, 100, CENTERED | MODAL);
 
+        // Hang onto type so that we can provide more convenience in
+        // onKeypress().
+        this.type = type;
+
         // Determine width and height
         String [] lines = caption.split("\n");
         int width = title.length() + 12;
@@ -188,7 +204,7 @@ public class TMessageBox extends TWindow {
 
         // The button line
         lineI++;
-        List<TButton> buttons = new ArrayList<TButton>();
+        buttons = new ArrayList<TButton>();
 
         int buttonX = 0;
 
@@ -315,6 +331,70 @@ public class TMessageBox extends TWindow {
             // constructor response will already be set.
             getApplication().yield();
         }
+    }
+
+    /**
+     * Handle keystrokes.
+     *
+     * @param keypress keystroke event
+     */
+    @Override
+    public void onKeypress(final TKeypressEvent keypress) {
+
+        if (this instanceof TInputBox) {
+            super.onKeypress(keypress);
+            return;
+        }
+
+        // Some convenience for message boxes: Alt won't be needed for the
+        // buttons.
+        switch (type) {
+
+        case OK:
+            if (keypress.equals(kbO)) {
+                buttons.get(0).dispatch();
+                return;
+            }
+            break;
+
+        case OKCANCEL:
+            if (keypress.equals(kbO)) {
+                buttons.get(0).dispatch();
+                return;
+            } else if (keypress.equals(kbC)) {
+                buttons.get(1).dispatch();
+                return;
+            }
+            break;
+
+        case YESNO:
+            if (keypress.equals(kbY)) {
+                buttons.get(0).dispatch();
+                return;
+            } else if (keypress.equals(kbN)) {
+                buttons.get(1).dispatch();
+                return;
+            }
+            break;
+
+        case YESNOCANCEL:
+            if (keypress.equals(kbY)) {
+                buttons.get(0).dispatch();
+                return;
+            } else if (keypress.equals(kbN)) {
+                buttons.get(1).dispatch();
+                return;
+            } else if (keypress.equals(kbC)) {
+                buttons.get(2).dispatch();
+                return;
+            }
+            break;
+
+        default:
+            throw new IllegalArgumentException("Invalid message box type: " + type);
+        }
+
+        super.onKeypress(keypress);
     }
 
 }

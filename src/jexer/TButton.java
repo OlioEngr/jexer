@@ -76,6 +76,16 @@ public final class TButton extends TWidget {
     private TAction action;
 
     /**
+     * Act as though the button was pressed.  This is useful for other UI
+     * elements to get the same action as if the user clicked the button.
+     */
+    public void dispatch() {
+        if (action != null) {
+            action.DO();
+        }
+    }
+
+    /**
      * Private constructor.
      *
      * @param parent parent widget

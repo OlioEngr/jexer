@@ -69,6 +69,17 @@ public final class ColorTheme {
     }
 
     /**
+     * Set the color for a named theme color.
+     *
+     * @param name theme color name, e.g. "twindow.border"
+     * @param color the new color to associate with name, e.g. bold yellow on
+     * blue
+     */
+    public void setColor(final String name, final CellAttributes color) {
+        colors.put(name, color);
+    }
+
+    /**
      * Save the color theme mappings to an ASCII file.
      *
      * @param filename file to write to

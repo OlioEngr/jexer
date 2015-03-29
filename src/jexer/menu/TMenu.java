@@ -241,8 +241,16 @@ public final class TMenu extends TWindow {
      */
     @Override
     public void onKeypress(final TKeypressEvent keypress) {
-        if (getActiveChild() != null) {
-            if (getActiveChild() instanceof TSubMenu) {
+
+        /*
+        System.err.printf("keypress: %s active child: %s\n", keypress,
+            getActiveChild());
+         */
+
+        if (getActiveChild() != this) {
+            if ((getActiveChild() instanceof TSubMenu)
+                || (getActiveChild() instanceof TMenu)
+            ) {
                 getActiveChild().onKeypress(keypress);
                 return;
             }
@@ -261,9 +269,7 @@ public final class TMenu extends TWindow {
             return;
         }
         if (keypress.equals(kbRight)) {
-            if (!isSubMenu) {
-                getApplication().switchMenu(true);
-            }
+            getApplication().switchMenu(true);
             return;
         }
         if (keypress.equals(kbLeft)) {

@@ -100,6 +100,18 @@ public final class TSubMenu extends TMenuItem {
     @Override
     public void onKeypress(final TKeypressEvent keypress) {
 
+        // Open me if they hit my mnemonic.
+        if (!keypress.getKey().isFnKey()
+            && !keypress.getKey().isAlt()
+            && !keypress.getKey().isCtrl()
+            && (getMnemonic() != null)
+            && (Character.toLowerCase(getMnemonic().getShortcut())
+                == Character.toLowerCase(keypress.getKey().getChar()))
+        ) {
+            dispatch();
+            return;
+        }
+
         if (menu.isActive()) {
             menu.onKeypress(keypress);
             return;

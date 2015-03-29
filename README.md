@@ -185,7 +185,6 @@ Many tasks remain before calling this version 1.0:
 
 0.0.5: BUG HUNT
 
-- TSubMenu keyboard mnemonic not working
 - Swing performance.  Even with double buffering it isn't great.
 
 0.1.0: BETA RELEASE

@@ -169,6 +169,16 @@ public final class SwingScreen extends Screen {
         private int maxDescent = 0;
 
         /**
+         * System-dependent Y adjustment for text in the  character cell.
+         */
+        private int textAdjustY = 0;
+
+        /**
+         * System-dependent X adjustment for text in the  character cell.
+         */
+        private int textAdjustX = 0;
+
+        /**
          * Top pixel absolute location.
          */
         private int top = 30;
@@ -350,6 +360,11 @@ public final class SwingScreen extends Screen {
             // This also produces the same number, but works better for ugly
             // monospace.
             textHeight = fm.getMaxAscent() + maxDescent - leading;
+
+            if (System.getProperty("os.name").startsWith("Windows")) {
+                textAdjustY = -1;
+                textAdjustX = 0;
+            }
         }
 
         /**
@@ -477,8 +492,10 @@ public final class SwingScreen extends Screen {
                                 gr.setColor(attrToForegroundColor(lCellColor));
                                 char [] chars = new char[1];
                                 chars[0] = lCell.getChar();
-                                gr.drawChars(chars, 0, 1, xPixel,
-                                    yPixel + textHeight - maxDescent);
+                                gr.drawChars(chars, 0, 1, xPixel + textAdjustX,
+                                    yPixel + textHeight - maxDescent
+                                    + textAdjustY);
+
                                 if (lCell.isUnderline()) {
                                     gr.fillRect(xPixel, yPixel + textHeight - 2,
                                         textWidth, 2);

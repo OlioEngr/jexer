@@ -1,4 +1,4 @@
-/**
+/*
  * Jexer - Java Text User Interface
  *
  * License: LGPLv3 or later

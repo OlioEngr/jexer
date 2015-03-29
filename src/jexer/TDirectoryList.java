@@ -42,7 +42,7 @@ import static jexer.TKeypress.*;
 /**
  * TDirectoryList shows the files within a directory.
  */
-public class TDirectoryList extends TWidget {
+public final class TDirectoryList extends TWidget {
 
     /**
      * Files in the directory.
@@ -57,7 +57,26 @@ public class TDirectoryList extends TWidget {
     /**
      * Root path containing files to display.
      */
-    public File path;
+    private File path;
+
+    /**
+     * Set the new path to display.
+     *
+     * @param path new path to list files for
+     */
+    public void setPath(String path) {
+        this.path = new File(path);
+        reflow();
+    }
+
+    /**
+     * Get the path that is being displayed.
+     *
+     * @return the path
+     */
+    public File getPath() {
+        return path;
+    }
 
     /**
      * Vertical scrollbar.
@@ -117,14 +136,16 @@ public class TDirectoryList extends TWidget {
 
         // Build a list of files in this directory
         File [] newFiles = path.listFiles();
-        for (int i = 0; i < newFiles.length; i++) {
-            if (newFiles[i].getName().startsWith(".")) {
-                continue;
+        if (newFiles != null) {
+            for (int i = 0; i < newFiles.length; i++) {
+                if (newFiles[i].getName().startsWith(".")) {
+                    continue;
+                }
+                if (newFiles[i].isDirectory()) {
+                    continue;
+                }
+                files.add(newFiles[i]);
             }
-            if (newFiles[i].isDirectory()) {
-                continue;
-            }
-            files.add(newFiles[i]);
         }
 
         for (int i = 0; i < files.size(); i++) {
@@ -197,6 +218,7 @@ public class TDirectoryList extends TWidget {
     public TDirectoryList(final TWidget parent, final String path, final int x,
         final int y, final int width, final int height, final TAction action) {
 
+        super(parent, x, y, width, height);
         this.path   = new File(path);
         this.action = action;
         files = new ArrayList<File>();
@@ -211,7 +233,7 @@ public class TDirectoryList extends TWidget {
         CellAttributes color = null;
         int begin = vScroller.getValue();
         int topY = 0;
-        for (int i = begin; i < files.size() - 1; i++) {
+        for (int i = begin; i < files.size(); i++) {
             String line = renderFile(i);
             if (hScroller.getValue() < line.length()) {
                 line = line.substring(hScroller.getValue());
@@ -232,6 +254,12 @@ public class TDirectoryList extends TWidget {
             if (topY >= getHeight() - 1) {
                 break;
             }
+        }
+
+        if (isAbsoluteActive()) {
+            color = getTheme().getColor("tdirectorylist");
+        } else {
+            color = getTheme().getColor("tdirectorylist.inactive");
         }
 
         // Pad the rest with blank lines
@@ -293,17 +321,52 @@ public class TDirectoryList extends TWidget {
         } else if (keypress.equals(kbRight)) {
             hScroller.increment();
         } else if (keypress.equals(kbUp)) {
-            vScroller.decrement();
+            if (files.size() > 0) {
+                if (selectedFile >= 0) {
+                    if (selectedFile > 0) {
+                        selectedFile--;
+                    }
+                } else {
+                    selectedFile = files.size() - 1;
+                }
+                path = files.get(selectedFile);
+            }
         } else if (keypress.equals(kbDown)) {
-            vScroller.increment();
+            if (files.size() > 0) {
+                if (selectedFile >= 0) {
+                    if (selectedFile < files.size() - 1) {
+                        selectedFile++;
+                    }
+                } else {
+                    selectedFile = 0;
+                }
+                path = files.get(selectedFile);
+            }
         } else if (keypress.equals(kbPgUp)) {
             vScroller.bigDecrement();
         } else if (keypress.equals(kbPgDn)) {
             vScroller.bigIncrement();
         } else if (keypress.equals(kbHome)) {
             vScroller.toTop();
+            if (files.size() > 0) {
+                selectedFile = 0;
+                path = files.get(selectedFile);
+            }
         } else if (keypress.equals(kbEnd)) {
             vScroller.toBottom();
+            if (files.size() > 0) {
+                selectedFile = files.size() - 1;
+                path = files.get(selectedFile);
+            }
+        } else if (keypress.equals(kbTab)) {
+            getParent().switchWidget(true);
+        } else if (keypress.equals(kbShiftTab) || keypress.equals(kbBackTab)) {
+            getParent().switchWidget(false);
+        } else if (keypress.equals(kbEnter)) {
+            if (selectedFile >= 0) {
+                path = files.get(selectedFile);
+                dispatch();
+            }
         } else {
             // Pass other keys (tab etc.) on
             super.onKeypress(keypress);

@@ -42,9 +42,18 @@ import java.util.LinkedList;
 public class TDirectoryTreeItem extends TTreeItem {
 
     /**
-     * Directory entry corresponding to this list item.
+     * File corresponding to this list item.
      */
-    File dir;
+    private File file;
+
+    /**
+     * Get the File corresponding to this list item.
+     *
+     * @return the File
+     */
+    public final File getFile() {
+        return file;
+    }
 
     /**
      * Called when this item is expanded or collapsed.  this.expanded will be
@@ -52,20 +61,20 @@ public class TDirectoryTreeItem extends TTreeItem {
      */
     @Override
     public void onExpand() {
-        // System.err.printf("onExpand() %s\n", dir);
+        // System.err.printf("onExpand() %s\n", file);
 
-        if (dir == null) {
+        if (file == null) {
             return;
         }
         getChildren().clear();
 
         // Make sure we can read it before trying to.
-        if (dir.canRead()) {
+        if (file.canRead()) {
             setSelectable(true);
         } else {
             setSelectable(false);
         }
-        assert (dir.isDirectory());
+        assert (file.isDirectory());
         setExpandable(true);
 
         if ((isExpanded() == false) || (isExpandable() == false)) {
@@ -73,20 +82,20 @@ public class TDirectoryTreeItem extends TTreeItem {
             return;
         }
 
-        for (File file: dir.listFiles()) {
+        for (File f: file.listFiles()) {
             // System.err.printf("   -> file %s %s\n", file, file.getName());
 
-            if (file.getName().startsWith(".")) {
+            if (f.getName().startsWith(".")) {
                 // Hide dot-files
                 continue;
             }
-            if (!file.isDirectory()) {
+            if (!f.isDirectory()) {
                 continue;
             }
 
             try {
                 TDirectoryTreeItem item = new TDirectoryTreeItem(getTreeView(),
-                    file.getCanonicalPath(), false, false);
+                    f.getCanonicalPath(), false, false);
 
                 item.level = this.level + 1;
                 getChildren().add(item);
@@ -152,52 +161,52 @@ public class TDirectoryTreeItem extends TTreeItem {
 
         super(view, text, false);
 
-        List<String> parentPaths = new LinkedList<String>();
+        List<String> parentFiles = new LinkedList<String>();
         boolean oldExpanded = expanded;
 
         // Convert to canonical path
-        File rootPath = new File(text);
-        rootPath = rootPath.getCanonicalFile();
+        File rootFile = new File(text);
+        rootFile = rootFile.getCanonicalFile();
 
         if (openParents == true) {
             setExpanded(true);
 
             // Go up the directory tree
-            File parent = rootPath.getParentFile();
+            File parent = rootFile.getParentFile();
             while (parent != null) {
-                parentPaths.add(rootPath.getName());
-                rootPath = rootPath.getParentFile();
-                parent = rootPath.getParentFile();
+                parentFiles.add(rootFile.getName());
+                rootFile = rootFile.getParentFile();
+                parent = rootFile.getParentFile();
             }
         }
-        dir = rootPath;
-        if (rootPath.getParentFile() == null) {
+        file = rootFile;
+        if (rootFile.getParentFile() == null) {
             // This is a filesystem root, use its full name
-            setText(rootPath.getCanonicalPath());
+            setText(rootFile.getCanonicalPath());
         } else {
             // This is a relative path.  We got here because openParents was
             // false.
             assert (openParents == false);
-            setText(rootPath.getName());
+            setText(rootFile.getName());
         }
         onExpand();
 
         if (openParents == true) {
-            TDirectoryTreeItem childPath = this;
-            Collections.reverse(parentPaths);
-            for (String p: parentPaths) {
-                for (TWidget widget: childPath.getChildren()) {
+            TDirectoryTreeItem childFile = this;
+            Collections.reverse(parentFiles);
+            for (String p: parentFiles) {
+                for (TWidget widget: childFile.getChildren()) {
                     TDirectoryTreeItem child = (TDirectoryTreeItem) widget;
                     if (child.getText().equals(p)) {
-                        childPath = child;
-                        childPath.setExpanded(true);
-                        childPath.onExpand();
+                        childFile = child;
+                        childFile.setExpanded(true);
+                        childFile.onExpand();
                         break;
                     }
                 }
             }
             unselect();
-            getTreeView().setSelected(childPath);
+            getTreeView().setSelected(childFile);
             setExpanded(oldExpanded);
         }
         getTreeView().reflow();

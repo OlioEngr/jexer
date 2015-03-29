@@ -76,7 +76,7 @@ public class TTreeItem extends TWidget {
     /**
      * Set the displayable text for this item.
      *
-     * @param the displayable text for this item
+     * @param text the displayable text for this item
      */
     public final void setText(final String text) {
         this.text = text;
@@ -265,10 +265,10 @@ public class TTreeItem extends TWidget {
     /**
      * Recursively expand the tree into a linear array of items.
      *
-     * @param prefix = vertical bar of parent levels and such that is set on
+     * @param prefix vertical bar of parent levels and such that is set on
      * each child
-     * @param last = if true, this is the "last" leaf node of a tree
-     * @param additional items to add to the array
+     * @param last if true, this is the "last" leaf node of a tree
+     * @return additional items to add to the array
      */
     public List<TTreeItem> expandTree(final String prefix, final boolean last) {
         List<TTreeItem> array = new ArrayList<TTreeItem>();

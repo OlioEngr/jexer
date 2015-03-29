@@ -762,8 +762,7 @@ public abstract class TWidget implements Comparable<TWidget> {
     public void onKeypress(final TKeypressEvent keypress) {
 
         if ((children.size() == 0)
-            // TODO
-            // || (cast(TTreeView)this)
+            || (this instanceof TTreeView)
             || (this instanceof TText)
         ) {
 

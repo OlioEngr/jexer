@@ -980,7 +980,8 @@ public class TApplication implements Runnable {
     public final void enableSecondaryEventReceiver(final TWidget widget) {
         assert (secondaryEventReceiver == null);
         assert (secondaryEventHandler == null);
-        assert (widget instanceof TMessageBox);
+        assert ((widget instanceof TMessageBox)
+            || (widget instanceof TFileOpenBox));
         secondaryEventReceiver = widget;
         secondaryEventHandler = new WidgetEventHandler(this, false);
         (new Thread(secondaryEventHandler)).start();

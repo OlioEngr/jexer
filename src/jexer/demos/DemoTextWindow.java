@@ -44,14 +44,26 @@ public class DemoTextWindow extends TWindow {
     private TText textField;
 
     /**
+     * Public constructor makes a text window out of any string.
+     *
+     * @param parent the main application
+     * @param title the text string
+     * @param text the text string
+     */
+    public DemoTextWindow(final TApplication parent, final String title,
+        final String text) {
+
+        super(parent, title, 0, 0, 44, 20, RESIZABLE);
+        textField = addText(text, 1, 1, 40, 16);
+    }
+    
+    /**
      * Public constructor.
      *
      * @param parent the main application
      */
     public DemoTextWindow(final TApplication parent) {
-        super(parent, "Text Areas", 0, 0, 44, 20, RESIZABLE);
-
-        textField = addText(
+        this(parent, "Text Area",
 "This is an example of a reflowable text field.  Some example text follows.\n" +
 "\n" +
 "This library implements a text-based windowing system loosely\n" +
@@ -69,8 +81,8 @@ public class DemoTextWindow extends TWindow {
 "This library is licensed LGPL (\"GNU Lesser General Public License\")\n" +
 "version 3 or greater.  See the file COPYING for the full license text,\n" +
 "which includes both the GPL v3 and the LGPL supplemental terms.\n" +
-"\n",
-            1, 1, 40, 16);
+"\n");
+
     }
 
     /**

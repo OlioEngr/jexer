@@ -90,7 +90,6 @@ public final class TFileOpenBox extends TWindow {
     /**
      * The right-side directory list pane.
      */
-    @SuppressWarnings("unused")
     private TDirectoryList directoryList;
 
     /**
@@ -104,36 +103,27 @@ public final class TFileOpenBox extends TWindow {
     private TButton openButton;
 
     /**
-     * Update the fields in response to other field updates.
+     * See if there is a valid filename to return.  If the filename is a
+     * directory, then
      *
-     * @param enter if true, the user manually entered a filename
+     * @param newFilename the filename to check and return
      */
-    @SuppressWarnings("unused")
-    private void onUpdate(boolean enter) throws IOException {
-        String newFilename = entryField.getText();
+    private void checkFilename(final String newFilename) throws IOException {
         File newFile = new File(newFilename);
         if (newFile.exists()) {
-            if (enter) {
-                if (newFile.isFile()) {
-                    filename = entryField.getText();
-                    getApplication().closeWindow(this);
-                }
-                if (newFile.isDirectory()) {
-                    treeViewRoot = new TDirectoryTreeItem(treeView,
-                        entryField.getText(), true);
-                    treeView.setTreeRoot(treeViewRoot, true);
-                    treeView.reflow();
-                }
-                openButton.setEnabled(false);
-            } else {
-                if (newFile.isFile()) {
-                    openButton.setEnabled(true);
-                } else {
-                    openButton.setEnabled(false);
-                }
+            if (newFile.isFile()) {
+                filename = newFilename;
+                getApplication().closeWindow(this);
+                return;
             }
-        } else {
-            openButton.setEnabled(false);
+            if (newFile.isDirectory()) {
+                treeViewRoot = new TDirectoryTreeItem(treeView, newFilename,
+                    true);
+                treeView.setTreeRoot(treeViewRoot, true);
+                treeView.reflow();
+                openButton.setEnabled(false);
+                directoryList.setPath(newFilename);
+            }
         }
     }
 
@@ -154,13 +144,30 @@ public final class TFileOpenBox extends TWindow {
         entryField = addField(1, 1, getWidth() - 4, false,
             (new File(path)).getCanonicalPath(),
             new TAction() {
-                public void DO() {}
+                public void DO() {
+                    try {
+                        checkFilename(entryField.getText());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }, null);
+        entryField.onKeypress(new TKeypressEvent(kbEnd));
 
         // Add directory treeView
         treeView = addTreeView(1, 3, 30, getHeight() - 6,
             new TAction() {
-                public void DO() {}
+                public void DO() {
+                    TTreeItem item = treeView.getSelected();
+                    File selectedDir = ((TDirectoryTreeItem) item).getFile();
+                    try {
+                        directoryList.setPath(selectedDir.getCanonicalPath());
+                        openButton.setEnabled(false);
+                        activate(directoryList);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         );
         treeViewRoot = new TDirectoryTreeItem(treeView, path, true);
@@ -168,7 +175,17 @@ public final class TFileOpenBox extends TWindow {
         // Add directory files list
         directoryList = addDirectoryList(path, 34, 3, 28, getHeight() - 6,
             new TAction() {
-                public void DO() {}
+                public void DO() {
+                    try {
+                        File newPath = directoryList.getPath();
+                        entryField.setText(newPath.getCanonicalPath());
+                        entryField.onKeypress(new TKeypressEvent(kbEnd));
+                        openButton.setEnabled(true);
+                        activate(entryField);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         );
 
@@ -189,7 +206,13 @@ public final class TFileOpenBox extends TWindow {
         // Setup button actions
         openButton = addButton(openLabel, this.getWidth() - 12, 3,
             new TAction() {
-                public void DO() {}
+                public void DO() {
+                    try {
+                        checkFilename(entryField.getText());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         );
         openButton.setEnabled(false);
@@ -202,6 +225,9 @@ public final class TFileOpenBox extends TWindow {
                 }
             }
         );
+
+        // Default to the directory list
+        activate(directoryList);
 
         // Set the secondaryFiber to run me
         getApplication().enableSecondaryEventReceiver(this);

@@ -435,12 +435,20 @@ public class TTreeView extends TWidget {
                     }
                 }
             }
+        } else if (keypress.equals(kbTab)) {
+            getParent().switchWidget(true);
+            return;
+        } else if (keypress.equals(kbShiftTab)
+                || keypress.equals(kbBackTab)) {
+            getParent().switchWidget(false);
+            return;
         } else if (selectedItem != null) {
             // Give the TTreeItem a chance to handle arrow keys
             selectedItem.onKeypress(keypress);
         } else {
             // Pass other keys (tab etc.) on to TWidget's handler.
             super.onKeypress(keypress);
+            return;
         }
 
         // Update the screen after any thing has expanded/contracted

@@ -56,6 +56,17 @@ public class TField extends TWidget {
     }
 
     /**
+     * Set field text.
+     *
+     * @param text the new field text
+     */
+    public final void setText(String text) {
+        this.text = text;
+        position = 0;
+        windowStart = 0;
+    }
+
+    /**
      * If true, only allow enough characters that will fit in the width.  If
      * false, allow the field to scroll to the right.
      */

@@ -31,8 +31,10 @@
 package jexer.demos;
 
 import java.io.*;
+import java.util.*;
 
 import jexer.*;
+import jexer.event.*;
 import jexer.menu.*;
 
 /**
@@ -74,7 +76,7 @@ public class DemoApplication extends TApplication {
 
         addWindowMenu();
     }
-    
+
     /**
      * Public constructor.
      *
@@ -93,7 +95,47 @@ public class DemoApplication extends TApplication {
         super(input, output);
         addAllWidgets();
     }
-    
+
+    /**
+     * Handle menu events.
+     *
+     * @param menu menu event
+     * @return if true, the event was processed and should not be passed onto
+     * a window
+     */
+    @Override
+    public boolean onMenu(TMenuEvent menu) {
+        if (menu.getId() == TMenu.MID_OPEN_FILE) {
+            try {
+                String filename = fileOpenBox(".");
+                 if (filename != null) {
+                     try {
+                         File file = new File(filename);
+                         StringBuilder fileContents = new StringBuilder();
+                         Scanner scanner = new Scanner(file);
+                         String EOL = System.getProperty("line.separator");
+
+                         try {
+                             while(scanner.hasNextLine()) {
+                                 fileContents.append(scanner.nextLine() + EOL);
+                             }
+                             new DemoTextWindow(this, filename,
+                                 fileContents.toString());
+                         } finally {
+                             scanner.close();
+                         }
+                     } catch (IOException e) {
+                         e.printStackTrace();
+                     }
+                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return super.onMenu(menu);
+    }
+
     /**
      * Public constructor.
      *

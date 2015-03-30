@@ -458,6 +458,22 @@ public class TWindow extends TWidget {
     }
 
     /**
+     * Called by application.switchWindow() when this window gets the
+     * focus, and also by application.addWindow().
+     */
+    public void onFocus() {
+        // Default: do nothing
+    }
+
+    /**
+     * Called by application.switchWindow() when another window gets the
+     * focus.
+     */
+    public void onUnfocus() {
+        // Default: do nothing
+    }
+
+    /**
      * Called by TApplication.drawChildren() to render on screen.
      */
     @Override

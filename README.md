@@ -177,7 +177,6 @@ Many tasks remain before calling this version 1.0:
 
 0.0.4: NEW STUFF
 
-- Making TMenu keyboard accelerators active/inactive
 - TStatusBar
 - TEditor
 - TWindow

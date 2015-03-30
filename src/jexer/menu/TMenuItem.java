@@ -57,6 +57,15 @@ public class TMenuItem extends TWidget {
     private int id = TMenu.MID_UNUSED;
 
     /**
+     * Get the menu item ID.
+     *
+     * @return the id
+     */
+    public final int getId() {
+        return id;
+    }
+
+    /**
      * When true, this item can be checked or unchecked.
      */
     private boolean checkable = false;
@@ -69,7 +78,7 @@ public class TMenuItem extends TWidget {
     public final void setCheckable(final boolean checkable) {
         this.checkable = checkable;
     }
-    
+
     /**
      * When true, this item is checked.
      */
@@ -79,11 +88,6 @@ public class TMenuItem extends TWidget {
      * Global shortcut key.
      */
     private TKeypress key;
-
-    /**
-     * When true, a global accelerator can be used to select this item.
-     */
-    private boolean hasKey = false;
 
     /**
      * The title string.  Use '&' to specify a mnemonic, i.e. "&File" will
@@ -101,17 +105,28 @@ public class TMenuItem extends TWidget {
     }
 
     /**
+     * Get a global accelerator key for this menu item.
+     *
+     * @return global keyboard accelerator, or null if no key is associated
+     * with this item
+     */
+    public final TKeypress getKey() {
+        return key;
+    }
+
+    /**
      * Set a global accelerator key for this menu item.
      *
      * @param key global keyboard accelerator
      */
     public final void setKey(final TKeypress key) {
-        hasKey = true;
         this.key = key;
 
-        int newWidth = (label.length() + 4 + key.toString().length() + 2);
-        if (newWidth > getWidth()) {
-            setWidth(newWidth);
+        if (key != null) {
+            int newWidth = (label.length() + 4 + key.toString().length() + 2);
+            if (newWidth > getWidth()) {
+                setWidth(newWidth);
+            }
         }
     }
 
@@ -219,7 +234,7 @@ public class TMenuItem extends TWidget {
 
         getScreen().hLineXY(1, 0, getWidth() - 2, ' ', menuColor);
         getScreen().putStringXY(2, 0, mnemonic.getRawLabel(), menuColor);
-        if (hasKey) {
+        if (key != null) {
             String keyLabel = key.toString();
             getScreen().putStringXY((getWidth() - keyLabel.length() - 2), 0,
                 keyLabel, menuColor);

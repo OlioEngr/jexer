@@ -309,6 +309,18 @@ public final class TMenu extends TWindow {
     }
 
     /**
+     * Convenience function to add a menu item.
+     *
+     * @param id menu item ID.  Must be greater than 1024.
+     * @param label menu item label
+     * @return the new menu item
+     */
+    public final TMenuItem addItem(final int id, final String label) {
+        assert (id >= 1024);
+        return addItemInternal(id, label, null);
+    }
+
+    /**
      * Convenience function to add a custom menu item.
      *
      * @param id menu item ID.  Must be greater than 1024.
@@ -346,43 +358,7 @@ public final class TMenu extends TWindow {
         for (TWidget widget: getChildren()) {
             widget.setWidth(getWidth() - 2);
         }
-        getApplication().addAccelerator(menuItem, key.toLowerCase());
-        getApplication().recomputeMenuX();
-        activate(0);
-        return menuItem;
-    }
-
-    /**
-     * Convenience function to add a menu item.
-     *
-     * @param id menu item ID.  Must be greater than 1024.
-     * @param label menu item label
-     * @return the new menu item
-     */
-    public final TMenuItem addItem(final int id, final String label) {
-        assert (id >= 1024);
-        return addItemInternal(id, label);
-    }
-
-    /**
-     * Convenience function to add a menu item.
-     *
-     * @param id menu item ID
-     * @param label menu item label
-     * @return the new menu item
-     */
-    private TMenuItem addItemInternal(final int id, final String label) {
-        int newY = getChildren().size() + 1;
-        assert (newY < getHeight());
-
-        TMenuItem menuItem = new TMenuItem(this, id, 1, newY, label);
-        setHeight(getHeight() + 1);
-        if (menuItem.getWidth() + 2 > getWidth()) {
-            setWidth(menuItem.getWidth() + 2);
-        }
-        for (TWidget widget: getChildren()) {
-            widget.setWidth(getWidth() - 2);
-        }
+        getApplication().addMenuItem(menuItem);
         getApplication().recomputeMenuX();
         activate(0);
         return menuItem;
@@ -401,7 +377,6 @@ public final class TMenu extends TWindow {
 
         String label;
         TKeypress key = null;
-        boolean hasKey = true;
 
         switch (id) {
 
@@ -412,7 +387,6 @@ public final class TMenu extends TWindow {
 
         case MID_SHELL:
             label = "O&S Shell";
-            hasKey = false;
             break;
 
         case MID_OPEN_FILE:
@@ -434,21 +408,17 @@ public final class TMenu extends TWindow {
             break;
         case MID_CLEAR:
             label = "C&lear";
-            hasKey = false;
             // key = kbDel;
             break;
 
         case MID_TILE:
             label = "&Tile";
-            hasKey = false;
             break;
         case MID_CASCADE:
             label = "C&ascade";
-            hasKey = false;
             break;
         case MID_CLOSE_ALL:
             label = "Cl&ose All";
-            hasKey = false;
             break;
         case MID_WINDOW_MOVE:
             label = "&Size/Move";
@@ -468,7 +438,6 @@ public final class TMenu extends TWindow {
             break;
         case MID_WINDOW_CLOSE:
             label = "&Close";
-            hasKey = false;
             // key = kbCtrlW;
             break;
 
@@ -476,10 +445,7 @@ public final class TMenu extends TWindow {
             throw new IllegalArgumentException("Invalid menu ID: " + id);
         }
 
-        if (hasKey) {
-            return addItemInternal(id, label, key);
-        }
-        return addItemInternal(id, label);
+        return addItemInternal(id, label, key);
     }
 
     /**

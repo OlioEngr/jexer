@@ -431,6 +431,11 @@ public class TApplication implements Runnable {
     private Map<TKeypress, TMenuItem> accelerators;
 
     /**
+     * All menu items.
+     */
+    private List<TMenuItem> menuItems;
+
+    /**
      * Windows and widgets pull colors from this ColorTheme.
      */
     private ColorTheme theme;
@@ -561,6 +566,7 @@ public class TApplication implements Runnable {
         subMenus        = new LinkedList<TMenu>();
         timers          = new LinkedList<TTimer>();
         accelerators    = new HashMap<TKeypress, TMenuItem>();
+        menuItems       = new ArrayList<TMenuItem>();
 
         // Setup the main consumer thread
         primaryEventHandler = new WidgetEventHandler(this, true);
@@ -1075,6 +1081,7 @@ public class TApplication implements Runnable {
         synchronized (windows) {
             int z = window.getZ();
             window.setZ(-1);
+            window.onUnfocus();
             Collections.sort(windows);
             windows.remove(0);
             TWindow activeWindow = null;
@@ -1083,10 +1090,14 @@ public class TApplication implements Runnable {
                     w.setZ(w.getZ() - 1);
                     if (w.getZ() == 0) {
                         w.setActive(true);
+                        w.onFocus();
                         assert (activeWindow == null);
                         activeWindow = w;
                     } else {
-                        w.setActive(false);
+                        if (w.isActive()) {
+                            w.setActive(false);
+                            w.onUnfocus();
+                        }
                     }
                 }
             }
@@ -1152,8 +1163,10 @@ public class TApplication implements Runnable {
             }
             windows.get(activeWindowI).setActive(false);
             windows.get(activeWindowI).setZ(windows.get(nextWindowI).getZ());
+            windows.get(activeWindowI).onUnfocus();
             windows.get(nextWindowI).setZ(0);
             windows.get(nextWindowI).setActive(true);
+            windows.get(nextWindowI).onFocus();
 
         } // synchronized (windows)
 
@@ -1171,12 +1184,16 @@ public class TApplication implements Runnable {
                 assert (window.isModal());
             }
             for (TWindow w: windows) {
-                w.setActive(false);
+                if (w.isActive()) {
+                    w.setActive(false);
+                    w.onUnfocus();
+                }
                 w.setZ(w.getZ() + 1);
             }
             windows.add(window);
-            window.setActive(true);
             window.setZ(0);
+            window.setActive(true);
+            window.onFocus();
         }
     }
 
@@ -1320,10 +1337,12 @@ public class TApplication implements Runnable {
                     // We will be switching to another window
                     assert (windows.get(0).isActive());
                     assert (!window.isActive());
+                    windows.get(0).onUnfocus();
                     windows.get(0).setActive(false);
                     windows.get(0).setZ(window.getZ());
                     window.setZ(0);
                     window.setActive(true);
+                    window.onFocus();
                     return;
                 }
             }
@@ -1500,17 +1519,76 @@ public class TApplication implements Runnable {
     }
 
     /**
-     * Add a keyboard accelerator to the global hash.
+     * Add a menu item to the global list.  If it has a keyboard accelerator,
+     * that will be added the global hash.
      *
-     * @param item menu item this accelerator relates to
-     * @param keypress keypress that will dispatch a TMenuEvent
+     * @param item the menu item
      */
-    public final void addAccelerator(final TMenuItem item,
-        final TKeypress keypress) {
+    public final void addMenuItem(final TMenuItem item) {
+        menuItems.add(item);
 
-        synchronized (accelerators) {
-            assert (accelerators.get(keypress) == null);
-            accelerators.put(keypress, item);
+        TKeypress key = item.getKey();
+        if (key != null) {
+            synchronized (accelerators) {
+                assert (accelerators.get(key) == null);
+                accelerators.put(key.toLowerCase(), item);
+            }
+        }
+    }
+
+    /**
+     * Disable one menu item.
+     *
+     * @param id the menu item ID
+     */
+    public final void disableMenuItem(final int id) {
+        for (TMenuItem item: menuItems) {
+            if (item.getId() == id) {
+                item.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * Disable the range of menu items with ID's between lower and upper,
+     * inclusive.
+     *
+     * @param lower the lowest menu item ID
+     * @param upper the highest menu item ID
+     */
+    public final void disableMenuItems(final int lower, final int upper) {
+        for (TMenuItem item: menuItems) {
+            if ((item.getId() >= lower) && (item.getId() <= upper)) {
+                item.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * Enable one menu item.
+     *
+     * @param id the menu item ID
+     */
+    public final void enableMenuItem(final int id) {
+        for (TMenuItem item: menuItems) {
+            if (item.getId() == id) {
+                item.setEnabled(true);
+            }
+        }
+    }
+
+    /**
+     * Enable the range of menu items with ID's between lower and upper,
+     * inclusive.
+     *
+     * @param lower the lowest menu item ID
+     * @param upper the highest menu item ID
+     */
+    public final void enableMenuItems(final int lower, final int upper) {
+        for (TMenuItem item: menuItems) {
+            if ((item.getId() >= lower) && (item.getId() <= upper)) {
+                item.setEnabled(true);
+            }
         }
     }
 

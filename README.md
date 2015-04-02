@@ -1,17 +1,13 @@
 Jexer - Java Text User Interface library
 ========================================
 
-WARNING: THIS IS ALPHA CODE!  PLEASE CONSIDER FILING BUGS AS YOU
-ENCOUNTER THEM.
+This library implements a text-based windowing system reminiscient of
+Borland's [Turbo Vision](http://en.wikipedia.org/wiki/Turbo_Vision)
+system.  (For those wishing to use the actual C++ Turbo Vision
+library, see [Sergio Sigala's C++ version based on the public domain
+sources released by Borland.](http://tvision.sourceforge.net/) )
 
-This library is intended to implement a text-based windowing system
-loosely reminiscient of Borland's [Turbo
-Vision](http://en.wikipedia.org/wiki/Turbo_Vision) library.  For those
-wishing to use the actual C++ Turbo Vision library, see [Sergio
-Sigala's updated version](http://tvision.sourceforge.net/) that runs
-on many more platforms.
-
-Three backends are available:
+Jexer currently supports three backends:
 
 * System.in/out to a command-line ECMA-48 / ANSI X3.64 type terminal
   (tested on Linux + xterm).  I/O is handled through terminal escape
@@ -29,20 +25,6 @@ Three backends are available:
   jexer.Swing=true.  The default window size for Swing is 132x40,
   which is set in jexer.session.SwingSession.  For the demo
   application, this is the default backend on Windows platforms.
-
-The demo application showing the existing UI controls can be seen in
-three ways:
-
-  * 'java -jar jexer.jar' .  This will use System.in/out on
-    non-Windows, or Swing on Windows.
-
-  * 'java -Djexer.Swing=true -jar jexer.jar' .  This will always use
-    Swing.
-
-  * 'java -cp jexer.jar jexer.demos.Demo2 PORT' (where PORT is a
-    number to run the TCP daemon on).  This will use the telnet
-    protocol to establish an 8-bit clean channel and be aware of
-    screen size changes.
 
 Additional backends can be created by subclassing
 jexer.backend.Backend and passing it into the TApplication
@@ -75,30 +57,116 @@ here](http://files.ax86.net/terminus-ttf/) .
 Usage
 -----
 
-Usage patterns are still being worked on, but in general the goal will
-be to build applications as follows:
+Simply subclass TApplication and then run it in a new thread:
 
 ```Java
 import jexer.*;
 
-public class MyApplication extends TApplication {
+class MyApplication extends TApplication {
 
-    public MyApplication() {
+    public MyApplication() throws Exception {
         super(BackendType.SWING); // Could also use BackendType.XTERM
 
         // Create standard menus for File and Window
         addFileMenu();
         addWindowMenu();
+
+        // Add a custom window, see below for its code.
+        addWindow(new MyWindow(this));
     }
 
     public static void main(String [] args) {
-        MyApplication app = new MyApplication();
-        (new Thread(app)).start();
+        try {
+            MyApplication app = new MyApplication();
+            (new Thread(app)).start();
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 }
 ```
 
-See the files in jexer.demos for more detailed examples.
+Similarly, subclass TWindow and add some widgets:
+
+```Java
+class MyWindow extends TWindow {
+
+    public MyWindow(TApplication application) {
+        // See TWindow's API for several constructors.  This one uses the
+        // application, title, width, and height.  Note that the window width
+        // and height include the borders.  The widgets inside the window
+        // will see (0, 0) as the top-left corner inside the borders,
+        // i.e. what the window would see as (1, 1).
+        super(application, "My Window", 30, 20);
+
+        // See TWidget's API for convenience methods to add various kinds of
+        // widgets.  Note that ANY widget can be a container for other
+        // widgets: TRadioGroup for example has TRadioButtons as child
+        // widgets.
+
+        // We will add a basic label, text entry field, and button.
+        addLabel("This is a label", 5, 3);
+        addField(5, 5, 20, false, "enter text here");
+        // For the button, we will pop up a message box if the user presses
+        // it.
+        addButton("Press &Me!", 5, 8, new TAction() {
+            public void DO() {
+                MyWindow.this.messageBox("Box Title", "You pressed me, yay!");
+            }
+        } );
+    }
+}
+```
+
+Put these into a file, compile it with jexer.jar in the classpath, run
+it and you'll see an application like this:
+
+![The Example Code Above](/screenshots/readme_application.png?raw=true "The application in the text of README.md")
+
+See the files in jexer.demos for many more detailed examples showing
+all of the existing UI controls.  The demo can be run in three
+different ways:
+
+  * 'java -jar jexer.jar' .  This will use System.in/out with
+    xterm-like sequences on non-Windows platforms.  On Windows it will
+    use a Swing JFrame.
+
+  * 'java -Djexer.Swing=true -jar jexer.jar' .  This will always use
+    Swing on any platform.
+
+  * 'java -cp jexer.jar jexer.demos.Demo2 PORT' (where PORT is a
+    number to run the TCP daemon on).  This will use the telnet
+    protocol to establish an 8-bit clean channel and be aware of
+    screen size changes.
+
+
+
+More Screenshots
+----------------
+
+![Several Windows Open Including A Terminal](/screenshots/screenshot1.png?raw=true "Several Windows Open Including A Terminal")
+
+![Yo Dawg...](/screenshots/yodawg.png?raw=true "Yo Dawg, I heard you like text windowing systems, so I ran a text windowing system inside your text windowing system so you can have a terminal in your terminal.")
+
+
+
+System Properties
+-----------------
+
+The following properties control features of Jexer:
+
+  jexer.Swing
+  -----------
+
+  Used only by jexer.demos.Demo1.  If true, use the Swing interface
+  for the demo application.  Default: true on Windows platforms
+  (os.name starts with "Windows"), false on non-Windows platforms.
+
+  jexer.Swing.cursorStyle
+  -----------------------
+
+  Used by jexer.io.SwingScreen.  Selects the cursor style to draw.
+  Valid values are: underline, block, outline.  Default: underline.
 
 
 
@@ -148,34 +216,17 @@ ambiguous.  This section describes such issues.
 
 
 
-System Properties
------------------
-
-The following properties control features of Jexer:
-
-  jexer.Swing
-  -----------
-
-  Used only by jexer.demos.Demo1.  If true, use the Swing interface
-  for the demo application.  Default: true on Windows platforms
-  (os.name starts with "Windows"), false on non-Windows platforms.
-
-  jexer.Swing.cursorStyle
-  -----------------------
-
-  Used by jexer.io.SwingScreen.  Selects the cursor style to draw.
-  Valid values are: underline, block, outline.  Default: underline.
-
-
-
 Roadmap
 -------
 
 Many tasks remain before calling this version 1.0:
 
-0.0.3: FINISH PORTING
+0.0.3
 
-0.0.4: NEW STUFF
+- TListBox
+- TColorPicker
+
+0.0.4
 
 - TStatusBar
 - TEditor
@@ -190,27 +241,17 @@ Many tasks remain before calling this version 1.0:
 
 - TSpinner
 - TComboBox
-- TListBox
 - TCalendar
-- TColorPicker
 
 Wishlist features (2.0):
 
 - TTerminal
   - Handle resize events (pass to child process)
 - Screen
-  - Allow complex characters in putCharXY() and detect them in putStrXY().
+  - Allow complex characters in putCharXY() and detect them in putStringXY().
 - Drag and drop
   - TEditor
   - TField
   - TText
   - TTerminal
   - TComboBox
-
-
-Screenshots
------------
-
-![Several Windows Open Including A Terminal](/screenshots/screenshot1.png?raw=true "Several Windows Open Including A Terminal")
-
-![Yo Dawg...](/screenshots/yodawg.png?raw=true "Yo Dawg, I heard you like text windowing systems, so I ran a text windowing system inside your text windowing system so you can have a terminal in your terminal.")

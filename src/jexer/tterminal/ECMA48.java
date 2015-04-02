@@ -2185,8 +2185,9 @@ public class ECMA48 implements Runnable {
     }
 
     /**
-     * Set or unset a toggle.  value is 'true' for set ('h'), false for reset
-     * ('l').
+     * Set or unset a toggle.
+     *
+     * @param value true for set ('h'), false for reset ('l')
      */
     private void setToggle(final boolean value) {
         boolean decPrivateModeFlag = false;
@@ -5534,8 +5535,8 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.length() > 0) &&
-                    (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
+                if ((collectBuffer.length() > 0)
+                    && (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
                 ) {
                     toGround();
                 }
@@ -5566,8 +5567,8 @@ public class ECMA48 implements Runnable {
                 collect(ch);
             }
             if (ch == 0x5C) {
-                if ((collectBuffer.length() > 0) &&
-                    (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
+                if ((collectBuffer.length() > 0)
+                    && (collectBuffer.charAt(collectBuffer.length() - 1) == 0x1B)
                 ) {
                     toGround();
                 }
@@ -5719,7 +5720,7 @@ public class ECMA48 implements Runnable {
     /**
      * Read function runs on a separate thread.
      */
-    public void run() {
+    public final void run() {
         boolean utf8 = false;
         boolean done = false;
 

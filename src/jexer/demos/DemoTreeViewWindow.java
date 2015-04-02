@@ -49,8 +49,9 @@ public class DemoTreeViewWindow extends TWindow {
      * Public constructor.
      *
      * @param parent the main application
+     * @throws IOException if a java.io operation throws
      */
-    public DemoTreeViewWindow(TApplication parent) throws IOException {
+    public DemoTreeViewWindow(final TApplication parent) throws IOException {
         super(parent, "Tree View", 0, 0, 44, 16, TWindow.RESIZABLE);
 
         // Load the treeview with "stuff"
@@ -64,7 +65,7 @@ public class DemoTreeViewWindow extends TWindow {
      * @param resize resize event
      */
     @Override
-    public void onResize(TResizeEvent resize) {
+    public void onResize(final TResizeEvent resize) {
         if (resize.getType() == TResizeEvent.Type.WIDGET) {
             // Resize the text field
             treeView.setWidth(resize.getWidth() - 4);

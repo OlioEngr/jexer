@@ -315,7 +315,7 @@ public final class TMenu extends TWindow {
      * @param label menu item label
      * @return the new menu item
      */
-    public final TMenuItem addItem(final int id, final String label) {
+    public TMenuItem addItem(final int id, final String label) {
         assert (id >= 1024);
         return addItemInternal(id, label, null);
     }
@@ -328,7 +328,7 @@ public final class TMenu extends TWindow {
      * @param key global keyboard accelerator
      * @return the new menu item
      */
-    public final TMenuItem addItem(final int id, final String label,
+    public TMenuItem addItem(final int id, final String label,
         final TKeypress key) {
 
         assert (id >= 1024);
@@ -371,7 +371,7 @@ public final class TMenu extends TWindow {
      * (inclusive).
      * @return the new menu item
      */
-    public final TMenuItem addDefaultItem(final int id) {
+    public TMenuItem addDefaultItem(final int id) {
         assert (id >= 0);
         assert (id < 1024);
 
@@ -451,7 +451,7 @@ public final class TMenu extends TWindow {
     /**
      * Convenience function to add a menu separator.
      */
-    public final void addSeparator() {
+    public void addSeparator() {
         int newY = getChildren().size() + 1;
         assert (newY < getHeight());
 
@@ -468,7 +468,7 @@ public final class TMenu extends TWindow {
      * denoted by prefixing a letter with "&", e.g. "&File"
      * @return the new sub-menu
      */
-    public final TSubMenu addSubMenu(final String title) {
+    public TSubMenu addSubMenu(final String title) {
         int newY = getChildren().size() + 1;
         assert (newY < getHeight());
 

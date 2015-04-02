@@ -519,6 +519,8 @@ public final class SwingScreen extends Screen {
                     Cell lCell = screen.logical[cursorX][cursorY];
                     gr.setColor(attrToForegroundColor(lCell));
                     switch (cursorStyle) {
+                    default:
+                        // Fall through...
                     case UNDERLINE:
                         gr.fillRect(xPixel, yPixel + textHeight - 2,
                             textWidth, 2);
@@ -571,7 +573,7 @@ public final class SwingScreen extends Screen {
                     SwingScreen.this.frame.resizeToScreen();
                     SwingScreen.this.frame.setVisible(true);
                 }
-            } );
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }

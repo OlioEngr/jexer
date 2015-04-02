@@ -79,7 +79,7 @@ public final class MnemonicString {
     public String getRawLabel() {
         return rawLabel;
     }
-    
+
     /**
      * Public constructor.
      *

@@ -104,7 +104,7 @@ public class DemoApplication extends TApplication {
      * a window
      */
     @Override
-    public boolean onMenu(TMenuEvent menu) {
+    public boolean onMenu(final TMenuEvent menu) {
         if (menu.getId() == TMenu.MID_OPEN_FILE) {
             try {
                 String filename = fileOpenBox(".");
@@ -116,7 +116,7 @@ public class DemoApplication extends TApplication {
                          String EOL = System.getProperty("line.separator");
 
                          try {
-                             while(scanner.hasNextLine()) {
+                             while (scanner.hasNextLine()) {
                                  fileContents.append(scanner.nextLine() + EOL);
                              }
                              new DemoTextWindow(this, filename,
@@ -142,7 +142,7 @@ public class DemoApplication extends TApplication {
      * @param backendType one of the TApplication.BackendType values
      * @throws Exception if TApplication can't instantiate the Backend.
      */
-    public DemoApplication(BackendType backendType) throws Exception {
+    public DemoApplication(final BackendType backendType) throws Exception {
         super(backendType);
         addAllWidgets();
     }

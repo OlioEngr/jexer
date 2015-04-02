@@ -64,7 +64,7 @@ public final class TDirectoryList extends TWidget {
      *
      * @param path new path to list files for
      */
-    public void setPath(String path) {
+    public void setPath(final String path) {
         this.path = new File(path);
         reflow();
     }
@@ -115,7 +115,7 @@ public final class TDirectoryList extends TWidget {
      * @param index index into files
      * @return the line to draw
      */
-    private String renderFile(int index) {
+    private String renderFile(final int index) {
         File file = files.get(index);
         String name = file.getName();
         if (name.length() > 20) {

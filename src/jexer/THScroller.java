@@ -297,7 +297,8 @@ public final class THScroller extends TWidget {
             && (mouse.getX() < getWidth() - 1)
         ) {
             // Recompute value based on new box position
-            value = (rightValue - leftValue) * (mouse.getX()) / (getWidth() - 3) + leftValue;
+            value = (rightValue - leftValue)
+                * (mouse.getX()) / (getWidth() - 3) + leftValue;
             return;
         }
         inScroll = false;

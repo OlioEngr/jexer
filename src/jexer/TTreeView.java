@@ -52,6 +52,8 @@ public class TTreeView extends TWidget {
     /**
      * Get the horizontal scrollbar.  This is used by TTreeItem.draw(), and
      * potentially subclasses.
+     *
+     * @return the horizontal scrollbar
      */
     public final THScroller getHScroller() {
         return hScroller;
@@ -94,7 +96,7 @@ public class TTreeView extends TWidget {
      * If true, move the window to put the selected item in view.  This
      * normally only happens once after setting treeRoot.
      */
-    public boolean centerWindow = false;
+    private boolean centerWindow = false;
 
     /**
      * The action to perform when the user selects an item.
@@ -107,7 +109,9 @@ public class TTreeView extends TWidget {
      * @param treeRoot ultimate root of tree
      * @param centerWindow if true, move the window to put the root in view
      */
-    public void setTreeRoot(final TTreeItem treeRoot, final boolean centerWindow) {
+    public void setTreeRoot(final TTreeItem treeRoot,
+        final boolean centerWindow) {
+
         this.treeRoot = treeRoot;
         this.centerWindow = centerWindow;
     }
@@ -239,12 +243,12 @@ public class TTreeView extends TWidget {
             if (item == selectedItem) {
                 foundSelectedRow = true;
             }
-            if (foundSelectedRow == false) {
+            if (!foundSelectedRow) {
                 selectedRow++;
             }
 
             int lineWidth = item.getText().length()
-            + item.getPrefix().length() + 4;
+                + item.getPrefix().length() + 4;
             if (lineWidth > maxLineWidth) {
                 maxLineWidth = lineWidth;
             }
@@ -360,7 +364,7 @@ public class TTreeView extends TWidget {
      * @param mouse mouse button release event
      */
     @Override
-    public void onMouseUp(TMouseEvent mouse) {
+    public void onMouseUp(final TMouseEvent mouse) {
         // Pass to children
         super.onMouseDown(mouse);
 

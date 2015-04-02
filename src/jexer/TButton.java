@@ -56,7 +56,7 @@ public final class TButton extends TWidget {
      *
      * @return mnemonic string
      */
-    public final MnemonicString getMnemonic() {
+    public MnemonicString getMnemonic() {
         return mnemonic;
     }
 

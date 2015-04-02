@@ -51,7 +51,7 @@ public final class TCheckbox extends TWidget {
      *
      * @return if true, this is checked
      */
-    public final boolean isChecked() {
+    public boolean isChecked() {
         return checked;
     }
 
@@ -60,7 +60,7 @@ public final class TCheckbox extends TWidget {
      *
      * @param checked new checked value.
      */
-    public final void setChecked(final boolean checked) {
+    public void setChecked(final boolean checked) {
         this.checked = checked;
     }
 

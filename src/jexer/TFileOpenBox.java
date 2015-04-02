@@ -59,7 +59,14 @@ public final class TFileOpenBox extends TWindow {
      * TFileOpenBox can be called for either Open or Save actions.
      */
     public enum Type {
+        /**
+         * Button will be labeled "Open".
+         */
         OPEN,
+
+        /**
+         * Button will be labeled "Save".
+         */
         SAVE
     }
 
@@ -107,6 +114,7 @@ public final class TFileOpenBox extends TWindow {
      * directory, then
      *
      * @param newFilename the filename to check and return
+     * @throws IOException of a java.io operation throws
      */
     private void checkFilename(final String newFilename) throws IOException {
         File newFile = new File(newFilename);
@@ -133,6 +141,7 @@ public final class TFileOpenBox extends TWindow {
      * @param application the TApplication that manages this window
      * @param path path of selected file
      * @param type one of the Type constants
+     * @throws IOException of a java.io operation throws
      */
     public TFileOpenBox(final TApplication application, final String path,
         final Type type) throws IOException {

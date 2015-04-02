@@ -101,7 +101,7 @@ public class TTreeItem extends TWidget {
      *
      * @param expanded new value
      */
-    public final void setExpanded(boolean expanded) {
+    public final void setExpanded(final boolean expanded) {
         this.expanded = expanded;
     }
 
@@ -124,7 +124,7 @@ public class TTreeItem extends TWidget {
      *
      * @param expandable new value
      */
-    public final void setExpandable(boolean expandable) {
+    public final void setExpandable(final boolean expandable) {
         this.expandable = expandable;
     }
 
@@ -162,7 +162,7 @@ public class TTreeItem extends TWidget {
      *
      * @param invisible new value
      */
-    public final void setInvisible(boolean invisible) {
+    public final void setInvisible(final boolean invisible) {
         this.invisible = invisible;
     }
 
@@ -185,7 +185,7 @@ public class TTreeItem extends TWidget {
      *
      * @param selected new value
      */
-    public final void setSelected(boolean selected) {
+    public final void setSelected(final boolean selected) {
         this.selected = selected;
     }
 
@@ -199,7 +199,7 @@ public class TTreeItem extends TWidget {
      *
      * @param selectable new value
      */
-    public final void setSelectable(boolean selectable) {
+    public final void setSelectable(final boolean selectable) {
         this.selectable = selectable;
     }
 
@@ -276,7 +276,7 @@ public class TTreeItem extends TWidget {
         this.prefix = prefix;
         array.add(this);
 
-        if ((getChildren().size() == 0) || (expanded == false)) {
+        if ((getChildren().size() == 0) || !expanded) {
             return array;
         }
 

@@ -88,7 +88,7 @@ public class TMessageBox extends TWindow {
     /**
      * My buttons.
      */
-    List<TButton> buttons;
+    private List<TButton> buttons;
 
     /**
      * Message boxes have these possible results.

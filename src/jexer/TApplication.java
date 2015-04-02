@@ -89,7 +89,7 @@ public class TApplication implements Runnable {
         ECMA48,
 
         /**
-         * Synonym for ECMA48
+         * Synonym for ECMA48.
          */
         XTERM
     }
@@ -518,6 +518,10 @@ public class TApplication implements Runnable {
             // Fall through...
         case ECMA48:
             backend = new ECMA48Backend(this, null, null);
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid backend type: "
+                + backendType);
         }
         TApplicationImpl();
     }
@@ -1003,7 +1007,7 @@ public class TApplication implements Runnable {
         // secondary thread locks again.  When it gives up, we have the
         // single lock back.
         boolean oldLock = unlockHandleEvent();
-        assert (oldLock == true);
+        assert (oldLock);
 
         while (secondaryEventReceiver != null) {
             synchronized (primaryEventHandler) {
@@ -1905,6 +1909,7 @@ public class TApplication implements Runnable {
      *
      * @param path path of selected file
      * @return the result of the new file open box
+     * @throws IOException if java.io operation throws
      */
     public final String fileOpenBox(final String path) throws IOException {
 
@@ -1918,6 +1923,7 @@ public class TApplication implements Runnable {
      * @param path path of selected file
      * @param type one of the Type constants
      * @return the result of the new file open box
+     * @throws IOException if java.io operation throws
      */
     public final String fileOpenBox(final String path,
         final TFileOpenBox.Type type) throws IOException {

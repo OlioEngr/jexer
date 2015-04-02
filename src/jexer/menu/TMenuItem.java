@@ -196,6 +196,7 @@ public class TMenuItem extends TWidget {
      * Returns true if the mouse is currently on the menu item.
      *
      * @param mouse mouse event
+     * @return if true then the mouse is currently on this item
      */
     private boolean mouseOnMenuItem(final TMouseEvent mouse) {
         if ((mouse.getY() == 0)
@@ -261,21 +262,6 @@ public class TMenuItem extends TWidget {
             checked = !checked;
         }
     }
-
-    /**
-     * Handle mouse button presses.
-     *
-     * @param event mouse button press event
-     */
-    /* TODO: this was commented out in d-tui, why?
-    @Override
-    public void onMouseDown(final TMouseEvent event) {
-        if ((mouseOnMenuItem(event)) && (event.mouse1)) {
-            dispatch();
-            return;
-        }
-    }
-    */
 
     /**
      * Handle mouse button releases.

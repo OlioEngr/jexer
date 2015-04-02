@@ -328,13 +328,14 @@ public final class TVScroller extends TWidget {
             return;
         }
 
-        if ((mouse.isMouse1()) &&
-            (inScroll) &&
-            (mouse.getY() > 0) &&
-            (mouse.getY() < getHeight() - 1)
+        if ((mouse.isMouse1())
+            && (inScroll)
+            && (mouse.getY() > 0)
+            && (mouse.getY() < getHeight() - 1)
         ) {
             // Recompute value based on new box position
-            value = (bottomValue - topValue) * (mouse.getY()) / (getHeight() - 3) + topValue;
+            value = (bottomValue - topValue)
+                * (mouse.getY()) / (getHeight() - 3) + topValue;
             return;
         }
 

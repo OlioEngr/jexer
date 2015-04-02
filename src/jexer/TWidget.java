@@ -371,7 +371,7 @@ public abstract class TWidget implements Comparable<TWidget> {
     }
 
     /**
-     * Comparison operator sorts on:
+     * Comparison operator.  For various subclasses it sorts on:
      * <ul>
      * <li>tabOrder for TWidgets</li>
      * <li>z for TWindows</li>
@@ -1289,6 +1289,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param y row relative to parent
      * @param width width of tree view
      * @param height height of tree view
+     * @return the new tree view
      */
     public final TTreeView addTreeView(final int x, final int y,
         final int width, final int height) {
@@ -1304,6 +1305,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param width width of tree view
      * @param height height of tree view
      * @param action action to perform when an item is selected
+     * @return the new tree view
      */
     public final TTreeView addTreeView(final int x, final int y,
         final int width, final int height, final TAction action) {
@@ -1316,6 +1318,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      *
      * @param path path of selected file
      * @return the result of the new file open box
+     * @throws IOException if a java.io operation throws
      */
     public final String fileOpenBox(final String path) throws IOException {
         return getApplication().fileOpenBox(path);
@@ -1327,6 +1330,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param path path of selected file
      * @param type one of the Type constants
      * @return the result of the new file open box
+     * @throws IOException if a java.io operation throws
      */
     public final String fileOpenBox(final String path,
         final TFileOpenBox.Type type) throws IOException {
@@ -1341,6 +1345,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param y row relative to parent
      * @param width width of text area
      * @param height height of text area
+     * @return the new directory list
      */
     public final TDirectoryList addDirectoryList(final String path, final int x,
         final int y, final int width, final int height) {
@@ -1357,6 +1362,7 @@ public abstract class TWidget implements Comparable<TWidget> {
      * @param width width of text area
      * @param height height of text area
      * @param action action to perform when an item is selected
+     * @return the new directory list
      */
     public final TDirectoryList addDirectoryList(final String path, final int x,
         final int y, final int width, final int height, final TAction action) {

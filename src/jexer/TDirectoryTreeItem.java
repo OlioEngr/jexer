@@ -60,7 +60,7 @@ public class TDirectoryTreeItem extends TTreeItem {
      * true if this item was just expanded from a mouse click or keypress.
      */
     @Override
-    public void onExpand() {
+    public final void onExpand() {
         // System.err.printf("onExpand() %s\n", file);
 
         if (file == null) {
@@ -77,7 +77,7 @@ public class TDirectoryTreeItem extends TTreeItem {
         assert (file.isDirectory());
         setExpandable(true);
 
-        if ((isExpanded() == false) || (isExpandable() == false)) {
+        if (!isExpanded() || !isExpandable()) {
             getTreeView().reflow();
             return;
         }
@@ -118,7 +118,9 @@ public class TDirectoryTreeItem extends TTreeItem {
      * @throws IllegalArgumentException if this function is called
      */
     @Override
-    public final TTreeItem addChild(final String text, final boolean expanded) {
+    public final TTreeItem addChild(final String text,
+        final boolean expanded) throws IllegalArgumentException {
+
         throw new IllegalArgumentException("Do not call addChild(), use onExpand() instead");
     }
 
@@ -127,6 +129,7 @@ public class TDirectoryTreeItem extends TTreeItem {
      *
      * @param view root TTreeView
      * @param text text for this item
+     * @throws IOException if a java.io operation throws
      */
     public TDirectoryTreeItem(final TTreeView view,
         final String text) throws IOException {
@@ -140,6 +143,7 @@ public class TDirectoryTreeItem extends TTreeItem {
      * @param view root TTreeView
      * @param text text for this item
      * @param expanded if true, have it expanded immediately
+     * @throws IOException if a java.io operation throws
      */
     public TDirectoryTreeItem(final TTreeView view, final String text,
         final boolean expanded) throws IOException {
@@ -155,6 +159,7 @@ public class TDirectoryTreeItem extends TTreeItem {
      * @param expanded if true, have it expanded immediately
      * @param openParents if true, expand all paths up the root path and
      * return the root path entry
+     * @throws IOException if a java.io operation throws
      */
     public TDirectoryTreeItem(final TTreeView view, final String text,
         final boolean expanded, final boolean openParents) throws IOException {
@@ -168,7 +173,7 @@ public class TDirectoryTreeItem extends TTreeItem {
         File rootFile = new File(text);
         rootFile = rootFile.getCanonicalFile();
 
-        if (openParents == true) {
+        if (openParents) {
             setExpanded(true);
 
             // Go up the directory tree
@@ -186,12 +191,12 @@ public class TDirectoryTreeItem extends TTreeItem {
         } else {
             // This is a relative path.  We got here because openParents was
             // false.
-            assert (openParents == false);
+            assert (!openParents);
             setText(rootFile.getName());
         }
         onExpand();
 
-        if (openParents == true) {
+        if (openParents) {
             TDirectoryTreeItem childFile = this;
             Collections.reverse(parentFiles);
             for (String p: parentFiles) {

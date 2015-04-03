@@ -34,6 +34,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -66,6 +69,18 @@ public final class ColorTheme {
     public CellAttributes getColor(final String name) {
         CellAttributes attr = (CellAttributes) colors.get(name);
         return attr;
+    }
+
+    /**
+     * Retrieve all the names in the theme.
+     *
+     * @return a list of names
+     */
+    public List<String> getColorNames() {
+        Set<String> keys = colors.keySet();
+        List<String> names = new ArrayList<String>(keys.size());
+        names.addAll(keys);
+        return names;
     }
 
     /**
@@ -241,7 +256,7 @@ public final class ColorTheme {
         color.setBold(false);
         colors.put("tbutton.inactive", color);
         color = new CellAttributes();
-        color.setForeColor(Color.WHITE);
+        color.setForeColor(Color.CYAN);
         color.setBackColor(Color.GREEN);
         color.setBold(true);
         colors.put("tbutton.active", color);
@@ -402,27 +417,27 @@ public final class ColorTheme {
         color.setBold(true);
         colors.put("ttreeview.inactive", color);
 
-        // TText text
+        // TList
         color = new CellAttributes();
         color.setForeColor(Color.WHITE);
         color.setBackColor(Color.BLUE);
         color.setBold(false);
-        colors.put("tdirectorylist", color);
+        colors.put("tlist", color);
         color = new CellAttributes();
         color.setForeColor(Color.BLACK);
         color.setBackColor(Color.CYAN);
         color.setBold(false);
-        colors.put("tdirectorylist.selected", color);
+        colors.put("tlist.selected", color);
         color = new CellAttributes();
         color.setForeColor(Color.BLACK);
         color.setBackColor(Color.CYAN);
         color.setBold(false);
-        colors.put("tdirectorylist.unreadable", color);
+        colors.put("tlist.unreadable", color);
         color = new CellAttributes();
         color.setForeColor(Color.BLACK);
         color.setBackColor(Color.BLUE);
         color.setBold(true);
-        colors.put("tdirectorylist.inactive", color);
+        colors.put("tlist.inactive", color);
 
         // TEditor
         color = new CellAttributes();

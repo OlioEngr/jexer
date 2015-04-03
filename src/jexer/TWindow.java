@@ -398,7 +398,7 @@ public class TWindow extends TWidget {
      *
      * @return the border color
      */
-    private CellAttributes getBorder() {
+    public CellAttributes getBorder() {
         if (!isModal()
             && (inWindowMove || inWindowResize || inKeyboardResize)
         ) {

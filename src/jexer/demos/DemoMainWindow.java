@@ -77,7 +77,7 @@ public class DemoMainWindow extends TWindow {
     private DemoMainWindow(final TApplication parent, final int flags) {
         // Construct a demo window.  X and Y don't matter because it will be
         // centered on screen.
-        super(parent, "Demo Window", 0, 0, 60, 23, flags);
+        super(parent, "Demo Window", 0, 0, 60, 24, flags);
 
         int row = 1;
 
@@ -113,7 +113,7 @@ public class DemoMainWindow extends TWindow {
         addPasswordField(35, row++, 15, false);
         addLabel("Fixed-width password:", 1, row);
         addPasswordField(35, row++, 15, true, "hunter2");
-        row += 2;
+        row += 1;
 
         if (!isModal()) {
             addLabel("Radio buttons and checkboxes", 1, row);
@@ -173,6 +173,18 @@ public class DemoMainWindow extends TWindow {
                 new TAction() {
                     public void DO() {
                         getApplication().openTerminal(0, 0);
+                    }
+                }
+            );
+        }
+        row += 2;
+
+        if (!isModal()) {
+            addLabel("Color editor", 1, row);
+            addButton("Co&lors", 35, row,
+                new TAction() {
+                    public void DO() {
+                        new TEditColorThemeWindow(getApplication());
                     }
                 }
             );

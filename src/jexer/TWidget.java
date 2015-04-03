@@ -1370,4 +1370,59 @@ public abstract class TWidget implements Comparable<TWidget> {
         return new TDirectoryList(this, path, x, y, width, height, action);
     }
 
+    /**
+     * Convenience function to add a directory list to this container/window.
+     *
+     * @param strings list of strings to show
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @return the new directory list
+     */
+    public final TList addList(final List<String> strings, final int x,
+        final int y, final int width, final int height) {
+
+        return new TList(this, strings, x, y, width, height, null);
+    }
+
+    /**
+     * Convenience function to add a directory list to this container/window.
+     *
+     * @param strings list of strings to show
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @param enterAction action to perform when an item is selected
+     * @return the new directory list
+     */
+    public final TList addList(final List<String> strings, final int x,
+        final int y, final int width, final int height,
+        final TAction enterAction) {
+
+        return new TList(this, strings, x, y, width, height, enterAction);
+    }
+
+    /**
+     * Convenience function to add a directory list to this container/window.
+     *
+     * @param strings list of strings to show
+     * @param x column relative to parent
+     * @param y row relative to parent
+     * @param width width of text area
+     * @param height height of text area
+     * @param enterAction action to perform when an item is selected
+     * @param moveAction action to perform when the user navigates to a new
+     * item with arrow/page keys
+     * @return the new directory list
+     */
+    public final TList addList(final List<String> strings, final int x,
+        final int y, final int width, final int height,
+        final TAction enterAction, final TAction moveAction) {
+
+        return new TList(this, strings, x, y, width, height, enterAction,
+            moveAction);
+    }
+
 }

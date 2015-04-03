@@ -221,11 +221,6 @@ Roadmap
 
 Many tasks remain before calling this version 1.0:
 
-0.0.3
-
-- TListBox
-- TColorPicker
-
 0.0.4
 
 - TStatusBar

@@ -60,6 +60,7 @@ public class DemoApplication extends TApplication {
         item = demoMenu.addItem(2002, "&Normal");
         TSubMenu subMenu = demoMenu.addSubMenu("Sub-&Menu");
         item = demoMenu.addItem(2010, "N&ormal A&&D");
+        item = demoMenu.addItem(2050, "Co&lors...");
 
         item = subMenu.addItem(2000, "&Checkable (sub)");
         item.setCheckable(true);
@@ -105,6 +106,12 @@ public class DemoApplication extends TApplication {
      */
     @Override
     public boolean onMenu(final TMenuEvent menu) {
+
+        if (menu.getId() == 2050) {
+            new TEditColorThemeWindow(this);
+            return true;
+        }
+
         if (menu.getId() == TMenu.MID_OPEN_FILE) {
             try {
                 String filename = fileOpenBox(".");
